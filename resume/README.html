@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Niu - 个人简历</title>
+<style>
+  :root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --accent: #00b894;
+    --text: #333;
+    --text-light: #666;
+    --bg: #f8f9fc;
+    --card-bg: #fff;
+    --border: #e8ecf1;
+    --code-bg: #1e1e2e;
+    --code-text: #cdd6f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  /* ===== Header Banner ===== */
+  .banner {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary) 100%);
+    color: #fff;
+    text-align: center;
+    padding: 70px 20px 60px;
+    position: relative;
+    overflow: hidden;
+    clip-path: ellipse(150% 100% at 50% 0%);
+  }
+  .banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 60%),
+                radial-gradient(circle at 70% 50%, rgba(255,255,255,0.06) 0%, transparent 60%);
+  }
+  .banner h1 {
+    font-size: 3em;
+    font-weight: 800;
+    letter-spacing: 2px;
+    position: relative;
+    animation: fadeInUp 0.8s ease;
+  }
+  .banner .subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin-top: 8px;
+    position: relative;
+    animation: fadeInUp 0.8s ease 0.2s both;
+  }
+  .banner .wave {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+  }
+  .banner .wave svg { display: block; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Typing subtitle ===== */
+  .typing-box {
+    text-align: center;
+    padding: 24px 20px 16px;
+  }
+  .typing-box .line {
+    font-size: 1.25em;
+    font-weight: 600;
+    color: var(--primary);
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .typing-box .line + .line { margin-top: 4px; }
+
+  /* ===== Contact badges ===== */
+  .contact-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 20px 0;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .badge:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+  .badge.phone { background: var(--primary); }
+  .badge.email { background: var(--primary-dark); }
+  .badge.cnb { background: var(--accent); }
+  .badge.location { background: #e17055; }
+
+  /* ===== Status tags ===== */
+  .status-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 20px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #fff;
+    font-weight: 500;
+  }
+  .tag.status { background: var(--accent); }
+  .tag.school { background: var(--primary); }
+  .tag.major { background: var(--primary-dark); }
+  .tag.grade { background: #e17055; }
+
+  /* ===== Divider ===== */
+  .divider {
+    max-width: 800px;
+    margin: 28px auto;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== Container ===== */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* ===== Section titles ===== */
+  .section-title {
+    text-align: center;
+    font-size: 1.7em;
+    font-weight: 700;
+    margin: 40px 0 20px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .section-title .icon { font-size: 1.2em; }
+
+  /* ===== About table ===== */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 24px;
+    margin: 16px 0;
+  }
+  @media (max-width: 700px) { .about-grid { grid-template-columns: 1fr; } }
+
+  .code-block {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 0.88em;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .kw { color: #cba6f7; }
+  .code-block .cls { color: #89dceb; }
+  .code-block .fn { color: #a6e3a1; }
+  .code-block .str { color: #f9e2af; }
+  .code-block .cmt { color: #6c7086; font-style: italic; }
+
+  .skill-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .skill-card h4 {
+    text-align: center;
+    margin-bottom: 14px;
+    font-size: 1.05em;
+    color: var(--text);
+  }
+  .skill-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+  }
+  .skill-bar .label { min-width: 110px; text-align: right; color: var(--text-light); }
+  .skill-bar .bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #e8ecf1;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .skill-bar .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    transition: width 0.6s ease;
+  }
+  .skill-bar .pct { min-width: 36px; font-size: 0.82em; color: var(--text-light); }
+
+  /* ===== Education table ===== */
+  .info-table {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+  .info-table td {
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-table td:first-child { font-weight: 600; text-align: right; color: var(--text-light); width: 30%; }
+  .info-table td:last-child { text-align: left; }
+  .info-table .school-row td { text-align: center; font-weight: 700; font-size: 1.05em; border-bottom: 2px solid var(--primary); }
+
+  /* ===== Project cards ===== */
+  .project {
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin: 16px 0 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    overflow: hidden;
+    border-left: 4px solid var(--primary);
+  }
+  .project-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    cursor: default;
+    font-weight: 700;
+    font-size: 1.05em;
+  }
+  .project-header .date {
+    margin-left: auto;
+    font-weight: 400;
+    font-size: 0.85em;
+    color: var(--text-light);
+  }
+  .project-header .src-link {
+    font-weight: 500;
+    font-size: 0.82em;
+    color: var(--primary);
+    text-decoration: none;
+    padding: 2px 10px;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .project-header .src-link:hover { background: var(--primary); color: #fff; }
+  .project-body { padding: 0 20px 20px; }
+  .project-body .desc {
+    background: #f0f4ff;
+    border-left: 3px solid var(--primary);
+    padding: 10px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 14px;
+    font-size: 0.92em;
+    color: var(--text-light);
+  }
+  .project-metrics {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .metric {
+    background: var(--bg);
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 130px;
+  }
+  .metric .val {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .metric .lbl { font-size: 0.8em; color: var(--text-light); }
+  .project-body ul {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9em;
+  }
+  .project-body ul li {
+    padding: 5px 0;
+    padding-left: 24px;
+    position: relative;
+  }
+  .project-body ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 4px;
+    color: var(--primary);
+  }
+  .tech-stack {
+    margin-top: 12px;
+    font-size: 0.85em;
+  }
+  .tech-stack code {
+    background: #eef0ff;
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 0 2px;
+    font-size: 0.92em;
+  }
+
+  /* ===== Tech badges ===== */
+  .tech-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tech-badge {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .tech-badge.python { background: #3776AB; }
+  .tech-badge.c { background: #555; }
+  .tech-badge.docker { background: #2496ED; }
+  .tech-badge.git { background: #F05032; }
+  .tech-badge.linux { background: #FCC624; color: #333; }
+  .tech-badge.vscode { background: #007ACC; }
+  .tech-badge.numpy { background: #013243; }
+  .tech-badge.pandas { background: #150458; }
+  .tech-badge.requests { background: #E67E22; }
+
+  /* ===== Honor table ===== */
+  .honor-table {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+  .honor-table td {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92em;
+  }
+  .honor-table td:first-child { font-weight: 500; }
+  .honor-table td:last-child { text-align: right; color: var(--text-light); }
+
+  /* ===== Self-eval cards ===== */
+  .eval-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 750px;
+    margin: 0 auto;
+  }
+  @media (max-width: 600px) { .eval-grid { grid-template-columns: 1fr; } }
+  .eval-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s;
+  }
+  .eval-card:hover { transform: translateY(-3px); }
+  .eval-card h4 { font-size: 1em; margin-bottom: 8px; }
+  .eval-card p { font-size: 0.85em; color: var(--text-light); line-height: 1.7; }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center;
+    padding: 20px 20px 40px;
+  }
+  .footer-wave {
+    height: 80px;
+    margin-bottom: 20px;
+  }
+  .footer-wave svg { display: block; }
+  .footer .contact-bottom {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 24px;
+  }
+  .footer .hint {
+    font-size: 0.95em;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+  .visitor-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85em;
+  }
+
+  /* Animation delay helpers */
+  .aos { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .aos.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ========== Banner ========== -->
+<header class="banner">
+  <h1>Hi, I'm Niu 👋</h1>
+  <p class="subtitle">数据科学 · 分布式系统 · 云原生</p>
+</header>
+
+<!-- Typing subtitle -->
+<div class="typing-box">
+  <div class="line">💬 Always learn from the best！</div>
+  <div class="line">💬 Always be a learner！</div>
+</div>
+
+<!-- Contact badges -->
+<div class="contact-row">
+  <a class="badge phone" href="tel:+8613755122125">📞 137-5512-2125</a>
+  <a class="badge email" href="mailto:3420761503@qq.com">✉️ 3420761503@qq.com</a>
+  <a class="badge cnb" href="https://cnb.cool/u/STARS_NIU" target="_blank">🐙 CNB: STARS_NIU</a>
+  <span class="badge location">📍 湖南 长沙</span>
+</div>
+
+<!-- Status -->
+<div class="status-row">
+  <span class="tag status">📌 本科在读</span>
+  <span class="tag school">🏫 中南大学</span>
+  <span class="tag major">📚 数据科学与大数据技术</span>
+  <span class="tag grade">📅 2023 级</span>
+</div>
+
+<hr class="divider">
+
+<div class="container">
+
+<!-- ========== 关于我 ========== -->
+<h2 class="section-title"><span class="icon">👋</span> 关于我</h2>
+
+<div class="about-grid">
+  <!-- Code block -->
+  <div class="code-block">
+<span class="kw">class</span> <span class="cls">NiuChenXun</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.name    = <span class="str">"牛晨勋"</span>
+        self.school  = <span class="str">"中南大学"</span>
+        self.major   = <span class="str">"数据科学与大数据技术"</span>
+        self.year    = <span class="str">"2023 - 2027"</span>
+        self.location = <span class="str">"湖南 · 长沙"</span>
+
+    <span class="kw">def</span> <span class="fn">focus</span>(self):
+        <span class="kw">return</span> [<span class="str">"分布式系统"</span>, <span class="str">"并发编程"</span>, <span class="str">"数据驱动优化"</span>]
+
+    <span class="kw">def</span> <span class="fn">tools</span>(self):
+        <span class="kw">return</span> [<span class="str">"Python"</span>, <span class="str">"Docker"</span>, <span class="str">"Git"</span>, <span class="str">"Linux"</span>]
+
+    <span class="kw">def</span> <span class="fn">motto</span>(self):
+        <span class="kw">return</span> <span class="str">"用数据理解世界，用代码构建未来"</span>
+  </div>
+
+  <!-- Skill card -->
+  <div class="skill-card">
+    <h4>🎯 核心能力矩阵</h4>
+    <div class="skill-bar">
+      <span class="label">Python 并发编程</span>
+      <span class="bar-bg"><span class="bar-fill" style="width:80%"></span></span>
+      <span class="pct">80%</span>
+    </div>
+    <div class="skill-bar">
+      <span class="label">分布式系统设计</span>
+      <span class="bar-bg"><span class="bar-fill" style="width:60%"></span></span>
+      <span class="pct">60%</span>
+    </div>
+    <div class="skill-bar">
+      <span class="label">Docker / 云原生</span>
+      <span class="bar-bg"><span class="bar-fill" style="width:70%"></span></span>
+      <span class="pct">70%</span>
+    </div>
+    <div class="skill-bar">
+      <span class="label">数据分析与可视化</span>
+      <span class="bar-bg"><span class="bar-fill" style="width:80%"></span></span>
+      <span class="pct">80%</span>
+    </div>
+    <div class="skill-bar">
+      <span class="label">算法与数据结构</span>
+      <span class="bar-bg"><span class="bar-fill" style="width:70%"></span></span>
+      <span class="pct">70%</span>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ========== 教育背景 ========== -->
+<h2 class="section-title"><span class="icon">🎓</span> 教育背景</h2>
+
+<table class="info-table">
+  <tr class="school-row"><td colspan="2">🏫 中南大学 &nbsp;|&nbsp; 📅 2023.09 ~ 2027.07</td></tr>
+  <tr><td>专业</td><td>数据科学与大数据技术（本科）</td></tr>
+  <tr><td>GPA</td><td>3.33 / 4.0</td></tr>
+  <tr><td>排名</td><td>64 / 124 (前 50%)</td></tr>
+  <tr><td>荣誉</td><td>🏆 学院单项奖学金</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ========== 项目经历 ========== -->
+<h2 class="section-title"><span class="icon">🚀</span> 项目经历</h2>
+
+<!-- Project 1 -->
+<div class="project">
+  <div class="project-header">
+    🕷️ <span>PySpider - 高性能分布式网络爬虫系统</span>
+    <span class="date">2025.09 ~ 2025.12</span>
+    <a class="src-link" href="https://cnb.cool/OrionSeeker/WebSpider" target="_blank">🔗 源码</a>
+  </div>
+  <div class="project-body">
+    <div class="desc">
+      针对大规模网页抓取任务中高并发、URL 去重、数据持久化等挑战，设计并实现了基于<strong>生产者-消费者模式</strong>的分布式爬虫系统，在本地测试环境中成功完成 <strong>160,000+ 网页</strong>的抓取与解析。
+    </div>
+    <div class="project-metrics">
+      <div class="metric"><div class="val">44</div><div class="lbl">并发线程</div></div>
+      <div class="metric"><div class="val">98%↓</div><div class="lbl">锁竞争降低</div></div>
+      <div class="metric"><div class="val">800MB</div><div class="lbl">内存 / 10万URL</div></div>
+      <div class="metric"><div class="val">160,000+</div><div class="lbl">网页抓取</div></div>
+    </div>
+    <ul>
+      <li><strong>并发架构设计：</strong>多级消息队列（FetchQueue → ParseQueue → ResultQueue），实现 44 线程并发，避免阻塞</li>
+      <li><strong>URL 去重优化：</strong>64 分片集合去重器，全局锁竞争降低 98%，平均查询时间 &lt; 1ms</li>
+      <li><strong>系统稳定性：</strong>优雅关闭机制、动态超时控制、异常隔离策略；逐行 CSV 持久化，断电不丢失</li>
+      <li><strong>容器化部署：</strong>Docker + CNB 云原生开发平台，一键部署开箱即用</li>
+    </ul>
+    <div class="tech-stack"><strong>技术栈：</strong>
+      <code>Python 3.12</code> <code>threading</code> <code>requests</code> <code>Docker</code> <code>CNB</code>
+    </div>
+  </div>
+</div>
+
+<!-- Project 2 -->
+<div class="project">
+  <div class="project-header">
+    📹 <span>短视频流自适应预加载算法</span>
+    <span class="date">2025.12 ~ 2026.01</span>
+    <a class="src-link" href="https://cnb.cool/OrionSeeker/Data-processing-method-Project" target="_blank">🔗 源码</a>
+  </div>
+  <div class="project-body">
+    <div class="desc">
+      基于 <strong>ACM Multimedia 2022 短视频流挑战赛</strong>，针对短视频应用滑动式观看模式下的预加载数据浪费与带宽波动问题，设计并实现了一套自适应预加载算法。
+    </div>
+    <div class="project-metrics">
+      <div class="metric"><div class="val">+45.41%</div><div class="lbl">综合得分</div></div>
+      <div class="metric"><div class="val">+7.53%</div><div class="lbl">QoE 提升</div></div>
+      <div class="metric"><div class="val">-21.03%</div><div class="lbl">带宽浪费降低</div></div>
+      <div class="metric"><div class="val">-9.00%</div><div class="lbl">带宽使用降低</div></div>
+    </div>
+    <ul>
+      <li><strong>预加载策略设计：</strong>三级网络状态分类、基于条件概率的动态预加载决策、自适应下载优先级、码率增强机制</li>
+      <li><strong>带宽预测实现：</strong>结合调和平均数与算术均值进行鲁棒带宽预测，动态调整预加载阈值</li>
+      <li><strong>性能测试：</strong>在 4 种网络环境（共 80 条 trace）下测试，综合得分平均提升 45.41%</li>
+      <li><strong>云原生开发：</strong>Docker + CNB + code-server 开发环境，双平台自动化测试脚本</li>
+    </ul>
+    <div class="tech-stack"><strong>技术栈：</strong>
+      <code>Python 3.13</code> <code>NumPy</code> <code>Pandas</code> <code>MPC</code> <code>Docker</code> <code>CNB</code>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ========== 专业技能 ========== -->
+<h2 class="section-title"><span class="icon">🛠️</span> 专业技能</h2>
+
+<div style="text-align:center; margin-bottom:16px;">
+  <strong style="font-size:1em; color:var(--text-light);">编程语言</strong>
+  <div class="tech-badges" style="margin:6px 0 14px;">
+    <span class="tech-badge python">🐍 Python</span>
+    <span class="tech-badge c">C</span>
+  </div>
+
+  <strong style="font-size:1em; color:var(--text-light);">开发工具</strong>
+  <div class="tech-badges" style="margin:6px 0 14px;">
+    <span class="tech-badge docker">🐳 Docker</span>
+    <span class="tech-badge git">🔀 Git</span>
+    <span class="tech-badge linux">🐧 Linux</span>
+    <span class="tech-badge vscode">💻 VS Code</span>
+  </div>
+
+  <strong style="font-size:1em; color:var(--text-light);">Python 生态</strong>
+  <div class="tech-badges" style="margin:6px 0 14px;">
+    <span class="tech-badge numpy">🔢 NumPy</span>
+    <span class="tech-badge pandas">🐼 Pandas</span>
+    <span class="tech-badge requests">📡 Requests</span>
+  </div>
+</div>
+
+<table class="info-table">
+  <tr><td>🏅 CCF CSP</td><td>200 分</td></tr>
+  <tr><td>🐳 工程能力</td><td>熟悉 Docker 容器化部署和云原生开发流程</td></tr>
+  <tr><td>🌍 英语能力</td><td>CET-4</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ========== 荣誉奖项 ========== -->
+<h2 class="section-title"><span class="icon">🏆</span> 荣誉奖项</h2>
+
+<table class="honor-table">
+  <tr><td>🏅 中南大学数学建模竞赛校赛 <strong>三等奖</strong></td><td>2025.07</td></tr>
+  <tr><td>🏅 Datawhale AI 夏令营 <strong>优秀学习者</strong></td><td>2024.08</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ========== 自我评价 ========== -->
+<h2 class="section-title"><span class="icon">💡</span> 自我评价</h2>
+
+<div class="eval-grid">
+  <div class="eval-card">
+    <h4>🤝 团队协作</h4>
+    <p>具备良好的团队协作意识，乐于沟通配合，能够在团队项目中主动承担任务并与成员有效协作</p>
+  </div>
+  <div class="eval-card">
+    <h4>📚 快速学习</h4>
+    <p>学习能力强，善于通过实践掌握新技术，乐于尝试和探索陌生领域，能够快速上手并解决问题</p>
+  </div>
+  <div class="eval-card">
+    <h4>🌱 开源精神</h4>
+    <p>乐于知识分享与技术传播，热衷于参与 Datawhale 等开源学习活动，具有良好的社区贡献意识</p>
+  </div>
+</div>
+
+</div><!-- .container -->
+
+<!-- ========== Footer ========== -->
+<footer class="footer">
+  <!-- Wave -->
+  <div class="footer-wave">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path d="M0,40 C240,0 480,80 720,40 C960,0 1200,80 1440,40 L1440,80 L0,80 Z" fill="url(#footerGrad)"/>
+      <defs>
+        <linearGradient id="footerGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#667eea"/>
+          <stop offset="50%" stop-color="#764ba2"/>
+          <stop offset="100%" stop-color="#667eea"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <p class="hint">📬 欢迎通过邮件或 CNB 与我联系，期待交流学习！</p>
+
+  <div class="contact-bottom">
+    <a class="badge email" href="mailto:3420761503@qq.com">✉️ 3420761503@qq.com</a>
+    <a class="badge cnb" href="https://cnb.cool/u/STARS_NIU" target="_blank">🐙 CNB: STARS_NIU</a>
+  </div>
+
+  <span class="visitor-badge">👁️ 访问统计</span>
+</footer>
+
+</body>
+</html>

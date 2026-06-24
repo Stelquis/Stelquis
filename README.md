@@ -1,251 +1,121 @@
-<!-- 
-  ╔═══════════════════════════════════════════════════════════════╗
-  ║  🚀 科技未来风格个人主页 🚀                                    ║
-  ║  探索数字世界的无限可能                                         ║
-  ╚═══════════════════════════════════════════════════════════════╝
--->
+# CV-NIU
 
-<div align="center">
-  
-  <!-- 科技未来风格横幅 -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0066FF,50:00CCFF,100:0066FF&height=200&section=header&text=NIU&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=科技探索者%20%7C%20未来架构师&descAlignY=55&descSize=20" />
-  
-  <!-- 动态副标题 -->
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=600&size=28&duration=3000&pause=1000&color=00CCFF&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━+;🚀+探索科技边界，构建未来世界+🚀;+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━+" />
-  
-  <!-- 科技分隔线 -->
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-  
-</div>
+> 一份开箱即用的中文 LaTeX 简历模板 —— 改几行内容，`make` 一下，PDF 就有了。
 
-<!-- 全息投影风格介绍 -->
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   > 系统初始化中...                                              │
-│   > 连接到数字网络...                                            │
-│   > 全息投影已激活 ✓                                             │
-│                                                                 │
-│   ╔═════════════════════════════════════════════════════════╗   │
-│   ║  👤 身份: NIU                                           ║   │
-│   ║  📍 位置: 科技前沿                                       ║   │
-│   ║  💻 使命: 创新技术解决方案                               ║   │
-│   ║  ⚡ 状态: 在线并运行中                                    ║   │
-│   ╚═════════════════════════════════════════════════════════╝   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![LaTeX](https://img.shields.io/badge/LaTeX-XeLaTeX-blue.svg)](https://www.latex-project.org/)
+[![CNB](https://img.shields.io/badge/CNB-OrionSeeker%2FNiu-00b894)](https://cnb.cool/OrionSeeker/Niu)
+
+## 快速开始
+
+```bash
+# 1. 克隆
+git clone https://cnb.cool/OrionSeeker/Niu.git
+cd Niu
+
+# 2. 打开 resume/Niu/resume.tex，把个人信息替换成你自己的
+
+# 3. 编译
+make
 ```
 
-<div align="center">
-  
-  <!-- 科技状态徽章 -->
-  <a href="https://github.com/你的用户名">
-    <img src="https://img.shields.io/badge/状态-活跃-00CCFF?style=for-the-badge&logo=robot&logoColor=white&labelColor=0A1929&color=00CCFF" />
-  </a>
-  <a href="https://github.com/你的用户名?tab=repositories">
-    <img src="https://img.shields.io/badge/项目-进行中-0066FF?style=for-the-badge&logo=github&logoColor=white&labelColor=0A1929&color=0066FF" />
-  </a>
-  <a href="https://github.com/你的用户名">
-    <img src="https://img.shields.io/badge/模式-创新-00FFCC?style=for-the-badge&logo=lightbulb&logoColor=black&labelColor=0A1929&color=00FFCC" />
-  </a>
-  
-</div>
+打开 `resume/Niu/resume.pdf`，你的简历已经生成好了。
 
-<br>
+> 需要 LaTeX 环境？也可以直接用 Docker：`docker build -t cv-niu . && docker run --rm -v $(pwd):/workspace cv-niu`
 
-<!-- 技术矩阵 -->
-<div align="center">
-  
-  ### 🛰️ 技术矩阵 🛰️
-  
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=16&duration=2000&pause=500&color=00CCFF&center=true&vCenter=true&repeat=true&width=400&lines=正在加载技术矩阵..." />
-  
-</div>
+## 定制指南
 
-<table align="center">
-<tr>
-<td valign="top" width="50%">
+`resume.tex` 里所有需要修改的地方都标注了 `【修改】`，全局搜索就能找到。
 
-#### 🌐 前端技术
-<div align="center">
-  
-  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black&labelColor=0A1929)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=0A1929)
-  ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black&labelColor=0A1929)
-  ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white&labelColor=0A1929)
-  ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white&labelColor=0A1929)
-  
-</div>
+### 你只需要关心这几个部分：
 
-</td>
-<td valign="top" width="50%">
+| 章节 | 文件中的位置 | 说明 |
+|------|-------------|------|
+| **基本信息** | 第 138–166 行 | 姓名、电话、邮箱、地点、年龄 |
+| **个人照片** | 第 59–62 行 | 替换 `assets/photos/N.jpg` |
+| **教育背景** | 第 182–202 行 | 学校、专业、GPA、排名 |
+| **项目经历** | 第 250–276 行 | 两个项目示例，删改即可 |
+| **荣誉奖项** | 第 334–339 行 | 奖项列表 |
+| **专业技能** | 第 348–356 行 | 编程语言、工具、证书 |
+| **自我评价** | 第 364–370 行 | 个人特质描述 |
 
-#### 🔧 后端技术
-<div align="center">
-  
-  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white&labelColor=0A1929)
-  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=0A1929)
-  ![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white&labelColor=0A1929)
-  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white&labelColor=0A1929)
-  ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=0A1929)
-  
-</div>
+### 可选模块（默认已注释，需要时取消注释）：
 
-</td>
-</tr>
-<tr>
-<td valign="top" width="50%">
+| 模块 | 用途 |
+|------|------|
+| 考研成绩表 | 复试简历专用 |
+| 实习经历 | 有实习就打开 |
+| 毕业设计 | 毕设题目 |
+| 校园实践 | 社团、学生会 |
+| 志愿经历 | 志愿服务 |
+| 硕士规划 | 复试材料 |
 
-#### 📡 云服务
-<div align="center">
-  
-  ![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white&labelColor=0A1929)
-  ![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white&labelColor=0A1929)
-  ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white&labelColor=0A1929)
-  ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white&labelColor=0A1929)
-  ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white&labelColor=0A1929)
-  
-</div>
+### 替换照片
 
-</td>
-<td valign="top" width="50%">
+把证件照放到 `resume/assets/photos/` 目录下，然后在 `resume.tex` 第 61 行修改文件名即可。
 
-#### 🛠️ 开发工具
-<div align="center">
-  
-  ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white&labelColor=0A1929)
-  ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white&labelColor=0A1929)
-  ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white&labelColor=0A1929)
-  ![CI/CD](https://img.shields.io/badge/CI%2FCD-00CCFF?style=for-the-badge&logo=github-actions&logoColor=white&labelColor=0A1929)
-  
-</div>
+### 参考模板
 
-</td>
-</tr>
-</table>
+`resume/assets/template/` 目录下提供了 20+ 份真实求职简历 PDF，覆盖 Java、C++、前端、算法等方向，可作为撰写参考。
 
-<br>
+## 特性
 
-<!-- 数据可视化 -->
-<div align="center">
-  
-  ### 📊 技术数据 📊
-  
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="600">
-  
-</div>
+| 特性 | 说明 |
+|------|------|
+| **专业排版** | XeLaTeX 引擎，PDF 输出效果对标杂志排版 |
+| **中文优先** | 内置 Adobe 宋/黑/楷/仿宋四款中文字体 |
+| **FontAwesome 图标** | 电话、邮箱、地点等可视化信息展示 |
+| **模块化** | 每块内容独立，注释标记清晰，想改哪里改哪里 |
+| **考研成绩** | 可选显示/隐藏初试成绩表格 |
+| **一键编译** | `make` 编译 + 自动清理中间文件 |
+| **Docker** | 提供 Dockerfile，免配 LaTeX 环境 |
+| **跨平台** | Windows / macOS / Linux |
+| **参考丰富** | 20+ 份各方向真实简历 PDF 示例 |
 
-<div align="center">
-  <a href="https://github.com/你的用户名">
-    <img height="180em" src="https://github-readme-stats.vercel.app/api?username=你的用户名&show_icons=true&theme=blue&include_all_commits=true&count_private=true&custom_title=技术数据统计&border_color=00CCFF&title_color=00CCFF&icon_color=0066FF&text_color=FFFFFF&bg_color=0A1929"/>
-    <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=你的用户名&layout=compact&langs_count=8&theme=blue&border_color=0066FF&title_color=00CCFF&text_color=FFFFFF&bg_color=0A1929"/>
-  </a>
-</div>
+## 一个模板的故事
 
-<div align="center">
-  
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=你的用户名&theme=blue&background=0A1929&border=00CCFF&stroke=0066FF&ring=00CCFF&fire=00FFCC&currStreakLabel=00CCFF" />
-  
-</div>
+大一那年，我第一次写简历。Word 里对齐姓名和电话花了一整个下午，调完页边距整个人都麻了。室友看了一眼说："你这个……跟网上的模板感觉不太一样。"
 
-<br>
+后来接触到 LaTeX，才发现排版原来可以如此优雅。但市面上的模板要么纯英文，要么中文支持一塌糊涂。我在 [CTAN](https://ctan.org/) 文档和字体配置里折腾了三周，才调出让自己满意的效果。
 
-<!-- 活动热力图 -->
-<div align="center">
-  
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=你的用户名&custom_title=开发活动&title_color=00CCFF&bg_color=0A1929&line=0066FF&point=00CCFF&area=true&hide_border=true&theme=react-dark" width="100%"/>
-  
-</div>
+**于是我把它整理成一个模板。**
 
-<br>
+我希望任何一个刚接触 LaTeX 的同学，打开文件、改几行内容、跑一遍 `make`，就能拿到一份排版精致的简历——不用像我当初那样在字体配置里掉头发。
 
-<!-- 精选项目 -->
-<div align="center">
-  
-  ### 🚀 重点项目 🚀
-  
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=18&duration=2000&pause=500&color=00CCFF&center=true&vCenter=true&repeat=true&width=500&lines=探索我的创新项目..." />
-  
-</div>
+这大概就是"用代码构建未来"的意义：写一段代码，替别人省下一整天。
 
-<div align="center">
-  
-  <a href="https://github.com/你的用户名/项目1">
-    <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=你的用户名&repo=项目1&theme=blue&title_color=00CCFF&icon_color=0066FF&text_color=FFFFFF&bg_color=0A1929&border_color=00CCFF" />
-  </a>
-  <a href="https://github.com/你的用户名/项目2">
-    <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=你的用户名&repo=项目2&theme=blue&title_color=00CCFF&icon_color=0066FF&text_color=FFFFFF&bg_color=0A1929&border_color=0066FF" />
-  </a>
-  
-</div>
+## 项目结构
 
-<br>
+```
+.
+├── Makefile                        # 编译脚本
+├── Dockerfile                      # 免配环境的容器化方案
+├── scripts/                        # 辅助脚本
+│
+├── resume/
+│   ├── Niu/                        # 模板主体
+│   │   ├── resume.tex              #   简历内容 ← 你需要改的文件
+│   │   ├── resume.cls              #   文档类（页面布局/字体/章节样式）
+│   │   ├── resume.pdf              #   编译生成的简历
+│   │   ├── *.sty                   #   字体/行距/图标样式文件
+│   │   └── fontawesomesymbols-*.tex #  FontAwesome 图标定义
+│   │
+│   └── assets/
+│       ├── cn-fonts/               # 中文字体 .otf × 4
+│       ├── en-fonts/               # 英文字体 .otf × 5
+│       ├── icon-fonts/             # Font Awesome 图标字体
+│       ├── photos/                 # 照片示例
+│       └── template/               # 20+ 参考简历 PDF
+```
 
-<!-- 技术认证 -->
-<div align="center">
-  
-  ### 🏆 技术认证 🏆
-  
-  <img src="https://github-profile-trophy.vercel.app/?username=你的用户名&theme=blue&no-frame=true&no-bg=true&column=7&margin-w=15&margin-h=15" />
-  
-</div>
+## 贡献
 
-<br>
+欢迎提 Issue 和 PR。如果你有好的简历模板或改进建议，随时贡献。
 
-<!-- 科技名言 -->
-<div align="center">
-  
-  <img src="https://quotes-github-readme.vercel.app/api?type=horizontal&theme=blue" alt="科技名言" />
-  
-</div>
+## 协议
 
-<br>
+MIT License © NIU
 
-<!-- 联系信息 -->
-<div align="center">
-  
-  ### 📡 联系方式 📡
-  
-  <a href="mailto:your-email@example.com">
-    <img src="https://img.shields.io/badge/邮箱-联系-00CCFF?style=for-the-badge&logo=gmail&logoColor=white&labelColor=0A1929" />
-  </a>
-  <a href="https://linkedin.com/in/你的用户名">
-    <img src="https://img.shields.io/badge/领英-连接-0077B5?style=for-the-badge&logo=linkedin&logoColor=white&labelColor=0A1929" />
-  </a>
-  <a href="https://twitter.com/你的用户名">
-    <img src="https://img.shields.io/badge/推特-关注-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white&labelColor=0A1929" />
-  </a>
-  <a href="https://你的网站.com">
-    <img src="https://img.shields.io/badge/网站-访问-0066FF?style=for-the-badge&logo=website&logoColor=white&labelColor=0A1929" />
-  </a>
-  
-</div>
+---
 
-<br>
-
-<!-- 访问统计 -->
-<div align="center">
-  
-  <img src="https://komarev.com/ghpvc/?username=你的用户名&style=for-the-badge&color=00CCFF&label=访问量" />
-  
-</div>
-
-<br>
-
-<!-- 页脚 -->
-<div align="center">
-  
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-  
-  <!-- 动态页脚 -->
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=14&duration=4000&pause=1000&color=00CCFF&center=true&vCenter=true&repeat=true&width=600&lines=探索科技边界，创造无限可能！🚀;欢迎与我合作，共同构建未来！🌐;技术创新，永不止步！🔬" />
-  
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0066FF,50:00CCFF,100:0066FF&height=120&section=footer" />
-  
-</div>
-
-<!-- 
-  ╔═══════════════════════════════════════════════════════════════╗
-  ║  🚀 科技改变世界，创新引领未来！ 🚀                            ║
-  ╚═══════════════════════════════════════════════════════════════╝
--->
+**祝求职顺利，复试成功！** 🎉

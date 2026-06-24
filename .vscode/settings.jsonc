@@ -1,0 +1,52 @@
+{
+  // ===================================================================
+  // VS Code 配置
+  // ===================================================================
+
+  // ================================================================
+  // 底部状态栏显示项
+  // ================================================================
+
+  // CNB Sysmon: CPU 使用率
+  "cnb.sysmon.cpu.statusBar.enabled": true,
+  // CNB Sysmon: RAM 使用率
+  "cnb.sysmon.ram.statusBar.enabled": true,
+  // CNB 环境剩余时间
+  "cnb.environment.remainingTime.statusBar.enabled": true,
+  // Tencent Cloud CodeBuddy (Extension)
+  "codingcopilot.statusBar.enabled": true,
+
+  // ================================================================
+  // 主题配置
+  // ================================================================
+
+  "workbench.colorTheme": "Light Modern",
+  "workbench.iconTheme": "vs-seti",
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
+
+  // ================================================================
+  // 编辑器通用配置
+  // ================================================================
+
+  "editor.fontSize": 14,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.minimap.enabled": true,
+  "files.autoSave": "onFocusChange",
+
+  // ================================================================
+  // LaTeX Workshop 配置
+  // ================================================================
+
+  "latex-workshop.latex.recipe.default": "latexmk (xelatex)",
+  "latex-workshop.latex.autoClean.run": "onBuilt",
+  "latex-workshop.latex.build.clearLog.everyRecipeStep.enabled": false,
+
+  // ================================================================
+  // 文件关联
+  // ================================================================
+
+  "files.associations": {
+    "*.cnb.yml": "yaml"
+  }
+}

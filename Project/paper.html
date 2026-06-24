@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>paper.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="聊天框之外agentic-ai-的下一种形态">聊天框之外：Agentic AI 的下一种形态</h1>
+<h2 id="摘要">摘要</h2>
+<p>从网页对话到代码代理、浏览器代理，再到带长期记忆和多端入口的开放 Agent，AI 的产品形态正在明显变化。表面上看，这是界面从聊天框向终端、浏览器、桌面应用扩展；但更深层的原因，是 Agent 同时获得了两种过去聊天系统缺乏的能力：<strong>行动</strong>与<strong>积累</strong>。前者让 AI 能够进入真实任务流程，后者让 AI 能够保留状态、沉淀技能并在多次任务中持续成长。本文以形态演变为叙事主线，以工具使用和记忆技能为分析骨架，讨论 Agentic AI 为什么会走出聊天框，以及它为何正在朝“环境化”的下一种形态演变。本文认为，真正重要的变化不是界面换了，而是 AI 正从一次性问答工具变成可成长的执行体；而这种演变能否真正成立，仍取决于 memory、runtime、protocol 与治理能力能否同步成熟。最后，本文提出一套验证思路，用于检验这种“走出聊天框”的演变到底是技术事实，还是产品包装。</p>
+<p><strong>关键词</strong>：Agentic AI；Tool Use；Memory；Skill；OpenHuman；GenericAgent</p>
+<hr>
+<h2 id="窗口时代的终点">窗口时代的终点</h2>
+<p>大语言模型最早进入大众视野时，最典型的形态是网页聊天。它的优点非常明显：交互成本低、表达自然、几乎适用于所有人机沟通场景。但聊天框也天然设定了 AI 的工作方式：用户提出请求，模型给出回答，任务在一轮或几轮对话中结束。这种模式适合问答，却并不适合真实工作。</p>
+<p>真实任务往往不是“一问一答”就能完成的。修复一个程序 bug，需要读日志、改文件、运行测试并反复验证；整理一批资料，需要检索、归类、去重并更新；处理网页事务，则需要点击、跳转、填写、检查和回退。聊天框形态把 AI 固定在语言层，而现实任务要求 AI 进入行动层。</p>
+<p>因此，本文认为“聊天框之外”并不是一句营销口号，而是 Agentic AI 发展的必然结果：<strong>当 AI 开始承担真实任务时，它迟早会走出单轮对话的窗口。</strong> 这一变化既可以从 OpenAI 的 <a href="https://openai.com/codex/">Codex</a>、Anthropic 的 <a href="https://www.anthropic.com/product/claude-code">Claude Code</a> 和 <a href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use-tool">computer use</a> 中看到，也可以从 <a href="https://github.com/OpenHands/OpenHands">OpenHands</a>、<a href="https://github.com/browser-use/browser-use">browser-use</a>、<a href="https://github.com/tinyhumansai/openhuman">OpenHuman</a> 与 <a href="https://github.com/lsdefine/GenericAgent">GenericAgent</a> 这样的开源项目中看到。它们共同说明，Agent 正在离开“等待提问的窗口”，走向“持续参与任务的系统”。</p>
+<hr>
+<h2 id="行动的开始">行动的开始</h2>
+<p>Agent 走出聊天框，第一步不是“更会说”，而是“开始做事”。这一点是理解 Agentic AI 的第一个关键。</p>
+<p>在技术上，行动能力主要体现为工具使用与环境交互。OpenAI 在 <a href="https://openai.com/index/new-tools-and-features-in-the-responses-api/">Responses API</a> 和 <a href="https://openai.com/index/the-next-evolution-of-the-agents-sdk/">Agents SDK</a> 中持续强化工具能力，Anthropic 也通过 <a href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use-tool">computer use</a> 明确展示了模型直接操作计算机界面的方向。与此同时，<a href="https://github.com/browser-use/browser-use">browser-use</a> 这类项目则进一步把网页环境改造成“AI 可操作界面”，其口号就是“让网站对 AI agents 可访问”。这些进展共同表明，Agent 的外延已经从文本回答扩展到文件、终端、浏览器和 GUI。</p>
+<p>这一变化的重要性不在于“能调多少个工具”，而在于任务闭环开始出现。以 coding agent 为例，<a href="https://openai.com/codex/">Codex</a>、<a href="https://www.anthropic.com/product/claude-code">Claude Code</a>、<a href="https://github.com/OpenHands/OpenHands">OpenHands</a> 的共同特征，并不是给出更漂亮的代码建议，而是能进入代码库、读文件、修改、多轮测试并继续迭代。也就是说，AI 不再只回答“应该怎么做”，而是开始真正参与“把事情做完”。</p>
+<p>从这个角度看，聊天框之所以不再足够，不是因为它不流行，而是因为它无法承载这种执行闭环。一个被限制在对话窗口中的系统，很难自然地承担持续的、带反馈的、多步骤任务；一旦 AI 进入真实任务流程，界面必然会外扩，形态必然会变化。</p>
+<hr>
+<h2 id="积累的诞生">积累的诞生</h2>
+<p>如果说行动能力解释了 Agent 为什么能走出聊天框，那么积累能力解释了 Agent 为什么不会再回到聊天框。</p>
+<p>传统聊天系统的第二个根本局限，是每次对话都近似“重新开始”。即使上下文窗口变长，它仍然更像临时记忆，而不是长期成长机制。真实任务却要求另一种能力：记住已完成的步骤、保留中间状态、沉淀可复用经验，并在下一次相似任务中直接调用。</p>
+<p>这正是新一代 Agent 项目开始强调的方向。<a href="https://github.com/lsdefine/GenericAgent">GenericAgent</a> 将自己的核心概括为 <code>Layered Memory × Minimal Toolset × Autonomous Execution Loop</code>，并明确提出“不要预装技能，而是让技能从任务中生长”。其思路是：每完成一个新任务，就把执行路径结晶为可复用的 skill，久而久之形成个人 skill tree。这里最值得注意的，不是它用了多少工具，而是它把“做过一次”变成了“以后更会做”。</p>
+<p><a href="https://github.com/tinyhumansai/openhuman">OpenHuman</a> 则从另一侧展示了同样的趋势。它强调本地记忆、<code>Memory Tree</code>、Obsidian 风格知识库、自动抓取第三方服务数据和后台持续运行，目标并不是把 AI 做成一次性助手，而是让 Agent 在用户的日常环境中积累上下文。换言之，它试图解决的不是“这次怎么回答”，而是“怎样让 Agent 越来越了解你和你的任务世界”。</p>
+<p>因此，本文认为 Agent 的真正分水岭，并不只是会不会调用工具，而是会不会积累。<strong>当 AI 同时具备行动能力与积累能力时，它就从一次性工具转向了可成长的执行体。</strong> 这也是为什么 <code>memory</code>、<code>state</code>、<code>skill</code> 在当前 Agent 讨论中越来越重要：它们不是附属功能，而是新形态出现的条件。</p>
+<hr>
+<h2 id="环境中的-agent">环境中的 Agent</h2>
+<p>当行动与积累同时出现，Agent 的下一种形态就不再只是“更大的聊天框”，而开始呈现出环境化特征。</p>
+<p>所谓环境化，并不一定意味着一个全新的操作系统，更准确地说，它意味着 Agent 从“被唤起的工具”转向“持续在场的层”。在聊天框模式中，用户主动去找 AI；在环境化趋势中，AI 逐渐进入浏览器、终端、桌面应用、文件系统、知识库和消息通道，开始跨任务、跨应用、跨时间地存在。</p>
+<p><a href="https://github.com/tinyhumansai/openhuman">OpenHuman</a> 很适合作为这一趋势的界面层例子。它突出的是 UI-first、后台思考、多集成、自动拉取上下文和本地记忆，强调 Agent 持续存在于日常生活与工作环境中。<a href="https://github.com/lsdefine/GenericAgent">GenericAgent</a> 则更像这一趋势的执行层例子：它不强调人格化界面，而强调用少量原子工具、长程记忆和自我演化技能来获得系统级控制能力。两者外观不同，但指向同一个变化：Agent 不再只是一个聊天入口，而是开始成为连接用户、工具、数据和任务流的一层中介。</p>
+<p>这也是本文对未来 Agent 形态的核心判断：<strong>Agentic AI 的下一种形态，不只是更强的助手，而是更环境化的成长型执行体。</strong> 它可能有聊天界面、桌面 UI、CLI、浏览器入口，甚至具象化形象；但这些都只是入口，真正变化的是其存在方式——它越来越像一种持续在线、持续积累、持续执行的环境层。</p>
+<p>当然，这种“环境层”不是凭空出现的。它背后仍然需要少量但关键的系统支撑，例如 runtime、harness、协议接入和可观测性。但在本文的分析框架中，它们只是让行动与积累得以稳定展开的支架，而不是主角本身。</p>
+<hr>
+<h2 id="验证一场演变">验证一场演变</h2>
+<p>我们不能只停留在趋势判断，还需要有一条可验证的分析路径。若要检验“Agent 正在走出聊天框”是否成立，本文认为至少可以设计如下对比实验。</p>
+<p>首先，设置三类系统：</p>
+<ol>
+<li><strong>纯聊天系统</strong>：只负责问答，不调用工具，也不保留长期状态；</li>
+<li><strong>执行型 Agent</strong>：可以调用工具、操作终端或浏览器，但缺乏持续记忆与 skill 沉淀；</li>
+<li><strong>成长型 Agent</strong>：既能调用工具，又能保留任务状态、沉淀技能并在后续任务中复用。</li>
+</ol>
+<p>其次，选择三类具有代表性的任务：</p>
+<ul>
+<li>代码修复任务：读日志、改文件、运行测试、重复修复；</li>
+<li>网页事务任务：搜索、点击、填写、跳转、检查结果；</li>
+<li>长时整理任务：跨多轮会话收集资料、归档信息并持续更新。</li>
+</ul>
+<p>最后，比较五个指标：</p>
+<ul>
+<li><strong>任务闭环成功率</strong>：能否真正完成目标；</li>
+<li><strong>跨步骤恢复能力</strong>：某一步失败后能否重试或改用新策略；</li>
+<li><strong>状态延续率</strong>：能否正确承接历史中间结果；</li>
+<li><strong>经验复用率</strong>：是否能把上一次任务中沉淀的 skill 用到下一次；</li>
+<li><strong>安全违规率</strong>：是否出现越权操作、误删文件或错误执行。</li>
+</ul>
+<p>如果实验结果表明第三类系统在长时任务和复杂任务中明显优于前两类，那么就可以更有力地支持本文的判断：Agent 走出聊天框，不是一个界面修辞，而是由行动与积累共同推动的能力演变。</p>
+<hr>
+<h2 id="成熟之前">成熟之前</h2>
+<p>不过，走出聊天框并不等于已经成熟。恰恰相反，Agent 一旦进入真实环境，它暴露的问题反而会更多。</p>
+<p>第一，行动能力越强，错误代价越大。网页误点击、脚本误执行、账户误操作，都远比生成一段错误文本更危险。Anthropic 的 <a href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use-tool">computer use</a> 和 <a href="https://arxiv.org/abs/2404.07972">OSWorld</a> 这类工作都提醒我们，真实环境中的 Agent 仍远未稳定。</p>
+<p>第二，积累能力也可能带来污染。记忆可以沉淀经验，也可能固化偏差；skill 可以复用成功路径，也可能重复放大旧错误。一个不会更新、不会遗忘、不会纠错的成长系统，最终可能变成“错误越积越多”的系统。</p>
+<p>第三，环境化趋势会把技术问题转化为治理问题。一个常驻、跨应用、持续在线的 Agent，天然会涉及权限边界、责任归属、可追踪性和可撤销性。也就是说，Agent 的下一种形态能否成立，不只取决于模型强不强，还取决于治理机制是否跟得上。</p>
+<p>因此，本文并不主张对 Agentic AI 的未来做线性乐观判断。更准确的说法是：<strong>Agent 走出聊天框是一条真实趋势，但它能否稳定演化为下一种形态，仍取决于技术能力与治理能力能否同步成熟。</strong></p>
+<hr>
+<h2 id="聊天框之外">聊天框之外</h2>
+<p>回到最初的问题：为什么 Agentic AI 会走出聊天框？本文给出的答案是，它不是单纯的界面升级，而是因为 AI 同时获得了“行动”和“积累”两种过去所缺乏的能力。前者让它进入真实任务，后者让它形成持续成长的执行体；两者叠加，推动 Agent 从一次性问答工具走向新的存在方式。</p>
+<p>因此，<code>聊天框之外</code> 并不只是一个视觉隐喻，而是一个技术判断：<strong>Agentic AI 的下一种形态，将越来越表现为环境中的成长型执行体。</strong> 它不一定抛弃聊天界面，但不会再被聊天界面定义。它的真正边界，不再由窗口大小决定，而由行动能力、记忆能力、技能沉淀能力以及治理能力共同决定。</p>
+<p>这也正是本文想表达的核心观点：未来 Agent 的竞争，不只是“谁回答得更好”，而是“谁更能做事、谁更能积累、谁更能在真实环境中持续成长”。</p>
+
+</body>
+</html>

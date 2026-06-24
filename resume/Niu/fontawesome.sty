@@ -1,0 +1,100 @@
+% ===================================================================
+% 包名: fontawesome
+% ===================================================================
+% 功能: Font Awesome图标支持
+% 说明: 支持XeLaTeX、LuaLaTeX和pdfLaTeX编译器，提供丰富的图标命令
+% ===================================================================
+
+% -----------------------------------------------------------------------------
+% 第一部分: 基础设置与编译器检测
+% -----------------------------------------------------------------------------
+
+% 声明LaTeX版本和包信息
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{fontawesome}[2024/03/27 fontawesome Package]
+
+% 依赖包说明:
+%   ifxetex:    检测是否使用XeLaTeX
+%   ifluatex:   检测是否使用LuaLaTeX
+\RequirePackage{ifxetex,ifluatex}
+
+% 编译器类型检测
+%   \iffontawesome@otf:   true表示使用OTF字体（XeLaTeX/LuaLaTeX）
+%                         false表示使用传统字体（pdfLaTeX）
+\newif\iffontawesome@otf\fontawesome@otffalse
+\ifxetex
+\fontawesome@otftrue
+\else
+\ifluatex
+\fontawesome@otftrue\fi\fi
+
+% -----------------------------------------------------------------------------
+% 第二部分: 通用图标命令
+% -----------------------------------------------------------------------------
+
+% 通用图标命令: \faicon{图标名}
+% 功能: 根据图标名称显示对应图标
+% 用法: \faicon{phone} 显示电话图标
+\newcommand*{\faicon}[1]{%
+{\csname faicon@#1\endcsname}}
+
+% 加载通用图标定义
+\input{fontawesomesymbols-generic.tex}
+
+% -----------------------------------------------------------------------------
+% 第三部分: XeLaTeX/LuaLaTeX实现（OTF字体）
+% -----------------------------------------------------------------------------
+
+\iffontawesome@otf
+
+% 加载fontspec包以支持OTF字体
+\usepackage{fontspec}
+
+% 定义Font Awesome字体族
+% 配置说明:
+%   Path:           字体文件路径
+%   Scale:          缩放比例（0.85）
+%   SmallCapsFont:  小型大写字体（使用同一字体）
+\newfontfamily{\FA}[
+Path = ../assets/icon-fonts/ ,
+Scale = 0.85 ,
+SmallCapsFont = *
+]{font-awesome}
+
+% 加载XeLaTeX/LuaLaTeX专用图标定义
+\input{fontawesomesymbols-xeluatex.tex}
+
+% -----------------------------------------------------------------------------
+% 第四部分: pdfLaTeX实现（传统字体编码）
+% -----------------------------------------------------------------------------
+
+\else
+
+% 定义字体族命令（传统编码）
+%   \FAone:     Font Awesome第一字体族
+%   \FAtwo:     Font Awesome第二字体族
+%   \FAthree:   Font Awesome第三字体族
+\DeclareRobustCommand\FAone{\fontencoding{U}\fontfamily{fontawesomeone}\selectfont}
+\DeclareRobustCommand\FAtwo{\fontencoding{U}\fontfamily{fontawesometwo}\selectfont}
+\DeclareRobustCommand\FAthree{\fontencoding{U}\fontfamily{fontawesomethree}\selectfont}
+
+% 加载pdfLaTeX专用图标定义
+\input{fontawesomesymbols-pdftex.tex}
+
+\fi
+
+% -----------------------------------------------------------------------------
+% 第五部分: 特殊图标修复
+% -----------------------------------------------------------------------------
+
+% 修复图标名包含数字的问题
+% 功能: 支持\faHourglass[数字]格式，如\faHourglass[1]、\faHourglass[2]
+\renewcommand{\faHourglass}[1][]{%
+\faicon{hourglass\if\relax\detokenize{#1}\relax\else-#1\fi}}
+
+% 修复电池图标
+% 功能: 支持\faBattery[数字]格式，默认显示4格电量
+\renewcommand{\faBattery}[1][4]{%
+\faicon{battery-#1}}
+
+\endinput
