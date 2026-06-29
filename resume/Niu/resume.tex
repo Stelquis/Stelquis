@@ -1,9 +1,9 @@
 % ===================================================================
 % 文件: resume.tex
 % ===================================================================
-% 编译方法:
-%   方法1: 在项目根目录执行 make
-%   方法2: cd resume && xelatex resume.tex
+% 编译方法（始终在项目根目录执行）:
+%   方法1: make -C resume
+%   方法2: cd resume/Niu && xelatex resume.tex && xelatex resume.tex && cd /workspace
 % ===================================================================
 
 % ===================================================================
@@ -21,16 +21,10 @@
 % -------------------------------------------------------------------
 % 宏包加载
 % -------------------------------------------------------------------
-% external-cn-adobe: 中文字体配置（宋体/黑体/楷体/仿宋）
-\usepackage{external-cn-adobe}
-% fix_linespacing: 修复中文行距不一致问题
-\usepackage{fix_linespacing}
 % cite: 引用支持
 \usepackage{cite}
 % float: 浮动体控制（图片/表格）
 \usepackage{float}
-% fontspec: 字体设置（XeLaTeX 必需）
-\usepackage{fontspec}
 % graphicx: 图片插入支持
 \usepackage{graphicx}
 % wrapfig: 图文混排支持
@@ -58,7 +52,7 @@
 % - 照片尺寸：高3.5cm，宽2.5cm（标准证件照比例）
 \begin{figure}[h]
     \flushright
-    \includegraphics[height=3.5cm,width=2.5cm]{../assets/photos/N.jpg}
+    \includegraphics[height=3.5cm,width=2.5cm]{../assets/photos/Stelquis.png}
 \end{figure}
 
 % 垂直间距调整
@@ -177,9 +171,9 @@
 % \qquad: 大空格（2em）
 % \textasciitilde: 波浪号 ~
 % -------------------------------------------------------------------
-\section{\hspace{0.25em}\makebox[0.75em][c]{\faGraduationCap} \fangsong\textbf{教育背景}}
+\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faGraduationCap} \fangsong\textbf{教育背景}}{教育背景}}
 % 【修改】学校名称、专业、学历、入学-毕业时间
-\datedsubsection{\textbf{中南大学}\qquad \qquad \textbf{数据科学与大数据技术}\qquad \qquad \textbf{本科}}
+\datedsubsection{\texorpdfstring{\textbf{中南大学}\qquad \qquad \textbf{数据科学与大数据技术}\qquad \qquad \textbf{本科}}{中南大学 | 数据科学与大数据技术 | 本科}}
 {\textbf{2023.09 \textasciitilde \ 2027.06}}
 
 % 【修改】荣誉称号、GPA、专业排名（三栏布局）
@@ -240,10 +234,10 @@
 % \faThumbTack: 图钉图标 📌（用于标记要点）
 % \faHashtag: 井号图标 #
 % -------------------------------------------------------------------
-\section{\hspace{0.25em}\makebox[0.75em][c]{\faFlask} \fangsong\textbf{项目经历}}
+\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faFlask} \fangsong\textbf{项目经历}}{项目经历}}
 
 % 项目 1
-\datedsubsection{\textbf{\href{http://42.194.193.223}{\underline{「梨园星图」}}—— 京剧剧本多维可视分析系统}}{\textbf{主要负责人}\quad\textbf{2026.03\textasciitilde \ 2026.06}}
+\datedsubsection{\texorpdfstring{\textbf{\href{http://42.194.193.223}{\underline{「梨园星图」}}—— 京剧剧本多维可视分析系统}}{梨园星图 - 京剧剧本多维可视分析系统}}{\textbf{主要负责人}\quad\textbf{2026.03\textasciitilde \ 2026.06}}
 \hspace*{1.5em}\kaishu 针对 1,473 部京剧剧本的非结构化文本难以直接量化分析，系统提取角色关系、主题分布与叙事模式，探索三者间的关联，搭建数据挖掘与可视分析管线，作为 ChinaVis 2026 可视化竞赛参赛作品在投
 \begin{itemize}
     \item[\faThumbTack] \kaishu \textbf{数据处理与特征工程：}参与搭建 Python 数据处理管线（30+ 脚本），从非结构化剧本中提取 29 维角色特征、12 维主题体系及 8 项网络拓扑指标，构建 7,965 角色人次的共现关系网络
@@ -338,7 +332,7 @@
 % \faTrophy: 奖杯图标 🏆
 % \datedline: 带日期的列表项（奖项 | 时间）
 % -------------------------------------------------------------------
-\section{\hspace{0.25em}\makebox[0.75em][c]{\faTrophy} \fangsong\textbf{荣誉奖项}}
+\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faTrophy} \fangsong\textbf{荣誉奖项}}{荣誉奖项}}
 \vspace{0.1em}
 \begin{itemize}
     \item \datedline{\kaishu 中南大学数学建模竞赛校赛\qquad \textbf{三等奖}}{\textbf{2025.07}}
@@ -351,7 +345,7 @@
 % \faPuzzlePiece: 拼图图标 🧩（代表技能/能力）
 % \noindent: 取消首行缩进
 % -------------------------------------------------------------------
-\section{\hspace{0.25em}\makebox[0.75em][c]{\faPuzzlePiece} \fangsong\textbf{专业技能}}
+\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faPuzzlePiece} \fangsong\textbf{专业技能}}{专业技能}}
 \vspace{0.1em}
 \begin{itemize}
     \item \kaishu\textbf{编程语言}：Python（数据分析、机器学习、API 开发）、Java
@@ -367,7 +361,7 @@
 % -------------------------------------------------------------------
 % \faSignal: 信号图标 📶（代表个人特质）
 % -------------------------------------------------------------------
-\section{\hspace{0.25em}\makebox[0.75em][c]{\faSignal} \fangsong\textbf{自我评价}}
+\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faSignal} \fangsong\textbf{自我评价}}{自我评价}}
 \vspace{0.1em}
 \begin{itemize}
     \item \kaishu 具备良好的团队协作意识，乐于与他人沟通配合，能够在团队项目中主动承担任务并与成员有效协作

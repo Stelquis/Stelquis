@@ -20,7 +20,7 @@
   // 主题配置
   // ================================================================
 
-  "workbench.colorTheme": "Light Modern",
+  "workbench.colorTheme": "Light+",
   "workbench.iconTheme": "vs-seti",
   "workbench.secondarySideBar.defaultVisibility": "hidden",
 
@@ -32,6 +32,9 @@
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.minimap.enabled": true,
+  "editor.minimap.renderCharacters": true,
+  "editor.minimap.showSlider": "always",
+  "editor.minimap.scale": 1,
   "files.autoSave": "onFocusChange",
 
   // ================================================================

@@ -13,10 +13,11 @@ set -e
 # 用户配置区
 # -----------------------------------------------------------------------------
 
-# API Key: 支持任意兼容 Anthropic API 的提供商
+# API Key: 留空则运行时交互输入
+# 支持任意兼容 Anthropic API 的提供商
 # 格式: sk-xxxxx (OpenRouter/官方) 或 tp-xxxxx (Token Plan) 等
 # DeepSeek Platform: https://platform.deepseek.com/
-MY_API_KEY="sk-664e311d3c6f4a41997df499238557ef"
+MY_API_KEY=""
 
 # API 基础地址
 MY_BASE_URL="https://api.deepseek.com/anthropic"
@@ -49,47 +50,23 @@ CLAUDE_CODE_EFFORT_LEVEL="${CLAUDE_CODE_EFFORT_LEVEL:-$MY_EFFORT_LEVEL}"
 
 ROOT_CLAUDE_DIR="/root/.claude"
 ADMIN_CLAUDE_DIR="/home/admin/.claude"
-PLUGINS_DIR="$ROOT_CLAUDE_DIR/plugins"
 
 echo "=== Claude Code 配置初始化 ==="
 
-# -----------------------------------------------------------------------------
-# 安装 karpathy-skills 编码规范（从 GitHub 拉取）
-# -----------------------------------------------------------------------------
-install_karpathy_skills() {
-    local SKILLS_DIR="$ROOT_CLAUDE_DIR/skills/andrej-karpathy-skills"
-
-    # 检查是否已安装
-    if [ -d "$SKILLS_DIR/.git" ]; then
-        echo "⏭️  karpathy-skills 已安装，尝试更新..."
-        cd "$SKILLS_DIR" && git pull --ff-only 2>/dev/null || echo "⚠️  更新失败，使用现有版本"
-        return
+# 如果 API Key 为空，交互式输入
+if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo ""
+    echo "🔑 未检测到 ANTHROPIC_API_KEY，请交互输入："
+    read -r -p "请输入 API Key: " ANTHROPIC_API_KEY
+    if [ -z "$ANTHROPIC_API_KEY" ]; then
+        echo "❌ API Key 不能为空，配置终止。"
+        exit 1
     fi
-
-    echo "📦 正在从 GitHub 安装 karpathy-skills 编码规范..."
-    mkdir -p "$ROOT_CLAUDE_DIR/skills"
-
-    # 从 GitHub 克隆
-    git clone --depth 1 https://github.com/forrestchang/andrej-karpathy-skills.git "$SKILLS_DIR" 2>/dev/null
-
-    if [ -d "$SKILLS_DIR" ]; then
-        echo "✅ karpathy-skills 安装完成"
-    else
-        echo "❌ 安装失败"
-    fi
-}
-
-# 安装 karpathy-skills
-install_karpathy_skills
+    echo ""
+    echo "✅ 已读取 API Key，自动继续配置..."
+fi
 
 if [ -z "$ANTHROPIC_API_KEY" ]; then
-    echo "⚠️  警告: 未设置 ANTHROPIC_API_KEY"
-    echo ""
-    echo "   快速配置方法:"
-    echo "   1. 编辑本脚本: vim /usr/local/bin/init-claude.sh"
-    echo "   2. 修改第 16 行: MY_API_KEY=\"sk-你的API密钥\""
-    echo "   3. 保存并运行: /usr/local/bin/init-claude.sh"
-    echo ""
     mkdir -p "$ROOT_CLAUDE_DIR" "$ADMIN_CLAUDE_DIR"
 else
     echo "✅ 检测到 ANTHROPIC_API_KEY，正在生成配置文件..."

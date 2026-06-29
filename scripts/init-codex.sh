@@ -14,8 +14,8 @@ set -e
 # 用户配置区
 # -----------------------------------------------------------------------------
 
-# API Key: sk-xxx
-MY_API_KEY="sk-VQFRDgf7eWb8GC0VHdN6TSvXCfqdGHwHoqxjgWsbofrEbayz"
+# API Key: 留空则运行时交互输入
+MY_API_KEY=""
 
 # 中转站地址
 # 可选: https://api.aifamily.vip/v1 或 https://laoni.laonics.top/v1
@@ -39,14 +39,20 @@ ADMIN_CODEX_DIR="/home/admin/.codex"
 
 echo "=== CodeX 配置初始化 ==="
 
+# 如果 API Key 为空，交互式输入
 if [ -z "$CODEX_API_KEY" ]; then
-    echo "⚠️  警告: 未设置 CODEX_API_KEY"
     echo ""
-    echo "   快速配置方法:"
-    echo "   1. 编辑本脚本: vim /usr/local/bin/init-codex.sh"
-    echo "   2. 修改第 19 行: MY_API_KEY=\"sk-你的API密钥\""
-    echo "   3. 保存并运行: /usr/local/bin/init-codex.sh"
+    echo "🔑 未检测到 CODEX_API_KEY，请交互输入："
+    read -r -p "请输入 API Key: " CODEX_API_KEY
+    if [ -z "$CODEX_API_KEY" ]; then
+        echo "❌ API Key 不能为空，配置终止。"
+        exit 1
+    fi
     echo ""
+    echo "✅ 已读取 API Key，自动继续配置..."
+fi
+
+if [ -z "$CODEX_API_KEY" ]; then
     mkdir -p "$ROOT_CODEX_DIR" "$ADMIN_CODEX_DIR"
 else
     echo "✅ 检测到 CODEX_API_KEY，正在生成配置文件..."

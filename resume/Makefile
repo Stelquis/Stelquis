@@ -20,12 +20,13 @@ MAIN = resume
 # -----------------------------------------------------------------------------
 
 # 默认目标: 编译简历并清理中间文件
-# 用法: 在仓库根目录执行 make
-# 说明: 运行两次xelatex以正确生成hyperref书签和交叉引用
+# 用法: 在仓库根目录执行 make -C resume
+# 说明: 运行两次 xelatex 以正确生成 hyperref 书签和交叉引用
 all:
 	cd $(RESUME_DIR) && xelatex -synctex=1 -interaction=nonstopmode -file-line-error $(MAIN).tex
 	cd $(RESUME_DIR) && xelatex -synctex=1 -interaction=nonstopmode -file-line-error $(MAIN).tex
 	cd $(RESUME_DIR) && rm -f *.aux *.bbl *.blg *.synctex.gz *.out *.toc *.lof *.idx *.ilg *.ind *.fdb_latexmk *.fls *.log
+	cd /workspace
 
 # -----------------------------------------------------------------------------
 # 第三部分: 伪目标声明
