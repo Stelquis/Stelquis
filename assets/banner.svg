@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="55%" stop-color="#161333"/>
+      <stop offset="100%" stop-color="#0d0b26"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#667eea" stop-opacity="0.22"/>
+      <stop offset="60%" stop-color="#764ba2" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0a0a1a" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="title" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="45%" stop-color="#a259e6"/>
+      <stop offset="100%" stop-color="#00b894"/>
+    </linearGradient>
+
+    <linearGradient id="line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="50%" stop-color="#a259e6"/>
+      <stop offset="100%" stop-color="#00b894"/>
+    </linearGradient>
+
+    <radialGradient id="dot1">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#667eea" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="dot2">
+      <stop offset="0%" stop-color="#00b894"/>
+      <stop offset="100%" stop-color="#00b894" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="dot3">
+      <stop offset="0%" stop-color="#a259e6"/>
+      <stop offset="100%" stop-color="#a259e6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="340" fill="url(#bg)" rx="14"/>
+  <circle cx="600" cy="170" r="280" fill="url(#glow)"/>
+
+  <text x="600" y="155" text-anchor="middle" font-family="monospace" font-size="92" font-weight="bold" fill="url(#title)">
+    Hi, I'm Niu
+  </text>
+
+  <text x="600" y="215" text-anchor="middle" font-family="monospace" font-size="28" fill="#9ba4d4" letter-spacing="6">
+    数据科学 · 分布式 · 云原生
+  </text>
+
+  <line x1="320" y1="265" x2="880" y2="265" stroke="url(#line)" stroke-opacity="0.7" stroke-width="3"/>
+  <circle cx="320" cy="265" r="7" fill="url(#dot1)"/>
+  <circle cx="880" cy="265" r="7" fill="url(#dot2)"/>
+  <circle cx="600" cy="265" r="9" fill="none" stroke="#a259e6" stroke-width="2" opacity="0.9"/>
+
+  <g stroke="#667eea" stroke-opacity="0.2" stroke-width="1.5" fill="none">
+    <path d="M90 240 L140 200 L190 220 L240 180"/>
+    <path d="M1110 240 L1060 200 L1010 220 L960 180"/>
+  </g>
+
+  <g opacity="0.35">
+    <path d="M120 85 L150 102 L150 137 L120 154 L90 137 L90 102 Z" fill="none" stroke="url(#line)" stroke-width="2.5"/>
+  </g>
+
+  <g opacity="0.3" transform="translate(1030, 75) scale(0.8)">
+    <path d="M120 85 L150 102 L150 137 L120 154 L90 137 L90 102 Z" fill="none" stroke="url(#title)" stroke-width="2.5"/>
+  </g>
+
+  <g opacity="0.25" transform="translate(525, 270) scale(0.5)">
+    <path d="M120 85 L150 102 L150 137 L120 154 L90 137 L90 102 Z" fill="none" stroke="#00b894" stroke-width="3"/>
+  </g>
+
+  <circle cx="260" cy="120" r="6" fill="url(#dot1)" opacity="0.8"/>
+  <circle cx="940" cy="120" r="6" fill="url(#dot2)" opacity="0.8"/>
+  <circle cx="200" cy="280" r="7" fill="url(#dot3)" opacity="0.7"/>
+  <circle cx="1000" cy="280" r="7" fill="url(#dot1)" opacity="0.7"/>
+  <circle cx="320" cy="80" r="5" fill="url(#dot2)" opacity="0.6"/>
+  <circle cx="880" cy="80" r="5" fill="url(#dot3)" opacity="0.6"/>
+</svg>
