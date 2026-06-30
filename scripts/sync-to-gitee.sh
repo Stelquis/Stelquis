@@ -34,11 +34,10 @@ GITEE_REMOTE="gitee"
 SYNC_BRANCH="gitee-main"
 GITEE_API="https://gitee.com/api/v5"
 
-# 同步提交作者信息
+# 同步提交作者信息（author 用 QQ 邮箱以记录 GitHub 贡献）
+# 注意：committer 必须保持 CNB noreply 邮箱，否则 cnb-gpgsign 签名会 403
 export GIT_AUTHOR_NAME="Stelquis"
 export GIT_AUTHOR_EMAIL="3420761503@qq.com"
-export GIT_COMMITTER_NAME="Stelquis"
-export GIT_COMMITTER_EMAIL="3420761503@qq.com"
 
 echo "=== 同步到 Gitee ==="
 
