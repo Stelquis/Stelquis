@@ -156,16 +156,16 @@ if [ -n "$GITHUB_HEAD" ]; then
     # 效果：提交树 = CNB 内容，parent = github/main（纯增量）
     git checkout -b "$SYNC_BRANCH" main
     git reset --soft "${GITHUB_REMOTE}/main"
-    git commit -m "$(date '+%Y-%m-%d %H:%M')"
+    git -c commit.gpgsign=false commit -m "$(date '+%Y-%m-%d %H:%M')"
 else
     # GitHub 是空仓库：创建孤儿分支，全量提交
     echo "🔧 GitHub 为空仓库，创建孤儿分支全量提交..."
     git checkout --orphan "$SYNC_BRANCH"
     git rm -rf --quiet . 2>/dev/null || true
-    git commit --allow-empty -m "root"
+    git -c commit.gpgsign=false commit --allow-empty -m "root"
     git checkout main -- .
     git add -A
-    git commit -m "$(date '+%Y-%m-%d %H:%M')"
+    git -c commit.gpgsign=false commit -m "$(date '+%Y-%m-%d %H:%M')"
 fi
 
 # -------------------------------------------------------------------

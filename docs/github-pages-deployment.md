@@ -157,9 +157,71 @@ jobs:
 
 - 如果是用户/组织站点（仓库名必须是 `<username>.github.io`），则地址是 `https://Stelquis.github.io/`。
 
+### 6. CNB 环境同步脚本 GPG 签名 403
+
+- **现象**：运行 `sync-to-github.sh` 或 `sync-to-gitee.sh` 时报错：
+
+  ```
+  error signing commit: error making request: 403 | Author is invalid
+  error: gpg failed to sign the data
+  fatal: failed to write commit object
+  ```
+
+- **原因**：CNB 开发环境系统级 git 配置强制开启 GPG 签名：
+
+  ```
+  gpg.program=/usr/local/bin/cnb-gpgsign
+  commit.gpgsign=true
+  user.email=...@noreply.cnb.cool
+  ```
+
+  `cnb-gpgsign` 是 CNB 平台专属的签名程序，它会校验 commit 的 **author 和 committer 邮箱**，只认可 CNB noreply 邮箱（`...@noreply.cnb.cool`）。而同步脚本为了记录 GitHub 贡献，把 author 设成了 QQ 邮箱（`3420761503@qq.com`），导致签名被拒绝。
+
+- **解决**：同步脚本的 `git commit` 命令加 `-c commit.gpgsign=false` 临时关闭签名：
+
+  ```bash
+  git -c commit.gpgsign=false commit -m "..."
+  ```
+
+- **影响分析**：
+  - ✅ **GitHub 贡献绿格**：正常记录（贡献看的是 author 邮箱，不是签名）
+  - ✅ **CNB 主仓库**：不受影响（CNB 自己的 commit 仍用 noreply 邮箱 + 正常签名）
+  - ❌ **同步 commit 无 Verified 徽章**：无影响（这只是同步用的临时 commit，不是源仓库提交）
+
+- **为何昨天正常今天报错**：昨天直接在 CNB 环境提交（author = noreply 邮箱），cnb-gpgsign 认可。今天运行同步脚本后，脚本把 author 改成 QQ 邮箱，触发签名校验失败。
+
+### 7. 推送到 CNB 不触发 GitHub Action
+
+- **现象**：`git push` 后 GitHub Pages 没有更新。
+- **原因**：`origin` 远程指向 CNB（`https://cnb.cool/OrionSeeker/Niu.git`），`git push` 只推到了 CNB，GitHub 仓库没收到推送，Action 不触发。
+- **解决**：推送 CNB 后，额外运行同步脚本：
+
+  ```bash
+  bash /workspace/scripts/sync-to-github.sh
+  ```
+
+  脚本会把 main 分支内容同步到 GitHub，触发 `pages.yml` 工作流。
+
 ## 后续维护
 
-- 每次更新 `index.html` 或 `assets/banner.svg` 后，按第 2 步同步到 GitHub，Pages 会自动重新部署。
+- 每次更新 `index.html` 或 `assets/banner.svg` 后，先提交并推送到 CNB：
+
+  ```bash
+  git add -A && git commit -m "feat: 更新说明" && git push
+  ```
+
+- 然后同步到 GitHub（触发 Pages 自动部署）：
+
+  ```bash
+  bash /workspace/scripts/sync-to-github.sh
+  ```
+
+- 如需同步到 Gitee：
+
+  ```bash
+  bash /workspace/scripts/sync-to-gitee.sh
+  ```
+
 - 如需自定义域名，可在仓库根目录添加 `CNAME` 文件，并在 DNS 服务商配置 CNAME 记录。
 - 如需启用私有仓库的 Pages，需要 GitHub Pro / Enterprise 支持，免费版仅支持公开仓库 Pages。
 

@@ -80,6 +80,33 @@
     z-index: 99997;
   }
 
+  /* ===== Cursor ripple waves (gravity-field interaction) ===== */
+  .cursor-ripple {
+    position: fixed;
+    border: 1.5px solid var(--primary-light);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99996;
+    animation: rippleExpand 0.75s ease-out forwards;
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.35);
+  }
+  .cursor-ripple.secondary { border-color: var(--secondary); box-shadow: 0 0 14px rgba(236, 72, 153, 0.35); }
+  @keyframes rippleExpand {
+    0% { width: 4px; height: 4px; opacity: 0.8; transform: translate(-50%, -50%) scale(0); }
+    100% { width: 180px; height: 180px; opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* ===== Section warp-speed transition overlay ===== */
+  .warp-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .warp-overlay.active { opacity: 1; }
+
   a, button, .mail-card, .social-btn, .source-link, .tech-tags span, .theme-toggle, .scroll-hint {
     cursor: none !important;
   }
@@ -162,28 +189,6 @@
     20% { transform: translateY(-10px) scale(1.15); }
     100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
   }
-
-  /* ===== Code window typing animation ===== */
-  .code-window .typeline {
-    display: block;
-    opacity: 0;
-    transform: translateX(-8px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  .code-window .typeline.shown {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  .code-window .caret {
-    display: inline-block;
-    width: 8px;
-    height: 1em;
-    background: var(--primary-light);
-    vertical-align: text-bottom;
-    margin-left: 2px;
-    animation: blink 1s step-end infinite;
-  }
-  .code-window .caret.hidden { display: none; }
 
   /* ===== Magnetic buttons (JS adds transform) ===== */
   .magnetic { transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -846,11 +851,53 @@
     0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) translateZ(-80px) scale(1); }
     50% { opacity: 1; transform: translate(-50%, -50%) translateZ(-80px) scale(1.05); }
   }
+  /* ===== Energy Core — pulsing behind mascot, reacts to cursor & orbit resonance ===== */
+  .mascot-energy-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100px; height: 100px;
+    transform: translate(-50%, -50%) translateZ(15px);
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(129, 140, 248, 0.75) 12%,
+      rgba(99, 102, 241, 0.4) 32%,
+      rgba(236, 72, 153, 0.12) 56%,
+      transparent 74%
+    );
+    filter: blur(2px);
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.45;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                height 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.6s ease;
+    animation: energyPulse 3.5s ease-in-out infinite;
+  }
+  @keyframes energyPulse {
+    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) translateZ(15px) scale(1); }
+    28% { opacity: 0.7; transform: translate(-50%, -50%) translateZ(15px) scale(1.18); }
+    55% { opacity: 0.5; transform: translate(-50%, -50%) translateZ(15px) scale(0.92); }
+  }
+  .mascot-energy-core.nearby {
+    opacity: 0.85;
+    width: 130px; height: 130px;
+    filter: blur(2.5px);
+    box-shadow: 0 0 50px rgba(129, 140, 248, 0.5), 0 0 90px rgba(99, 102, 241, 0.25);
+  }
+  .mascot-energy-core.resonance {
+    opacity: 1;
+    width: 150px; height: 150px;
+    filter: blur(1px);
+    box-shadow: 0 0 60px rgba(129, 140, 248, 0.8), 0 0 120px rgba(99, 102, 241, 0.5), 0 0 200px rgba(236, 72, 153, 0.3);
+    transition: opacity 0.15s ease, width 0.15s ease, height 0.15s ease, filter 0.15s ease;
+  }
   /* ===== Unified SVG Orbit System ===== */
   .orbit-system {
     position: absolute;
     top: 50%; left: 50%;
-    width: 560px; height: 560px;
+    width: 420px; height: 420px;
     transform: translate(-50%, -50%) translateZ(-30px);
     pointer-events: none;
     overflow: visible;
@@ -990,80 +1037,180 @@
   }
   .light-mode .glass-card:hover { box-shadow: 0 25px 60px rgba(0,0,0,0.08), 0 0 40px var(--glow); }
 
-  /* ===== About ===== */
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 24px;
-  }
-  @media (max-width: 1024px) { .about-grid { grid-template-columns: 1fr; gap: 20px; } }
-
-  .code-window {
-    position: relative;
-  }
-  .code-header {
+  /* ===== About · Editorial Layout ===== */
+  .about-editorial {
+    max-width: 900px;
+    margin: 0 auto;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    gap: 36px;
   }
-  .code-header .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .code-header .dot:nth-child(1) { background: #ff5f57; }
-  .code-header .dot:nth-child(2) { background: #febc2e; }
-  .code-header .dot:nth-child(3) { background: #28c840; }
-  .code-header .title {
-    margin-left: 8px;
-    font-size: 0.8em;
-    color: var(--text-muted);
+
+  /* Hero statement */
+  .editorial-hero { position: relative; }
+  .ed-brow {
     font-family: 'Fira Code', monospace;
-  }
-  .code-window pre {
-    font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
-    font-size: 0.88em;
-    line-height: 1.7;
-    overflow-x: auto;
-  }
-  .code-window .kw { color: #c792ea; }
-  .code-window .cls { color: #82aaff; }
-  .code-window .fn { color: #a5e844; }
-  .code-window .str { color: #f9e2af; }
-  .code-window .cmt { color: #676e95; font-style: italic; }
-  .code-window .num { color: #ff5370; }
-
-  .philosophy-list { list-style: none; }
-  .philosophy-list li {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
+    font-size: 0.7em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    font-size: 0.95em;
+    gap: 10px;
   }
-  .philosophy-list li:last-child { border-bottom: none; }
-  .philosophy-list .check {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--cyan));
+  .ed-brow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .ed-statement {
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+    line-height: 1.85;
+    color: var(--text);
+    max-width: 680px;
+  }
+  .ed-dropcap {
+    float: left;
+    font-size: 3.8em;
+    font-weight: 900;
+    line-height: 0.75;
+    margin-right: 10px;
+    margin-top: 2px;
+    color: transparent;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .ed-statement .em {
+    color: var(--primary-light);
+    font-weight: 500;
+  }
+
+  /* Numbered info strips */
+  .ed-strips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .ed-strip {
+    position: relative;
+    padding: 20px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.3s ease;
+  }
+  .ed-strip:hover { border-color: var(--primary); }
+  .ed-num {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--primary);
+    opacity: 0.5;
+    line-height: 1;
+    flex-shrink: 0;
+    min-width: 28px;
+  }
+  .ed-strip-title {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .ed-strip-desc {
+    font-size: 0.82em;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .ed-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ed-tags span {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-light);
+  }
+
+  /* Bottom: principles + radar */
+  .ed-footer {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: start;
+  }
+  .ed-principles {
+    padding: 0;
+  }
+  .ed-section-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ed-principle {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9em;
+    gap: 12px;
+  }
+  .ed-principle:last-child { border-bottom: none; }
+  .ed-principle span:first-child {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .ed-principle span:last-child {
+    font-size: 0.82em;
+    color: var(--text-muted);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .ed-radar {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75em;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    min-height: 240px;
+    padding: 16px;
+  }
+  .ed-radar canvas {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
   }
 
   /* ===== Radar Chart ===== */
-  .radar-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 260px;
+  #radarCanvas { width: 100%; max-width: 300px; }
+
+  @media (max-width: 1024px) {
+    .ed-strips { grid-template-columns: 1fr; }
+    .ed-footer { grid-template-columns: 1fr; }
+    .ed-radar { min-height: 200px; }
   }
-  #radarCanvas {
-    width: 100%;
-    max-width: 320px;
+  @media (max-width: 768px) {
+    .about-editorial { gap: 24px; }
+    .ed-statement { font-size: 1.05rem; }
+    .ed-dropcap { font-size: 3em; }
+    .ed-strip { padding: 14px 14px; }
+    .ed-principle { flex-direction: column; gap: 2px; padding: 8px 0; }
+    .ed-principle span:last-child { text-align: left; }
   }
 
   .project-card {
@@ -1602,9 +1749,9 @@
     .hero h1 { font-size: clamp(4rem, 11vw, 8rem); }
     .hero-bg-text { font-size: clamp(14rem, 38vw, 38rem); }
     .mascot-stage { width: 300px; height: 300px; }
-    .orbit-system { width: 460px; height: 460px; }
-    .mascot-disc { width: 230px; height: 230px; }
-    .mascot-floor-ring { width: 180px; }
+    .orbit-system { width: 350px; height: 350px; }
+    .mascot-disc { width: 210px; height: 210px; }
+    .mascot-floor-ring { width: 170px; }
     section { padding: 80px 24px; }
     .hero-corners { inset: 60px 5vw 50px; }
   }
@@ -1623,8 +1770,8 @@
     .hero-corners { inset: 30px 12px 30px; }
     .hero-connector { display: none; }
     .mascot-stage { width: 240px; height: 240px; }
-    .orbit-system { width: 380px; height: 380px; }
-    .mascot-disc { width: 190px; height: 190px; }
+    .orbit-system { width: 300px; height: 300px; }
+    .mascot-disc { width: 170px; height: 170px; }
     .mascot-floor-ring { width: 150px; height: 28px; }
     .social-row { justify-content: center; }
     .social-btn { padding: 11px 18px; font-size: 0.95em; }
@@ -1661,10 +1808,6 @@
     /* rocket button reposition */
     .rocket-btn { bottom: 18px; right: 18px; width: 46px; height: 46px; }
 
-    /* code window smaller font */
-    .code-window pre { font-size: 0.8em; }
-    .code-window .code-header .title { font-size: 0.72em; }
-
     /* contact terminal smaller */
     .contact-terminal .term-body { padding: 16px 18px; }
     .contact-terminal .line { font-size: 0.82em; }
@@ -1691,8 +1834,8 @@
     .social-btn { padding: 10px 14px; font-size: 0.88em; gap: 6px; }
 
     .mascot-stage { width: 200px; height: 200px; }
-    .orbit-system { width: 320px; height: 320px; }
-    .mascot-disc { width: 160px; height: 160px; }
+    .orbit-system { width: 260px; height: 260px; }
+    .mascot-disc { width: 150px; height: 150px; }
     .mascot-floor-ring { width: 130px; height: 24px; }
 
     section { padding: 60px 14px; }
@@ -1742,8 +1885,8 @@
     .hero-info { order: 1; }
     .hero-mascot { order: 2; }
     .mascot-stage { width: 200px; height: 200px; }
-    .orbit-system { width: 320px; height: 320px; }
-    .mascot-disc { width: 160px; height: 160px; }
+    .orbit-system { width: 260px; height: 260px; }
+    .mascot-disc { width: 150px; height: 150px; }
     .hero h1 { font-size: clamp(2.5rem, 8vw, 4rem); }
   }
 
@@ -1913,37 +2056,37 @@
               <stop offset="100%" stop-color="#ec4899" stop-opacity="0.6"/>
             </linearGradient>
             <!-- 行星运动路径 -->
-            <path id="planetPath1" d="M 220,80 A 140,140 0 1,1 219.99,80" fill="none"/>
-            <path id="planetPath2" d="M 220,60 A 160,160 0 1,1 219.99,60" fill="none"/>
+            <path id="planetPath1" d="M 220,105 A 115,115 0 1,1 219.99,105" fill="none"/>
+            <path id="planetPath2" d="M 220,90 A 130,130 0 1,1 219.99,90" fill="none"/>
           </defs>
 
           <!-- 内圈轨道线（虚线） -->
-          <circle class="orbit-line orbit-dashed" cx="220" cy="220" r="140"
+          <circle class="orbit-line orbit-dashed" cx="220" cy="220" r="115"
                   stroke="url(#orbitGradInner)"/>
           <!-- 外圈轨道线（虚线） -->
-          <circle class="orbit-line orbit-dashed" cx="220" cy="220" r="160"
+          <circle class="orbit-line orbit-dashed" cx="220" cy="220" r="130"
                   stroke="url(#orbitGradOuter)"/>
 
           <!-- 外圈刻度（8 个方向，罗盘感） -->
           <g>
-            <line class="tick" x1="220" y1="48" x2="220" y2="58"/>
-            <line class="tick" x1="220" y1="392" x2="220" y2="382"/>
-            <line class="tick" x1="48" y1="220" x2="58" y2="220"/>
-            <line class="tick" x1="392" y1="220" x2="382" y2="220"/>
-            <line class="tick" x1="98" y1="98" x2="105" y2="105"/>
-            <line class="tick" x1="342" y1="98" x2="335" y2="105"/>
-            <line class="tick" x1="98" y1="342" x2="105" y2="335"/>
-            <line class="tick" x1="342" y1="342" x2="335" y2="335"/>
+            <line class="tick" x1="220" y1="78" x2="220" y2="88"/>
+            <line class="tick" x1="220" y1="362" x2="220" y2="352"/>
+            <line class="tick" x1="78" y1="220" x2="88" y2="220"/>
+            <line class="tick" x1="362" y1="220" x2="352" y2="220"/>
+            <line class="tick" x1="120" y1="120" x2="127" y2="127"/>
+            <line class="tick" x1="320" y1="120" x2="313" y2="127"/>
+            <line class="tick" x1="120" y1="320" x2="127" y2="313"/>
+            <line class="tick" x1="320" y1="320" x2="313" y2="313"/>
           </g>
 
           <!-- 雷达扫描光弧 1（内圈，6s 顺时针） -->
-          <circle class="sweep-arc" cx="220" cy="220" r="140"
+          <circle class="sweep-arc" cx="220" cy="220" r="115"
                   stroke="url(#sweepGrad)"
-                  stroke-dasharray="220 660"/>
+                  stroke-dasharray="180 540"/>
           <!-- 雷达扫描光弧 2（外圈，10s 逆时针） -->
-          <circle class="sweep-arc-2" cx="220" cy="220" r="160"
+          <circle class="sweep-arc-2" cx="220" cy="220" r="130"
                   stroke="url(#sweepGrad2)"
-                  stroke-dasharray="180 820"/>
+                  stroke-dasharray="150 670"/>
 
           <!-- 行星 1（内圈，紫色，8s） -->
           <circle class="planet" r="4" fill="#818cf8" style="color:#818cf8">
@@ -1958,6 +2101,9 @@
             </animateMotion>
           </circle>
         </svg>
+
+        <!-- 角色背后能量核心（光标靠近发光，轨道行星共振爆发） -->
+        <div class="mascot-energy-core" id="energyCore"></div>
 
         <!-- 角色 IP（鼠标跟随倾斜） -->
         <div class="mascot-3d" id="mascot3d">
@@ -1974,51 +2120,60 @@
   <a href="#about" class="scroll-hint stagger" data-stagger="6">向下探索 ↓</a>
 </header>
 
-<!-- About -->
+<!-- About · Editorial -->
 <section id="about">
   
   <h2 class="section-title reveal">关于我</h2>
-  <div class="about-grid reveal">
-    <div class="glass-card code-window">
-      <div class="code-header">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="title">Niu.py</span>
-      </div>
-      <pre id="codeBlock"><span class="typeline"><span class="cmt"># 用数据理解世界，用代码构建未来</span></span>
-<span class="typeline">&nbsp;</span>
-<span class="typeline"><span class="kw">class</span> <span class="cls">Niu</span>:</span>
-<span class="typeline">    <span class="kw">def</span> <span class="fn">__init__</span>(self):</span>
-<span class="typeline">        self.name     = <span class="str">"Niu"</span></span>
-<span class="typeline">        self.school   = <span class="str">"中南大学"</span></span>
-<span class="typeline">        self.major    = <span class="str">"数据科学与大数据技术"</span></span>
-<span class="typeline">        self.location = <span class="str">"湖南 · 长沙"</span></span>
-<span class="typeline">&nbsp;</span>
-<span class="typeline">    <span class="kw">def</span> <span class="fn">philosophy</span>(self):</span>
-<span class="typeline">        <span class="kw">return</span> [</span>
-<span class="typeline">            <span class="str">"可复现 > 一次性"</span>,</span>
-<span class="typeline">            <span class="str">"系统化 > 打补丁"</span>,</span>
-<span class="typeline">            <span class="str">"数据驱动 > 凭感觉"</span>,</span>
-<span class="typeline">            <span class="str">"AI 是副驾驶，不是替代者"</span>,</span>
-<span class="typeline">        ]</span>
-<span class="typeline">&nbsp;</span>
-<span class="typeline">    <span class="kw">def</span> <span class="fn">build</span>(self):</span>
-<span class="typeline">        <span class="kw">return</span> [<span class="str">"Docker"</span>, <span class="str">"Git"</span>, <span class="str">"Linux"</span>, <span class="str">"LaTeX"</span>]</span>
-<span class="typeline">&nbsp;</span>
-<span class="typeline">    <span class="kw">def</span> <span class="fn">explore</span>(self):</span>
-<span class="typeline">        <span class="kw">return</span> [<span class="str">"分布式系统"</span>, <span class="str">"数据可视化"</span>,</span>
-<span class="typeline">                <span class="str">"NLP"</span>, <span class="str">"并发编程"</span>]<span class="caret" id="codeCaret"></span></span></pre>
+
+  <div class="about-editorial reveal">
+    <!-- ═══ Statement ═══ -->
+    <div class="editorial-hero">
+      <div class="ed-brow">数据科学 · 分布式系统 · 云原生</div>
+      <p class="ed-statement">
+        <span class="ed-dropcap">用</span>数据理解世界，用代码构建未来。
+        就读于<span class="em">中南大学</span>数据科学与大数据技术专业，
+        热衷于把实验跑在容器里，<span class="em">让机器做重复的事</span>，
+        把 AI 当副驾驶，持续探索数据工程的边界。
+      </p>
     </div>
-    <div class="glass-card">
-      <h3 style="margin-bottom: 18px; font-size: 1.2em;">🎯 我关心的事</h3>
-      <ul class="philosophy-list">
-        <li><span class="check">✓</span> 把实验跑在容器里，换机器不换环境</li>
-        <li><span class="check">✓</span> 用数据说话，而不是直觉</li>
-        <li><span class="check">✓</span> 写脚本让机器做重复的事</li>
-        <li><span class="check">✓</span> 拥抱 AI，把它当副驾驶</li>
-        <li><span class="check">✓</span> 分享知识，像 Datawhale 那样</li>
-      </ul>
-      <div class="radar-wrap">
-        <canvas id="radarCanvas" width="320" height="260"></canvas>
+
+    <!-- ═══ Info Strips ═══ -->
+    <div class="ed-strips">
+      <div class="ed-strip">
+        <span class="ed-num">01</span>
+        <div>
+          <div class="ed-strip-title">教育</div>
+          <div class="ed-strip-desc">中南大学<br>湖南 · 长沙</div>
+        </div>
+      </div>
+      <div class="ed-strip">
+        <span class="ed-num">02</span>
+        <div>
+          <div class="ed-strip-title">技术工具</div>
+          <div class="ed-tags"><span>Docker</span><span>Git</span><span>Linux</span><span>LaTeX</span><span>Python</span></div>
+        </div>
+      </div>
+      <div class="ed-strip">
+        <span class="ed-num">03</span>
+        <div>
+          <div class="ed-strip-title">探索方向</div>
+          <div class="ed-tags"><span>分布式系统</span><span>数据可视化</span><span>NLP</span><span>并发编程</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Principles + Radar ═══ -->
+    <div class="ed-footer">
+      <div class="ed-principles">
+        <div class="ed-section-label">运作准则</div>
+        <div class="ed-principle"><span>可复现 > 一次性</span><span>把实验跑在容器里</span></div>
+        <div class="ed-principle"><span>系统化 > 打补丁</span><span>写脚本让机器做重复的事</span></div>
+        <div class="ed-principle"><span>数据驱动 > 凭感觉</span><span>用数据说话</span></div>
+        <div class="ed-principle"><span>AI 是副驾驶</span><span>拥抱 AI，不是替代者</span></div>
+        <div class="ed-principle"><span>知识共享</span><span>像 Datawhale 那样分享</span></div>
+      </div>
+      <div class="ed-radar glass-card">
+        <canvas id="radarCanvas" width="300" height="240"></canvas>
       </div>
     </div>
   </div>
@@ -2271,6 +2426,9 @@
 <!-- Toast -->
 <div class="toast" id="toast">已复制到剪贴板</div>
 
+<!-- Section warp-speed transition canvas -->
+<canvas id="warpCanvas" class="warp-overlay"></canvas>
+
 <!-- Critical entrance logic (independent of Three.js CDN) -->
 <script>
 // ===== Loader: Liquid Morph + Hero Entrance =====
@@ -2450,10 +2608,16 @@ if (mascotStage && mascot3d) {
     // clamp and scale
     mascotTargetRY = Math.max(-1, Math.min(1, dx)) * 22;
     mascotTargetRX = Math.max(-1, Math.min(1, dy)) * -16;
+    // Energy core: glow brighter when cursor is near mascot center
+    if (energyCore) {
+      const dist = Math.hypot(dx, dy);
+      energyCore.classList.toggle('nearby', dist < 0.35);
+    }
   });
   hero.addEventListener('mouseleave', () => {
     mascotTargetRX = 0;
     mascotTargetRY = 0;
+    if (energyCore) energyCore.classList.remove('nearby');
   });
 
   function animateMascot() {
@@ -2527,6 +2691,15 @@ const starMaterial = new THREE.PointsMaterial({
 const stars = new THREE.Points(starGeometry, starMaterial);
 scene.add(stars);
 
+// Store original star positions for nebula interaction
+const originPositions = new Float32Array(starCount * 3);
+originPositions.set(positions);
+
+// Supernova state (click burst)
+let supernovaActive = false;
+let supernovaOrigin = { x: 0, y: 0, z: 0 };
+let supernovaStartTime = 0;
+
 // Create a few orbiting "data nodes"
 const dataNodes = [];
 for (let i = 0; i < 5; i++) {
@@ -2549,10 +2722,55 @@ function animate3D() {
 
   const time = Date.now() * 0.001;
 
-  // rotate stars slowly
-  stars.rotation.x += 0.0001;
-  stars.rotation.y += 0.0002;
-  stars.rotation.z += 0.00005;
+  // === Interactive Nebula: mouse attracts nearby stars ===
+  const posArr = starGeometry.attributes.position.array;
+  const mx3d = (mouseX / window.innerWidth - 0.5) * 35;
+  const my3d = -(mouseY / window.innerHeight - 0.5) * 25;
+
+  for (let i = 0; i < starCount; i++) {
+    const i3 = i * 3;
+    const ox = originPositions[i3];
+    const oy = originPositions[i3 + 1];
+    const oz = originPositions[i3 + 2];
+
+    let tx = ox, ty = oy, tz = oz;
+
+    // Mouse gravitational attraction — stars within ~14 units cluster toward cursor
+    const ddx = mx3d - ox;
+    const ddy = my3d - oy;
+    const mDist = Math.sqrt(ddx * ddx + ddy * ddy) + 0.8;
+    if (mDist < 14) {
+      const pull = (14 - mDist) / 14 * 0.22;
+      tx += ddx * pull;
+      ty += ddy * pull;
+    }
+
+    // Supernova burst — stars pushed away from click origin, then spring back
+    if (supernovaActive) {
+      const elapsed = (Date.now() * 0.001) - supernovaStartTime;
+      const sx = ox - supernovaOrigin.x;
+      const sy = oy - supernovaOrigin.y;
+      const sz = oz - supernovaOrigin.z;
+      const sDist = Math.sqrt(sx * sx + sy * sy + sz * sz) + 0.04;
+      const force = Math.exp(-elapsed * 1.8) * 8 / (sDist * 0.7);
+      tx += (sx / sDist) * force;
+      ty += (sy / sDist) * force;
+      tz += (sz / sDist) * force;
+
+      if (elapsed > 3.5) supernovaActive = false;
+    }
+
+    // Smooth lerp back toward target
+    posArr[i3] += (tx - posArr[i3]) * 0.07;
+    posArr[i3 + 1] += (ty - posArr[i3 + 1]) * 0.07;
+    posArr[i3 + 2] += (tz - posArr[i3 + 2]) * 0.07;
+  }
+  starGeometry.attributes.position.needsUpdate = true;
+
+  // Subtle overall drift
+  stars.rotation.x += 0.00005;
+  stars.rotation.y += 0.00008;
+  stars.rotation.z += 0.00002;
 
   // animate data nodes
   dataNodes.forEach(node => {
@@ -2581,8 +2799,18 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// Click supernova: burst star particles away from click point
+document.addEventListener('click', (e) => {
+  if (e.target.closest('a, button, .mail-card, .social-btn, .theme-toggle, .magnetic, .carousel-btn, .carousel-dot, .rocket-btn, nav')) return;
+  supernovaOrigin.x = (e.clientX / window.innerWidth - 0.5) * 35;
+  supernovaOrigin.y = -(e.clientY / window.innerHeight - 0.5) * 25;
+  supernovaOrigin.z = (Math.random() - 0.5) * 12;
+  supernovaActive = true;
+  supernovaStartTime = Date.now() * 0.001;
+});
+
 // ===== 3D Tilt Effect on Cards =====
-document.querySelectorAll('.glass-card:not(.code-window)').forEach(card => {
+document.querySelectorAll('.glass-card:not(.ed-radar)').forEach(card => {
   card.addEventListener('mousemove', (e) => {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -2767,17 +2995,18 @@ const radarObserver = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.3 });
-const radarWrap = document.querySelector('.radar-wrap');
+const radarWrap = document.querySelector('.ed-radar');
 if (radarWrap) {
   radarObserver.observe(radarWrap);
   drawRadar(); // initial draw at 0 progress
 }
 
-// ===== Particle Trail Cursor =====
+// ===== Particle Trail Cursor — Gravity Field Edition =====
 const trailCanvas = document.getElementById('trailCanvas');
 const trailCtx = trailCanvas.getContext('2d');
 let trailParticles = [];
 const trailColors = ['#818cf8', '#ec4899', '#06b6d4', '#10b981'];
+let lastRippleTime = 0;
 
 function resizeTrail() {
   trailCanvas.width = window.innerWidth;
@@ -2786,28 +3015,65 @@ function resizeTrail() {
 resizeTrail();
 window.addEventListener('resize', resizeTrail);
 
+// Spawn particles with random scatter near cursor
 document.addEventListener('mousemove', (e) => {
-  if (Math.random() < 0.6) {
+  if (Math.random() < 0.5) {
     trailParticles.push({
-      x: e.clientX + (Math.random() - 0.5) * 4,
-      y: e.clientY + (Math.random() - 0.5) * 4,
-      vx: (Math.random() - 0.5) * 0.8,
-      vy: (Math.random() - 0.5) * 0.8 - 0.3,
+      x: e.clientX + (Math.random() - 0.5) * 8,
+      y: e.clientY + (Math.random() - 0.5) * 8,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6 - 0.15,
       life: 1,
       size: Math.random() * 2.5 + 1,
       color: trailColors[Math.floor(Math.random() * trailColors.length)],
     });
   }
-  if (trailParticles.length > 80) trailParticles.shift();
+  if (trailParticles.length > 100) trailParticles.shift();
+
+  // Cursor ripple waves — spawn every 350ms while moving
+  const now = performance.now();
+  if (now - lastRippleTime > 350) {
+    lastRippleTime = now;
+    const ripple = document.createElement('div');
+    ripple.className = 'cursor-ripple';
+    ripple.style.left = e.clientX + 'px';
+    ripple.style.top = e.clientY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+  }
+});
+
+// Hover targets trigger secondary-colored ripple
+document.querySelectorAll(hoverTargets).forEach(el => {
+  el.addEventListener('mouseenter', function(e) {
+    const ripple = document.createElement('div');
+    ripple.className = 'cursor-ripple secondary';
+    ripple.style.left = e.clientX + 'px';
+    ripple.style.top = e.clientY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+  });
 });
 
 function animateTrail() {
   trailCtx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
   for (let i = trailParticles.length - 1; i >= 0; i--) {
     const p = trailParticles[i];
+    // Gravitational pull toward cursor
+    const dx = mouseX - p.x;
+    const dy = mouseY - p.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 220 && dist > 1) {
+      const force = (220 - dist) / 220 * 0.12;
+      p.vx += (dx / dist) * force;
+      p.vy += (dy / dist) * force;
+    }
+    // Damping
+    p.vx *= 0.965;
+    p.vy *= 0.965;
     p.x += p.vx;
     p.y += p.vy;
-    p.life -= 0.025;
+    p.life -= 0.022;
     if (p.life <= 0) { trailParticles.splice(i, 1); continue; }
     trailCtx.globalAlpha = p.life * 0.8;
     trailCtx.fillStyle = p.color;
@@ -2837,7 +3103,7 @@ document.querySelectorAll('.magnetic').forEach(el => {
   });
 });
 
-// ===== Scroll-driven Ambient Light =====
+// ===== Scroll-driven Ambient Light + Section Warp Detection =====
 const sectionAmbient = [
   { id: 'hero',     hue: 240 },
   { id: 'about',    hue: 260 },
@@ -2847,18 +3113,107 @@ const sectionAmbient = [
   { id: 'contact',  hue: 190 },
 ];
 const bgGradient = document.querySelector('.bg-gradient');
+let prevSectionId = 'hero';
+
 window.addEventListener('scroll', () => {
   const scrollY = window.scrollY;
   const winH = window.innerHeight;
   let activeHue = sectionAmbient[0].hue;
+  let currentSectionId = sectionAmbient[0].id;
   for (let i = 0; i < sectionAmbient.length; i++) {
     const sec = document.getElementById(sectionAmbient[i].id);
     if (!sec) continue;
     const top = sec.offsetTop;
-    if (scrollY + winH * 0.4 >= top) activeHue = sectionAmbient[i].hue;
+    if (scrollY + winH * 0.4 >= top) {
+      activeHue = sectionAmbient[i].hue;
+      currentSectionId = sectionAmbient[i].id;
+    }
   }
   bgGradient.style.filter = `hue-rotate(${(activeHue - 240) * 0.4}deg)`;
+
+  // Section warp-speed trigger
+  if (currentSectionId !== prevSectionId) {
+    triggerWarp();
+    prevSectionId = currentSectionId;
+  }
 });
+
+// ===== Warp-speed section transition (speed line canvas) =====
+const warpCanvas = document.getElementById('warpCanvas');
+const warpCtx = warpCanvas.getContext('2d');
+let warpActive = false;
+let warpStartTime = 0;
+let warpLines = [];
+
+function resizeWarp() {
+  warpCanvas.width = window.innerWidth;
+  warpCanvas.height = window.innerHeight;
+}
+resizeWarp();
+window.addEventListener('resize', resizeWarp);
+
+function triggerWarp() {
+  warpActive = true;
+  warpStartTime = performance.now();
+  warpCanvas.classList.add('active');
+  warpLines = [];
+  for (let i = 0; i < 40; i++) {
+    warpLines.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      length: 40 + Math.random() * 130,
+      speed: 4 + Math.random() * 10,
+      opacity: Math.random() * 0.7 + 0.3,
+      color: Math.random() > 0.5 ? '#818cf8' : '#ec4899',
+    });
+  }
+  if (!warpAnimating) animateWarp();
+}
+
+let warpAnimating = false;
+function animateWarp(ts) {
+  if (!warpActive) { warpAnimating = false; return; }
+  warpAnimating = true;
+  const elapsed = ts - warpStartTime;
+  if (elapsed > 700) {
+    warpActive = false;
+    warpCanvas.classList.remove('active');
+    warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
+    warpAnimating = false;
+    return;
+  }
+  const fadeOut = 1 - elapsed / 700;
+  warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
+  warpLines.forEach(line => {
+    line.x += line.speed;
+    if (line.x > warpCanvas.width + line.length) line.x = -line.length;
+    warpCtx.globalAlpha = line.opacity * fadeOut;
+    warpCtx.strokeStyle = line.color;
+    warpCtx.lineWidth = 1.2;
+    warpCtx.shadowBlur = 8;
+    warpCtx.shadowColor = line.color;
+    warpCtx.beginPath();
+    warpCtx.moveTo(line.x - line.length, line.y);
+    warpCtx.lineTo(line.x, line.y);
+    warpCtx.stroke();
+  });
+  warpCtx.globalAlpha = 1;
+  warpCtx.shadowBlur = 0;
+  requestAnimationFrame(animateWarp);
+}
+
+// ===== Energy Core resonance: orbit sync + mouse proximity =====
+const energyCore = document.getElementById('energyCore');
+if (energyCore) {
+  // Periodic resonance flash (simulates planet passing overhead)
+  setInterval(() => {
+    energyCore.classList.add('resonance');
+    setTimeout(() => energyCore.classList.remove('resonance'), 250);
+  }, 4000);
+
+  // Mouse proximity intensifies glow (using existing mascot mousemove handler)
+  // The 'nearby' class is toggled inside the existing mascotStage mousemove — we extend it below
+}
 
 // ===== Back-to-top Rocket Button =====
 const rocketBtn = document.getElementById('rocketBtn');
@@ -2880,25 +3235,6 @@ rocketBtn.addEventListener('click', () => {
 
 // keep keyboard number shortcuts (1-5 navigation) without the hint UI
 
-
-// ===== Code Window Line-by-line Typing =====
-const codeLines = document.querySelectorAll('#codeBlock .typeline');
-const codeCaret = document.getElementById('codeCaret');
-const codeObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      codeLines.forEach((line, i) => {
-        setTimeout(() => line.classList.add('shown'), i * 120);
-      });
-      setTimeout(() => {
-        if (codeCaret) codeCaret.classList.add('hidden');
-      }, codeLines.length * 120 + 800);
-      codeObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.3 });
-const codeBlock = document.getElementById('codeBlock');
-if (codeBlock) codeObserver.observe(codeBlock);
 
 // ===== Projects Carousel (infinite loop with clone trick) =====
 const track = document.getElementById('projectsTrack');
