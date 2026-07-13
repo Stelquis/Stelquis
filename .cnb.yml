@@ -10,29 +10,18 @@ main:
     - services:
         - docker
       stages:
-        - name: check Dockerfile change
-          script: |
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
-            echo "变更文件列表:"
-            echo "${CHANGED_FILES:-无变更}"
-            if echo "${CHANGED_FILES}" | grep -q "Dockerfile"; then
-              echo "检测到 Dockerfile 变更，触发镜像构建"
-              echo "BUILD=true" >> /tmp/build_env
-            else
-              echo "Dockerfile 未变更，跳过构建"
-              echo "BUILD=false" >> /tmp/build_env
-            fi
-
         - name: docker build and push
           script: |
-            source /tmp/build_env 2>/dev/null || true
-            if [[ "${BUILD}" != "true" ]]; then
-              echo "跳过镜像构建"
-              exit 0
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+            echo "变更文件列表: ${CHANGED_FILES:-无变更}"
+            if echo "${CHANGED_FILES}" | grep -q "Dockerfile"; then
+              echo "检测到 Dockerfile 变更，触发镜像构建"
+              docker login -u cnb -p "bbu4SkDtF9TN1cb2V5mgDCvFY2A" docker.cnb.cool
+              docker build -t docker.cnb.cool/orionseeker/niu:latest .
+              docker push docker.cnb.cool/orionseeker/niu:latest
+            else
+              echo "Dockerfile 未变更，跳过构建"
             fi
-            docker login -u cnb -p "bbu4SkDtF9TN1cb2V5mgDCvFY2A" docker.cnb.cool
-            docker build -t docker.cnb.cool/orionseeker/niu:latest .
-            docker push docker.cnb.cool/orionseeker/niu:latest
 
 # -----------------------------------------------------------------------------
 # 云原生开发环境配置
