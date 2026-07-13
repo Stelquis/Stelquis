@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔭 横纵分析报告：基站位置推断 — 基于 MR 数据</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --accent: #0891b2;
+    --accent-light: #ecfeff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --blue: #3b82f6;
+    --orange: #f97316;
+    --cyan: #06b6d4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .header {
+    background: linear-gradient(135deg, #164e63 0%, #0891b2 100%);
+    color: white;
+    padding: 48px 40px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header .meta { color: #a5f3fc; font-size: 14px; }
+  .header .badge { display:inline-block; background:var(--purple); padding:2px 12px; border-radius:12px; font-size:12px; margin-top:12px; }
+
+  .toc { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px 32px; margin-bottom:32px; }
+  .toc h2 { font-size:18px; margin-bottom:12px; color:var(--accent); }
+  .toc ul { list-style:none; padding:0; }
+  .toc li { padding:3px 0; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--accent); }
+  .toc .sub { padding-left:20px; font-size:14px; color:var(--text-secondary); }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:32px; margin-bottom:24px; }
+  .card h2 { font-size:22px; color:var(--accent); border-bottom:2px solid var(--accent-light); padding-bottom:8px; margin-bottom:20px; }
+  .card h3 { font-size:18px; color:var(--text); margin-top:24px; margin-bottom:12px; }
+  .card h4 { font-size:15px; color:var(--text); margin-top:16px; margin-bottom:8px; }
+  .card p { margin-bottom:12px; color:var(--text-secondary); }
+  .card ul, .card ol { margin:8px 0 12px 24px; color:var(--text-secondary); }
+  .card li { margin-bottom:6px; }
+  .card strong { color:var(--text); }
+
+  .tag { display:inline-block; padding:2px 10px; border-radius:6px; font-size:12px; font-weight:600; margin-right:4px; }
+  .tag-green { background:#d1fae5; color:#065f46; }
+  .tag-yellow { background:#fef3c7; color:#92400e; }
+  .tag-blue { background:#dbeafe; color:#1e40af; }
+  .tag-red { background:#fee2e2; color:#991b1b; }
+  .tag-purple { background:#ede9fe; color:#5b21b6; }
+  .tag-cyan { background:#cffafe; color:#155e75; }
+
+  .timeline { position:relative; padding-left:28px; margin:16px 0; }
+  .timeline::before { content:''; position:absolute; left:8px; top:0; bottom:0; width:2px; background:#e2e8f0; }
+  .tl-item { position:relative; margin-bottom:20px; }
+  .tl-item::before { content:''; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid white; }
+  .tl-item .tl-year { font-size:13px; font-weight:700; color:var(--accent); }
+  .tl-item .tl-title { font-weight:600; color:var(--text); }
+  .tl-item .tl-desc { font-size:14px; color:var(--text-secondary); }
+
+  table { width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:10px 12px; text-align:left; }
+  th { background:var(--accent-light); color:var(--text); font-weight:600; }
+  tr:hover { background:#f1f5f9; }
+
+  .insight { background:linear-gradient(135deg,#ecfeff,#cffafe); border-left:4px solid var(--cyan); padding:16px 20px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .insight p { color:var(--text); margin:0; }
+  .callout { background:#fffbeb; border-left:4px solid var(--yellow); padding:16px 20px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .callout p { margin:0; }
+
+  .footer { text-align:center; padding:32px; color:var(--text-secondary); font-size:13px; }
+  pre { background:#f1f5f9; padding:12px; border-radius:8px; font-size:13px; overflow-x:auto; margin:12px 0; }
+
+  @media (max-width:640px) {
+    body { padding:12px; }
+    .header { padding:28px 20px; }
+    .header h1 { font-size:22px; }
+    .card { padding:20px; }
+    table, th, td { font-size:12px; padding:6px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🔭 横纵分析报告：基站位置推断</h1>
+    <p style="color:#a5f3fc;margin-top:4px;">基于 MR 数据的存量基站位置反演技术深度研究</p>
+    <div class="meta">
+      研究对象：存量基站位置推断（BS Localization from MR Data）<br>
+      输入数据：MR 测量报告（RSRP / TA / AOA / 邻区信息）<br>
+      研究日期：2026-07-13 &nbsp;·&nbsp; 方法论：横纵分析法
+    </div>
+    <span class="badge">基站定位 · MR数据 · 传播模型 · 指纹定位 · 深度学习</span>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>📋 目录</h2>
+    <ul>
+      <li><a href="#sec1">一、研究对象概述</a></li>
+      <li><a href="#sec2">二、纵轴：技术演进</a>
+        <ul class="sub">
+          <li><a href="#sec2-1">1. 几何方法时代：Cell-ID / TA / AOA（2000s–2010s）</a></li>
+          <li><a href="#sec2-2">2. 传播模型方法：路径损耗拟合（2010s–2018）</a></li>
+          <li><a href="#sec2-3">3. 指纹定位时代：kNN / 加权质心（2015–2020）</a></li>
+          <li><a href="#sec2-4">4. 机器学习时代：回归模型 / 随机过程（2018–2022）</a></li>
+          <li><a href="#sec2-5">5. 深度学习时代：GNN / Attention / CSI（2022 至今）</a></li>
+          <li><a href="#sec2-6">6. 混合方法时代：随机模型 + 多源融合（当前）</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec3">三、横轴：横向对比</a>
+        <ul class="sub">
+          <li><a href="#sec3-1">1. 六种方法精度与适用场景对比</a></li>
+          <li><a href="#sec3-2">2. 不同输入数据的定位能力</a></li>
+          <li><a href="#sec3-3">3. LTE vs 5G NR 定位能力差异</a></li>
+          <li><a href="#sec3-4">4. 城区 vs 郊区 vs 农村精度差异</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec4">四、横纵交叉：洞察与推演</a>
+        <ul class="sub">
+          <li><a href="#sec4-1">1. 方法演进的内在逻辑</a></li>
+          <li><a href="#sec4-2">2. MR 数据质量的核心约束</a></li>
+          <li><a href="#sec4-3">3. 未来推演</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec5">五、信息来源</a></li>
+    </ul>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="card" id="sec1">
+    <h2>一、研究对象概述</h2>
+    <table>
+      <tr><th style="width:130px">维度</th><th>内容</th></tr>
+      <tr><td>研究对象</td><td><strong>存量基站位置推断</strong>（BS Localization from MR Data）——已知用户终端的位置和上报的 MR 测量值，反推基站天线的地理经纬度</td></tr>
+      <tr><td>输入数据</td><td>MR（Measurement Report）：RSRP（参考信号接收功率）、RSRQ、TA（时间提前量）、AOA（到达角）、邻区 PCI 列表等</td></tr>
+      <tr><td>输出目标</td><td>基站（eNodeB/gNodeB）的地理坐标（经度、纬度）</td></tr>
+      <tr><td>与 UE 定位的区别</td><td>UE 定位是用已知的基站位置推用户位置；这里是反过来——用已知的 UE 位置（如 GPS 采样点）+ MR 信号测量，反推基站位置</td></tr>
+      <tr><td>工程意义</td><td>运营商资产管理系统中的站点工参（经纬度）可能不准确、过期或缺失，通过 MR 数据反演可校验和补全基站位置信息</td></tr>
+    </table>
+    <div class="insight">
+      <p><strong>一句话定义：</strong>基站位置推断相当于"逆向定位"——把 UE 定位问题反过来求解：已知大量采样点的信号测量值和 GPS 位置，反推出基站天线在哪。精度受限于多径传播、GPS 误差和 TA 量化分辨率。</p>
+    </div>
+  </div>
+
+  <!-- Section 2: Vertical -->
+  <div class="card" id="sec2">
+    <h2>二、纵轴：技术演进</h2>
+    <p>基站位置推断的技术发展可以追溯到蜂窝网络诞生之初。随着测量手段的丰富和 ML 技术的成熟，精度从公里级逐步提升到数十米级。</p>
+
+    <h3 id="sec2-1">2.1 几何方法时代：Cell-ID / TA / AOA（2000s–2010s）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2000s</span>
+        <div class="tl-title">Cell-ID：基站位置 ≈ 用户位置</div>
+        <div class="tl-desc">最简单的方法：用户所在的服务小区基站位置直接作为用户位置的近似。精度完全取决于小区覆盖半径——城区 100–500m，郊区 1–5km。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2010s</span>
+        <div class="tl-title">TA（时间提前量）测距</div>
+        <div class="tl-desc">TA 是基站根据信号传播延迟计算的时间提前量。LTE 中 TA 分辨率 78m/step（550m 步长 × 传播速度折算），5G NR 中提升至约 4.88m/step。将 TA 转化为距离约束后，结合多个采样点可缩小基站位置的不确定性区域。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2010s</span>
+        <div class="tl-title">AOA 到达角 + 三角定位</div>
+        <div class="tl-desc">利用基站天线阵列估计用户信号的来波方向，多个基站测量同一终端的 AOA 后可形成射线交会定位。精度受天线阵列规模和 NLoS 环境影响。</div>
+      </div>
+    </div>
+    <table>
+      <tr><th>方法</th><th>精度</th><th>优点</th><th>局限</th></tr>
+      <tr><td>Cell-ID</td><td>100m–5km</td><td>零成本，无需额外数据</td><td>精度极低，依赖覆盖半径</td></tr>
+      <tr><td>TA 测距</td><td>50–300m</td><td>直接反映距离，4G/5G 标准支持</td><td>多径导致距离偏大，量化误差</td></tr>
+      <tr><td>AOA 三角定位</td><td>20–200m</td><td>仅需少量基站即可定位</td><td>需天线阵列，NLoS 下误差极大</td></tr>
+      <tr><td>ECID（增强 Cell-ID）</td><td>50–150m</td><td>结合 TA+RSRP+AOA，兼容性好</td><td>精度有限，作为其他方法的兜底</td></tr>
+    </table>
+
+    <h3 id="sec2-2">2.2 传播模型方法：路径损耗拟合（2010s–2018）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2010s</span>
+        <div class="tl-title">RSRP → 距离转换 + 圆交会</div>
+        <div class="tl-desc">利用路径损耗模型（Cost231、FSPL、Macro、Walfisch-Ikegami）将 RSRP 测量值转换为基站到终端的距离估计，然后以多个基站为圆心画圆，交会点即为用户位置（或反过来求基站位置）。</div>
+      </div>
+    </div>
+    <p>核心流程：</p>
+    <pre>MR 数据 → 选取路径损耗模型 → RSRP → 距离估算 → 圆交会 / 插值 → 位置输出</pre>
+    <table>
+      <tr><th>路径损耗模型</th><th>适用场景</th><th>特点</th></tr>
+      <tr><td>FSPL（自由空间）</td><td>简单 LOS</td><td>最简单，误差大</td></tr>
+      <tr><td>Cost231-Hata</td><td>城区/郊区/农村宏站</td><td>与蜂窝宏站分类吻合度好</td></tr>
+      <tr><td>Walfisch-Ikegami</td><td>城市街谷/峡谷场景</td><td>复杂传播环境，需参数调优</td></tr>
+      <tr><td>Macro（3GPP）</td><td>宏蜂窝标准场景</td><td>标准推荐，通用性好</td></tr>
+    </table>
+    <div class="callout">
+      <p><strong>⚠️ 关键问题：</strong>传播模型是 RSRP→距离转换中最关键也最脆弱的一环。模型参数不准（如天线高度、建筑物密度）会导致距离估算偏差放大。在城区 NLoS 场景下，信号衰减远大于理论值，会显著高估距离。</p>
+    </div>
+
+    <h3 id="sec2-3">2.3 指纹定位时代：kNN / 加权质心（2015–2020）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2015–2020</span>
+        <div class="tl-title">信号指纹匹配定位</div>
+        <div class="tl-desc">离线阶段：在已知位置采集信号指纹（RSRP 向量 + 邻区列表）建立指纹库。在线阶段：将实时测量值与指纹库匹配，用 kNN 算法找出最近邻，加权平均得到位置。UE 定位精度可达城区 30m、农村 105m（中位数）。</div>
+      </div>
+    </div>
+    <p><strong>指纹反推基站位置：</strong>如果指纹库中的采样点带有 GPS 位置标签，且已知每个采样点检测到的基站 PCI 和 RSRP，可以通过加权质心法反推基站位置——将所有测量到该基站的采样点的位置按 RSRP 加权平均。</p>
+    <table>
+      <tr><th>方法</th><th>典型误差（城区）</th><th>典型误差（农村）</th></tr>
+      <tr><td>加权质心（RSSI 加权）</td><td>均值 ~215m</td><td>&gt;500m</td></tr>
+      <tr><td>动态加权质心（可变 BTS 数）</td><td>CDF 100m: ~48%</td><td>CDF 250m: ~98%</td></tr>
+      <tr><td>kNN 指纹匹配</td><td>中位数 ~30m</td><td>中位数 ~105m</td></tr>
+      <tr><td>多元线性回归（RSSI）</td><td>67% 误差 &lt;64m</td><td>最大 275m</td></tr>
+    </table>
+
+    <h3 id="sec2-4">2.4 机器学习时代：回归模型 / 随机过程（2018–2022）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2018–2022</span>
+        <div class="tl-title">多模型对比：线性回归/Bayesian Ridge/Lasso 等</div>
+        <div class="tl-desc">实际路测数据（TA + RSRP + RSRQ + GPS）训练回归模型预测基站距离。8 种机器学习算法对比中，Lasso 和 Ridge 回归表现最佳（MSLE ~0.16）。关键发现：每个基站的环境不同，需要为每个基站独立训练模型。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2022</span>
+        <div class="tl-title">随机模型：明确分解误差来源</div>
+        <div class="tl-desc">Eller et al. 提出基于 TA 的 BS 定位随机模型，直接建模 GPS 噪声（Rician）、多径传播（指数分布）、TA 量化（确定性）三类误差。无需先验基站候选，均值误差 &lt;100m；有候选集时识别准确率 95%。</div>
+      </div>
+    </div>
+
+    <h3 id="sec2-5">2.5 深度学习时代：GNN / Attention / CSI（2022 至今）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2022–2024</span>
+        <div class="tl-title">GNN / GAT 用于 5G 波束级定位</div>
+        <div class="tl-desc">5G NR 的多波束特性提供了丰富的空间信息。GNN 利用 beam RSRP + LoS/NLoS 标签构建图结构，Graph Attention Network 动态学习邻居节点权重。64 波束下 80% 误差 &lt;7.68m，12 波束下 80% 误差 &lt;15.1m。相比 ToA 三角定位，NLoS 下优势显著。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2024–2025</span>
+        <div class="tl-title">Attention + 不确定性估计</div>
+        <div class="tl-desc">利用 self-attention 处理信道冲激响应波束矩阵，结合负对数似然或回归分类实现不确定性估计。在商用 5G 基站实测中（3.85GHz，100MHz 带宽），LoS/NLoS 混合场景达到亚米级定位精度。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2025</span>
+        <div class="tl-title">超图神经网络：解决 MR 缺失位置问题</div>
+        <div class="tl-desc">针对 MR 数据缺少 GPS 位置标签的普遍问题，提出基于超图神经网络的半监督方法，通过距离感知超图建模和超图卷积从多模态信息中提取位置，在真实 MR 数据集上验证了优越性能。</div>
+      </div>
+    </div>
+
+    <h3 id="sec2-6">2.6 混合方法时代：随机模型 + 多源融合（当前）</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">当前主流</span>
+        <div class="tl-title">"几何 + 传播模型 + ML" 多层融合</div>
+        <div class="tl-desc">实际工程中，单一路径损耗模型不够用。当前最佳实践：先用多种传播模型估算距离（FSPL/Cost231/Macro/WI），加权决策融合；AOA 方向校正；RSRP 偏差大时用比例校正；最终用最小残差/加权质心/最小二乘输出坐标。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2025–2026</span>
+        <div class="tl-title">同时定位 + 建图（SLAM-like）</div>
+        <div class="tl-desc">Simultaneous LTE Signal Propagation Modelling and BS Positioning：在不知道传播模型参数和基站位置的情况下同时估计两者，利用车载 GPS + RSRP 测量值联合优化路径损耗模型参数和基站坐标。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Horizontal -->
+  <div class="card" id="sec3">
+    <h2>三、横轴：横向对比</h2>
+
+    <h3 id="sec3-1">3.1 六种方法精度与适用场景对比</h3>
+    <table>
+      <tr><th>方法</th><th>精度（城区）</th><th>精度（农村）</th><th>数据需求</th><th>计算开销</th><th>适用场景</th></tr>
+      <tr>
+        <td><span class="tag tag-blue">Cell-ID / ECID</span></td>
+        <td>100–500m</td>
+        <td>1–5km</td>
+        <td>极低</td>
+        <td>极低</td>
+        <td>兜底、快速粗略定位</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">传播模型圆交会</span></td>
+        <td>50–200m</td>
+        <td>200–500m</td>
+        <td>低（MR + 工参）</td>
+        <td>低</td>
+        <td>工程常用，参数需调优</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-yellow">指纹匹配（kNN）</span></td>
+        <td>30–100m</td>
+        <td>100–300m</td>
+        <td>高（需路测建指纹库）</td>
+        <td>中</td>
+        <td>城区精细定位</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-purple">ML 回归模型</span></td>
+        <td>50–150m</td>
+        <td>100–300m</td>
+        <td>中（需标注训练数据）</td>
+        <td>中</td>
+        <td>基站级模型，需独立训练</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">随机模型（TA）</span></td>
+        <td>&lt;100m</td>
+        <td>100–200m</td>
+        <td>低（仅 TA + GPS）</td>
+        <td>中</td>
+        <td>⭐ 性价比最优：95% 识别率</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-cyan">GNN / 深度学习</span></td>
+        <td>5–15m（5G 波束）</td>
+        <td>—</td>
+        <td>高（需大量标注数据）</td>
+        <td>高</td>
+        <td>前沿，5G 多波束场景</td>
+      </tr>
+    </table>
+
+    <h3 id="sec3-2">3.2 不同输入数据的定位能力</h3>
+    <table>
+      <tr><th>输入数据</th><th>蕴含的信息</th><th>对基站定位的帮助</th><th>局限性</th></tr>
+      <tr><td><strong>RSRP</strong></td><td>信号强度 → 距离相关性</td><td>可用路径损耗模型反算距离</td><td>NLoS 下衰减不可预测，多径干扰大</td></tr>
+      <tr><td><strong>TA</strong></td><td>时间提前量 → 距离直接指示</td><td>最直接的测距参数，5G 分辨率达 4.88m</td><td>多径导致距离偏大（主要误差源）</td></tr>
+      <tr><td><strong>AOA</strong></td><td>到达角 → 方向指示</td><td>辅助判断基站相对方向，校正位置</td><td>需天线阵列，NLoS 下角度偏差大</td></tr>
+      <tr><td><strong>邻区列表</strong></td><td>周围基站 PCI 列表</td><td>提供多站信息，支持圆交会</td><td>精度取决于邻区数量和几何分布</td></tr>
+      <tr><td><strong>RSRQ</strong></td><td>信号质量 → 干扰判断</td><td>辅助过滤干扰严重的采样点</td><td>间接信息，不直接反映距离</td></tr>
+      <tr><td><strong>GPS 位置</strong></td><td>采样点经纬度</td><td><strong>⭐ 最关键数据</strong>：已知位置 + 信号 = 反推基站</td><td>城区 GPS 误差大，MR 常缺 GPS</td></tr>
+    </table>
+
+    <h3 id="sec3-3">3.3 LTE vs 5G NR 定位能力差异</h3>
+    <table>
+      <tr><th>维度</th><th>4G LTE</th><th>5G NR</th><th>对基站定位的影响</th></tr>
+      <tr><td>TA 分辨率</td><td>78m/step</td><td>4.88m/step（3846 级）</td><td>5G TA 精度提升 16 倍</td></tr>
+      <tr><td>带宽</td><td>最大 20MHz</td><td>100–400MHz</td><td>更精确的 TOA 估计</td></tr>
+      <tr><td>波束数量</td><td>无（全向）</td><td>64+ 数字波束</td><td>beam RSRP 提供丰富空间信息</td></tr>
+      <tr><td>天线阵列</td><td>2/4 端口</td><td>64T64R（Massive MIMO）</td><td>AOA 精度大幅提升</td></tr>
+      <tr><td>定位参考信号</td><td>PRS（可选）</td><td>PRS + SRS（标配）</td><td>更多测量机会</td></tr>
+      <tr><td>典型定位精度</td><td>50–300m</td><td>亚米级–15m（波束辅助）</td><td>5G 可大幅提升基站位置推断精度</td></tr>
+    </table>
+
+    <h3 id="sec3-4">3.4 城区 vs 郊区 vs 农村精度差异</h3>
+    <table>
+      <tr><th>场景</th><th>基站密度</th><th>多径影响</th><th>GPS 精度</th><th>TA 可用性</th><th>典型定位误差</th></tr>
+      <tr><td><strong>密集城区</strong></td><td>高（200–500m）</td><td>高（NLoS 频繁）</td><td>低</td><td>多径偏大</td><td>30–150m</td></tr>
+      <tr><td><strong>一般城区</strong></td><td>中（500–1000m）</td><td>中</td><td>中</td><td>可用</td><td>50–200m</td></tr>
+      <tr><td><strong>郊区</strong></td><td>低（1–3km）</td><td>低</td><td>高</td><td>好</td><td>100–300m</td></tr>
+      <tr><td><strong>农村</strong></td><td>极低（3–10km）</td><td>极低</td><td>极高</td><td>很好</td><td>200–500m</td></tr>
+    </table>
+    <div class="callout">
+      <p><strong>⚠️ 反直觉的事实：</strong>基站密度越高的区域，基站定位误差反而越大？密集城区多径严重导致 TA 偏大，GPS 精度下降，区分相邻基站更加困难。农村基站稀疏但 GPS 精度高、多径少，TA 反而更准确。</p>
+    </div>
+  </div>
+
+  <!-- Section 4: Cross -->
+  <div class="card" id="sec4">
+    <h2>四、横纵交叉：洞察与推演</h2>
+
+    <h3 id="sec4-1">4.1 方法演进的内在逻辑</h3>
+    <ol>
+      <li><strong>从"硬几何"到"软概率"：</strong>早期方法依赖三角定位等确定几何关系，逐步演进到用概率模型处理多径、量化、GPS 噪声等不确定因素。Eller et al. 的随机模型是这一转变的标志性工作——明确分解三类误差源，让模型"知道自己不知道"。</li>
+      <li><strong>数据驱动正在超越模型驱动：</strong>GNN 和深度学习方法在 5G 多波束场景下达到亚米级精度，远超传统传播模型方法的 50–200m。但代价是数据需求和计算开销大幅上升，且泛化能力尚未充分验证。</li>
+      <li><strong>"同时定位与建图"是终极形态：</strong>2025–2026 年的 SLAM-like 方法（同时估计传播模型参数和基站位置）代表了基站定位的最高形态——不需要先验传播模型参数，也不需要基站工参，仅靠 MR 数据即可完成全部推断。</li>
+    </ol>
+
+    <h3 id="sec4-2">4.2 MR 数据质量的核心约束</h3>
+    <table>
+      <tr><th>数据问题</th><th>描述</th><th>影响程度</th><th>应对策略</th></tr>
+      <tr>
+        <td><strong>GPS 缺失</strong></td><td>大量 MR 数据没有 GPS 位置标签</td><td><span class="tag tag-red">高</span></td>
+        <td>半监督学习、超图神经网络、MDT 补充</td></tr>
+      <tr>
+        <td><strong>GPS 误差</strong></td><td>城区 GPS 误差可达 10–50m</td><td><span class="tag tag-yellow">中高</span></td>
+        <td>建模为 Rician 分布，纳入误差模型</td></tr>
+      <tr>
+        <td><strong>多径传播</strong></td><td>NLoS 下信号走行距离 > 直线距离</td><td><span class="tag tag-red">高</span></td>
+        <td>指数分布建模多径偏量、AOA 方向校正</td></tr>
+      <tr>
+        <td><strong>TA 量化</strong></td><td>LTE: 78m/step, 5G NR: 4.88m/step</td><td><span class="tag tag-yellow">中</span></td>
+        <td>纳入确定性系统模型、5G 分辨率大幅改善</td></tr>
+      <tr>
+        <td><strong>采样分布不均</strong></td><td>路测数据集中在道路，覆盖不均匀</td><td><span class="tag tag-yellow">中</span></td>
+        <td>DOP（精度因子）评估几何分布优劣</td></tr>
+    </table>
+
+    <h3 id="sec4-3">4.3 未来推演</h3>
+    <h4>短期（1–2 年）</h4>
+    <ul>
+      <li><strong>TA + 随机模型成为工程标准：</strong>仅需 TA 和 GPS 两个参数，无需传播模型调参，均值误差 &lt;100m，适合大规模部署</li>
+      <li><strong>5G NR TA 高分辨率红利释放：</strong>4.88m 的 TA 分辨率使基站位置推断精度大幅提升，LTE 时代的量化误差不再是瓶颈</li>
+    </ul>
+    <h4>中期（3–5 年）</h4>
+    <ul>
+      <li><strong>GNN + 波束 RSRP 成为高精度方案基线：</strong>在 5G Massive MIMO 普及后，beam-level 的空间信息将支撑 10m 级基站定位</li>
+      <li><strong>MR + MDT 数据融合：</strong>MDT（Minimization of Drive Testing）提供更丰富的带 GPS 标签的测量数据，弥补纯 MR 数据的位置缺失</li>
+    </ul>
+    <h4>长期（5 年以上）</h4>
+    <ul>
+      <li><strong>联邦学习 + 分布式基站定位：</strong>各省份 MR 数据不出域，联合训练基站定位模型</li>
+      <li><strong>数字孪生驱动的基站自校准：</strong>基站位置偏差由系统自动检测并修正，无需人工巡检</li>
+    </ul>
+  </div>
+
+  <!-- Section 5: Sources -->
+  <div class="card" id="sec5">
+    <h2>五、信息来源</h2>
+    <ol style="font-size:13px;color:var(--text-secondary);">
+      <li>Eller et al., Localizing Basestations From End-User Timing Advance Measurements — IEEE Access, 2022</li>
+      <li>Simultaneous LTE Signal Propagation Modelling and BS Positioning Based on Multiple Virtual Locations — Sensors, 2022</li>
+      <li>Positioning of Wireless Base Station using Location-Based RSRP Measurement — JPNT, 2019</li>
+      <li>GNN-based Localization with Beam RSRP in 5G Systems — JPNT, 2025</li>
+      <li>Attention-aided Outdoor Localization in Commercial 5G NR Systems — arXiv, 2024</li>
+      <li>Deep Learning based Positioning with Multi-task Learning — arXiv, 2024</li>
+      <li>MR Data-Driven Framework for Localized Statistical Channel Modeling — arXiv, 2025</li>
+      <li>A Measurement Report Data-Driven Framework for LSCM — arXiv, 2025</li>
+      <li>Robust NLoS Localization in 5G mmWave Networks — arXiv, 2024</li>
+      <li>Location Estimation on Mobile Networks — Dergipark, 2022</li>
+      <li>MR Positioning Tool to Support Coverage Analysis — telecomHall Forum, 2026</li>
+      <li>A Network-based Mobile Positioning System Using an Optimization Model — IJAAS, 2024</li>
+      <li>A Comprehensive Framework for 5G Indoor Localization — ScienceDirect, 2024</li>
+      <li>Impact of Preprocessing on Neural Network-Based RSS/AoA Positioning — arXiv, 2026</li>
+      <li>5G NR Positioning Technology and Its Deployment Scheme — ZTE, 2021</li>
+      <li>Localization With Cellular Signal RSRP Fingerprint of Multiband and Multicell — IEEE JSAC, 2024</li>
+      <li>面向5G的定位技术研究综述 — 北京邮电大学学报, 2018</li>
+    </ol>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>本报告由 AtomCode 按照横纵分析法（hv-analysis）框架生成</p>
+    <p>方法论来源：数字生命卡兹克（Khazix）· 横纵分析法</p>
+    <p>© 2026 · 仅供研究参考</p>
+  </div>
+
+</div>
+</body>
+</html>
