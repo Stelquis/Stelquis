@@ -2785,7 +2785,6 @@ function animate3D() {
   const scrollY = window.scrollY;
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
   const scrollFraction = maxScroll > 0 ? scrollY / maxScroll : 0;
-  camera.position.x = Math.sin(scrollFraction * Math.PI * 2) * 2;
   camera.position.y = -scrollFraction * 5;
   camera.lookAt(0, 0, -5);
 
@@ -3131,9 +3130,9 @@ window.addEventListener('scroll', () => {
   }
   bgGradient.style.filter = `hue-rotate(${(activeHue - 240) * 0.4}deg)`;
 
-  // Section warp-speed trigger
+  // Section warp-speed trigger (disabled horizontal speed lines)
   if (currentSectionId !== prevSectionId) {
-    triggerWarp();
+    // triggerWarp();
     prevSectionId = currentSectionId;
   }
 });
