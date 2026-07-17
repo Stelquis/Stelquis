@@ -28,10 +28,11 @@ set -e
 GITHUB_REMOTE="github"
 SYNC_BRANCH="github-main"
 
-# 同步提交作者信息（author 用 QQ 邮箱以记录 GitHub 贡献）
-# 注意：committer 必须保持 CNB noreply 邮箱，否则 cnb-gpgsign 签名会 403
+# 同步提交作者与提交者信息（统一使用 QQ 邮箱，确保 GitHub 贡献记录正确归属）
 export GIT_AUTHOR_NAME="Stelquis"
 export GIT_AUTHOR_EMAIL="3420761503@qq.com"
+export GIT_COMMITTER_NAME="Stelquis"
+export GIT_COMMITTER_EMAIL="3420761503@qq.com"
 
 echo "=== 同步到 GitHub ==="
 
