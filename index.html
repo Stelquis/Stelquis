@@ -19,6 +19,9 @@
     --text-muted: #94a3b8;
     --border: rgba(148, 163, 184, 0.12);
     --glow: rgba(99, 102, 241, 0.5);
+    --font-serif: Georgia, 'Times New Roman', Times, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
   }
 
   .light-mode {
@@ -36,7 +39,7 @@
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-family: var(--font-serif);
     background: var(--bg);
     color: var(--text);
     line-height: 1.7;
@@ -95,17 +98,6 @@
     0% { width: 4px; height: 4px; opacity: 0.8; transform: translate(-50%, -50%) scale(0); }
     100% { width: 180px; height: 180px; opacity: 0; transform: translate(-50%, -50%) scale(1); }
   }
-
-  /* ===== Section warp-speed transition overlay ===== */
-  .warp-overlay {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 40;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
-  .warp-overlay.active { opacity: 1; }
 
   a, button, .mail-card, .social-btn, .source-link, .tech-tags span, .theme-toggle, .scroll-hint {
     cursor: none !important;
@@ -331,7 +323,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-sans);
     font-size: 4.5em;
     font-weight: 900;
     background: linear-gradient(135deg, #fff 0%, #e0e7ff 50%, #fff 100%);
@@ -354,7 +346,7 @@
 
   /* brand text with staggered letter reveal */
   .loader-brand {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.85em;
     letter-spacing: 4px;
     color: var(--text-muted);
@@ -523,9 +515,9 @@
     font-weight: 900;
     letter-spacing: -0.05em;
     line-height: 0.8;
+    font-family: var(--font-serif);
     color: transparent;
     -webkit-text-stroke: 1.5px rgba(99, 102, 241, 0.1);
-    text-stroke: 1.5px rgba(99, 102, 241, 0.1);
     pointer-events: none;
     z-index: 0;
     white-space: nowrap;
@@ -621,7 +613,7 @@
     border: 1px solid var(--border);
     font-size: 0.9em;
     color: var(--text-muted);
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
   }
   .status-badge .live-dot {
     width: 8px; height: 8px;
@@ -642,6 +634,7 @@
     line-height: 0.9;
     margin: 8px 0 4px;
     perspective: 600px;
+    font-family: var(--font-serif);
     filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.35));
   }
   .hero h1 .letter {
@@ -666,7 +659,7 @@
   .hero-subtitle {
     font-size: 0.9em;
     color: var(--primary-light);
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     letter-spacing: 2.5px;
   }
   /* dynamic gradient divider under subtitle */
@@ -687,7 +680,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: clamp(1.3rem, 3.2vw, 1.9rem);
     color: var(--text-muted);
   }
@@ -994,6 +987,7 @@
     display: inline-block;
     left: 50%;
     transform-style: preserve-3d;
+    font-family: var(--font-serif);
   }
   .section-title.reveal {
     opacity: 0;
@@ -1049,7 +1043,7 @@
   /* Hero statement */
   .editorial-hero { position: relative; }
   .ed-brow {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.7em;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -1070,6 +1064,7 @@
     line-height: 1.85;
     color: var(--text);
     max-width: 680px;
+    font-family: var(--font-serif);
   }
   .ed-dropcap {
     float: left;
@@ -1108,7 +1103,7 @@
   }
   .ed-strip:hover { border-color: var(--primary); }
   .ed-num {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 1.6em;
     font-weight: 700;
     color: var(--primary);
@@ -1122,6 +1117,7 @@
     font-size: 0.9em;
     color: var(--text);
     margin-bottom: 6px;
+    font-family: var(--font-serif);
   }
   .ed-strip-desc {
     font-size: 0.82em;
@@ -1134,7 +1130,7 @@
     gap: 4px;
   }
   .ed-tags span {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.68em;
     padding: 2px 7px;
     border-radius: 3px;
@@ -1153,7 +1149,7 @@
     padding: 0;
   }
   .ed-section-label {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.65em;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -1192,7 +1188,6 @@
   }
   .ed-radar canvas {
     width: 100%;
-    max-width: 260px;
     height: auto;
   }
 
@@ -1227,6 +1222,7 @@
     background: linear-gradient(120deg, transparent, var(--primary), var(--secondary), var(--cyan), transparent);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -1248,6 +1244,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    font-family: var(--font-serif);
   }
   .source-link {
     display: inline-flex;
@@ -1313,10 +1310,12 @@
   .projects-carousel {
     position: relative;
     overflow: hidden;
+    cursor: grab;
   }
   .projects-track {
     display: flex;
     transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
   }
   .project-slide {
     flex: 0 0 100%;
@@ -1355,22 +1354,12 @@
     box-shadow: 0 0 20px var(--glow);
     transform: scale(1.1);
   }
-  .carousel-btn.disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
   .projects-carousel.dragging {
     cursor: grabbing !important;
   }
   .projects-carousel.dragging .project-card {
     transform: none !important;
     box-shadow: none !important;
-  }
-  .projects-carousel {
-    cursor: grab;
-  }
-  .projects-track {
-    will-change: transform;
   }
   /* progress segments instead of dots */
   .carousel-dot {
@@ -1394,7 +1383,7 @@
     gap: 8px;
   }
   .carousel-counter {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     color: var(--text-muted);
     font-size: 0.85em;
     min-width: 56px;
@@ -1458,20 +1447,14 @@
     perspective: 1200px;
   }
   .trophy-card {
-    position: relative;
     padding: 32px 24px;
-    border-radius: 24px;
-    background: var(--card-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    overflow: hidden;
   }
   .trophy-card::before {
     content: '';
     position: absolute;
     inset: 0;
+    height: auto;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent 60%);
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -1496,11 +1479,12 @@
     font-weight: 700;
     margin-bottom: 8px;
     transform: translateZ(25px);
+    font-family: var(--font-serif);
   }
   .trophy-date {
     font-size: 0.85em;
     color: var(--text-muted);
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     transform: translateZ(15px);
   }
   .trophy-shine {
@@ -1524,7 +1508,7 @@
     overflow: hidden;
   }
   .heatmap-divider .label {
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.75em;
     color: var(--text-muted);
     white-space: nowrap;
@@ -1599,7 +1583,7 @@
     border-radius: 16px;
     overflow: hidden;
     text-align: left;
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
   }
   .light-mode .contact-terminal { background: rgba(255,255,255,0.7); }
   .contact-terminal .term-header {
@@ -1628,16 +1612,11 @@
     margin: 0 auto 40px;
   }
   .mail-card {
-    position: relative;
     padding: 24px 20px;
     border-radius: 18px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
     backdrop-filter: blur(16px);
     text-decoration: none;
     color: var(--text);
-    transition: all 0.3s ease;
-    overflow: hidden;
   }
   .mail-card::before {
     content: '';
@@ -1661,7 +1640,7 @@
   .mail-card .mail-addr {
     font-weight: 700;
     font-size: 1.05em;
-    font-family: 'Fira Code', monospace;
+    font-family: var(--font-mono);
   }
   .mail-card .copy-hint {
     position: absolute;
@@ -1695,7 +1674,7 @@
     0%, 100% { transform: scale(1); opacity: 0.6; }
     50% { transform: scale(1.15); opacity: 0.9; }
   }
-  #contact h2 { font-size: 2em; margin-bottom: 12px; }
+  #contact h2 { font-size: 2em; margin-bottom: 12px; font-family: var(--font-serif); }
   #contact p { color: var(--text-muted); margin-bottom: 36px; }
 
   /* ===== Reveal ===== */
@@ -2366,19 +2345,19 @@
   
   <h2 class="section-title reveal">荣誉奖项</h2>
   <div class="trophy-showcase reveal">
-    <div class="trophy-card">
+    <div class="glass-card trophy-card">
       <div class="trophy-shine"></div>
       <div class="trophy-icon">🏅</div>
       <div class="trophy-name">中南大学数学建模竞赛校赛 三等奖</div>
       <div class="trophy-date">2025.07</div>
     </div>
-    <div class="trophy-card">
+    <div class="glass-card trophy-card">
       <div class="trophy-shine"></div>
       <div class="trophy-icon">🏆</div>
       <div class="trophy-name">Datawhale AI 夏令营 优秀学习者</div>
       <div class="trophy-date">2024.08</div>
     </div>
-    <div class="trophy-card">
+    <div class="glass-card trophy-card">
       <div class="trophy-shine"></div>
       <div class="trophy-icon">📜</div>
       <div class="trophy-name">CCF CSP 认证 200 分</div>
@@ -2410,12 +2389,12 @@
   </div>
 
   <div class="mail-grid reveal">
-    <a class="mail-card magnetic" href="mailto:stelquis@gmail.com" data-copy="stelquis@gmail.com">
+    <a class="glass-card mail-card magnetic" href="mailto:stelquis@gmail.com" data-copy="stelquis@gmail.com">
       <span class="copy-hint">点击复制</span>
       <div class="mail-type">Gmail</div>
       <div class="mail-addr">stelquis@gmail.com</div>
     </a>
-    <a class="mail-card magnetic" href="mailto:3420761503@qq.com" data-copy="3420761503@qq.com">
+    <a class="glass-card mail-card magnetic" href="mailto:3420761503@qq.com" data-copy="3420761503@qq.com">
       <span class="copy-hint">点击复制</span>
       <div class="mail-type">QQ Mail</div>
       <div class="mail-addr">3420761503@qq.com</div>
@@ -2425,9 +2404,6 @@
 
 <!-- Toast -->
 <div class="toast" id="toast">已复制到剪贴板</div>
-
-<!-- Section warp-speed transition canvas -->
-<canvas id="warpCanvas" class="warp-overlay"></canvas>
 
 <!-- Critical entrance logic (independent of Three.js CDN) -->
 <script>
@@ -3130,76 +3106,10 @@ window.addEventListener('scroll', () => {
   }
   bgGradient.style.filter = `hue-rotate(${(activeHue - 240) * 0.4}deg)`;
 
-  // Section warp-speed trigger (disabled horizontal speed lines)
   if (currentSectionId !== prevSectionId) {
-    // triggerWarp();
     prevSectionId = currentSectionId;
   }
 });
-
-// ===== Warp-speed section transition (speed line canvas) =====
-const warpCanvas = document.getElementById('warpCanvas');
-const warpCtx = warpCanvas.getContext('2d');
-let warpActive = false;
-let warpStartTime = 0;
-let warpLines = [];
-
-function resizeWarp() {
-  warpCanvas.width = window.innerWidth;
-  warpCanvas.height = window.innerHeight;
-}
-resizeWarp();
-window.addEventListener('resize', resizeWarp);
-
-function triggerWarp() {
-  warpActive = true;
-  warpStartTime = performance.now();
-  warpCanvas.classList.add('active');
-  warpLines = [];
-  for (let i = 0; i < 40; i++) {
-    warpLines.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      length: 40 + Math.random() * 130,
-      speed: 4 + Math.random() * 10,
-      opacity: Math.random() * 0.7 + 0.3,
-      color: Math.random() > 0.5 ? '#818cf8' : '#ec4899',
-    });
-  }
-  if (!warpAnimating) animateWarp();
-}
-
-let warpAnimating = false;
-function animateWarp(ts) {
-  if (!warpActive) { warpAnimating = false; return; }
-  warpAnimating = true;
-  const elapsed = ts - warpStartTime;
-  if (elapsed > 700) {
-    warpActive = false;
-    warpCanvas.classList.remove('active');
-    warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
-    warpAnimating = false;
-    return;
-  }
-  const fadeOut = 1 - elapsed / 700;
-  warpCtx.clearRect(0, 0, warpCanvas.width, warpCanvas.height);
-  warpLines.forEach(line => {
-    line.x += line.speed;
-    if (line.x > warpCanvas.width + line.length) line.x = -line.length;
-    warpCtx.globalAlpha = line.opacity * fadeOut;
-    warpCtx.strokeStyle = line.color;
-    warpCtx.lineWidth = 1.2;
-    warpCtx.shadowBlur = 8;
-    warpCtx.shadowColor = line.color;
-    warpCtx.beginPath();
-    warpCtx.moveTo(line.x - line.length, line.y);
-    warpCtx.lineTo(line.x, line.y);
-    warpCtx.stroke();
-  });
-  warpCtx.globalAlpha = 1;
-  warpCtx.shadowBlur = 0;
-  requestAnimationFrame(animateWarp);
-}
 
 // ===== Energy Core resonance: orbit sync + mouse proximity =====
 const energyCore = document.getElementById('energyCore');
@@ -3223,9 +3133,7 @@ window.addEventListener('scroll', () => {
     scrollVisible = shouldShow;
     rocketBtn.classList.toggle('visible', scrollVisible);
   }
-  lastScrollY = window.scrollY;
 });
-let lastScrollY = 0;
 rocketBtn.addEventListener('click', () => {
   rocketBtn.classList.add('launching');
   window.scrollTo({ top: 0, behavior: 'smooth' });
