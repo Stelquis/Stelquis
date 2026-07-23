@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>开源课题实战项目申请书 — tRPC 多租户与节点部署</title>
+<meta name="author" content="牛晨勋">
+<meta name="description" content="申请 tRPC 开源课题实战项目：多租户与节点部署架构设计">
+<meta name="keywords" content="tRPC, Agent, 多租户, 节点部署, 申请书">
+<meta name="generator" content="Kami">
+<style>
+  /* 标题字体：楷体 */
+  @font-face {
+    font-family: "KaiTi";
+    src: url("../../repo/Kami/assets/fonts/TsangerJinKai02-W04.ttf") format("truetype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W04.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: "KaiTi";
+    src: url("../../repo/Kami/assets/fonts/TsangerJinKai02-W05.ttf") format("truetype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W05.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+  }
+  @page {
+    size: A4;
+    margin: 18mm 20mm 20mm 20mm;
+    background: #f5f4ed;
+    @bottom-center {
+      content: "— " counter(page) " —";
+      font-family: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+      font-size: 8pt;
+      color: #6b6a64;
+    }
+  }
+  @page:first { @bottom-center { content: ""; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --parchment: #f5f4ed; --ivory: #faf9f5; --near-black:#141413;
+    --dark-warm: #3d3d3a; --olive: #504e49; --stone: #6b6a64;
+    --brand: #1B365D; --border: #e8e6dc; --border-soft:#e5e3d8;
+    --tag-bg: #E4ECF5;
+    --kai: "KaiTi", "AR PL KaitiM GB", "AR PL KaitiM Big5", serif;
+    --serif: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, -apple-system, sans-serif;
+    --sans: var(--serif);
+  }
+  html, body { background: var(--parchment); }
+  @media screen { body { max-width: 210mm; margin: 0 auto; padding: 18mm 20mm 20mm 20mm; } }
+  body {
+    color: var(--near-black); font-family: var(--serif); font-size: 10.5pt;
+    line-height: 1.6; letter-spacing: 0.3pt; widows: 2; orphans: 2;
+  }
+  a { color: var(--brand); text-decoration: none; }
+
+  /* ═══════ 封面 ═══════ */
+  .cover {
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 260mm; text-align: center;
+    break-after: page;
+  }
+  .cover-tagline { font-size: 15pt; color: var(--brand); letter-spacing: 4pt; text-transform: uppercase; margin-bottom: 12pt; font-family: var(--kai); }
+  .cover-org { font-size: 15pt; color: var(--stone); margin-bottom: 48pt; font-family: var(--kai); }
+  .cover-title { font-size: 51pt; font-weight: 500; line-height: 1.15; color: var(--near-black); margin-bottom: 9pt; font-family: var(--kai); }
+  .cover-sub { font-size: 22pt; color: var(--olive); line-height: 1.45; margin-bottom: 36pt; font-family: var(--kai); }
+  .cover-divider { width: 84pt; height: 4pt; background: var(--brand); margin: 0 auto 36pt auto; border-radius: 2pt; }
+  .cover-name { font-size: 21pt; color: var(--near-black); margin-bottom: 6pt; font-family: var(--kai); }
+  .cover-school { font-size: 16pt; color: var(--stone); margin-bottom: 30pt; }
+  .cover-badges { margin-bottom: 36pt; line-height: 42px; }
+  .cover-badges img { margin: 2px 2px; height: 20px; vertical-align: middle; }
+  .sb {
+    display: inline-block; height: 20px; margin: 2px 2px; vertical-align: middle;
+    border-radius: 3px; overflow: hidden; text-decoration: none;
+    font-size: 11px;
+    line-height: 20px; font-weight: 400; text-transform: uppercase;
+  }
+  .sb-l {
+    display: inline-block; color: #fff; height: 20px; vertical-align: top;
+    padding: 0 7px 0 6px;
+  }
+  .sb-l img { height: 11px; vertical-align: middle; margin: 0 4px 0 0; position: relative; top: -1px; border: none; }
+  .sb-r {
+    display: inline-block; color: #fff; height: 20px; vertical-align: top;
+    padding: 0 7px;
+  }
+  .cover-quote { font-size: 11pt; color: var(--stone); line-height: 1.5; max-width: 70%; margin: 0 auto; font-style: italic; }
+
+  /* ═══════ 正文 ═══════ */
+  .page-header {
+    border-bottom: 1.5pt solid var(--brand);
+    padding-bottom: 8pt; margin-bottom: 14pt;
+  }
+  .page-header-title { font-size: 18pt; font-weight: 500; line-height: 1.3; color: var(--near-black); margin-bottom: 3pt; font-family: var(--kai); }
+  .page-header-meta { font-size: 8.5pt; color: var(--stone); display: flex; flex-wrap: wrap; gap: 3pt 12pt; }
+  .page-header-meta strong { color: var(--dark-warm); font-weight: 500; }
+
+  h2 {
+    font-size: 14pt; font-weight: 500; line-height: 1.3;
+    margin: 16pt 0 8pt 0; color: var(--near-black);
+    border-left: 2.5pt solid var(--brand); border-radius: 1.5pt;
+    padding-left: 8pt; break-after: avoid; font-family: var(--kai);
+  }
+  h3 { font-size: 11.5pt; font-weight: 500; line-height: 1.3; margin: 12pt 0 5pt 0; color: var(--dark-warm); break-after: avoid; font-family: var(--kai); }
+  p { margin: 0 0 8pt 0; line-height: 1.6; }
+  .hl { color: var(--brand); font-weight: 500; }
+  strong { font-weight: 500; }
+  ul, ol { margin: 4pt 0 8pt 0; padding-left: 18pt; line-height: 1.55; }
+  ul li::marker { color: var(--brand); }
+  ol li::marker { color: var(--brand); font-weight: 500; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 10pt 0; break-inside: avoid; }
+  th { text-align: left; font-weight: 500; color: var(--dark-warm); padding: 5pt 7pt; border-bottom: 1pt solid var(--border); }
+  td { padding: 4pt 7pt; border-bottom: 0.3pt solid var(--border-soft); vertical-align: top; }
+  .compact th { padding: 3pt 5pt; font-size: 8.5pt; }
+  .compact td { padding: 2pt 5pt; font-size: 8.5pt; line-height: 1.4; }
+
+  .callout {
+    background: var(--ivory); border-left: 2pt solid var(--brand);
+    padding: 8pt 12pt; border-radius: 3pt; margin: 10pt 0;
+    line-height: 1.55; break-inside: avoid; font-size: 10pt;
+  }
+
+  .tag {
+    display: inline-block; background: var(--tag-bg); color: var(--brand);
+    font-size: 8pt; font-weight: 500; padding: 1pt 5pt; border-radius: 2pt; margin: 1pt 2pt;
+  }
+  .tag-green { background: #e8f5e9; color: #2e7d32; }
+  .tag-amber { background: #fff8e1; color: #f57f17; }
+  .tag-blue { background: #e3f2fd; color: #1565c0; }
+  .tag-red { background: #fce4ec; color: #c62828; }
+
+  .badge-row { margin: 6pt 0 8pt 0; }
+  .badge-row img { height: 18px; vertical-align: middle; margin: 1pt 1pt; }
+
+  .card {
+    background: var(--ivory); border: 0.5pt solid var(--border);
+    border-radius: 4pt; padding: 10pt 12pt; margin: 8pt 0; break-inside: avoid;
+  }
+  .card-title { font-size: 10pt; font-weight: 500; color: var(--brand); margin-bottom: 3pt; font-family: var(--kai); }
+  .card p { font-size: 9.5pt; margin: 0 0 4pt 0; }
+  .card ul { font-size: 9pt; margin: 2pt 0 0 0; }
+
+  .metrics { display: flex; gap: 8pt; margin: 10pt 0; break-inside: avoid; }
+  .metric-item { flex: 1; background: var(--ivory); border-radius: 4pt; padding: 8pt 6pt; text-align: center; border: 0.5pt solid var(--border); }
+  .metric-value { font-size: 14pt; font-weight: 500; color: var(--brand); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .metric-label { font-size: 7.5pt; color: var(--stone); margin-top: 2pt; }
+
+  .timeline { margin: 10pt 0; break-inside: avoid; }
+  .tl-item { display: flex; gap: 10pt; margin-bottom: 6pt; padding-left: 0; }
+  .tl-week { width: 48pt; flex-shrink: 0; text-align: center; background: var(--brand); color: #fff; border-radius: 3pt; font-size: 8.5pt; font-weight: 500; padding: 3pt 0; height: fit-content; }
+  .tl-content { flex: 1; padding: 2pt 0; }
+  .tl-content .tl-title { font-size: 10pt; font-weight: 500; color: var(--near-black); font-family: var(--kai); }
+  .tl-content .tl-desc { font-size: 9pt; color: var(--olive); line-height: 1.4; }
+  .tl-content .tl-deliverable { font-size: 8.5pt; color: var(--stone); }
+
+  .project-block { margin: 8pt 0 10pt 0; }
+  .project-block .meta { font-size: 9pt; color: var(--stone); margin-bottom: 2pt; }
+  .project-block ul { font-size: 9.5pt; }
+
+  .stage-bar { display: flex; gap: 4pt; margin: 8pt 0; break-inside: avoid; }
+  .stage-item { flex: 1; text-align: center; padding: 4pt 2pt; border-radius: 3pt; font-size: 7.5pt; line-height: 1.3; }
+  .stage-done { background: #e8f5e9; color: #2e7d32; }
+  .stage-cur { background: #e3f2fd; color: #1565c0; font-weight: 500; }
+  .stage-next { background: var(--tag-soft); color: var(--stone); }
+
+  .footer-note { margin-top: 14pt; padding-top: 8pt; border-top: 0.5pt solid var(--border-soft); font-size: 9pt; color: var(--stone); text-align: center; }
+
+  .goal-grid { display: flex; gap: 8pt; margin: 10pt 0; break-inside: avoid; }
+  .goal-item { flex: 1; background: var(--ivory); border-radius: 4pt; padding: 10pt; border: 0.5pt solid var(--border); }
+  .goal-item h4 { font-size: 10pt; font-weight: 500; color: var(--brand); margin-bottom: 4pt; font-family: var(--kai); }
+  .goal-item p { font-size: 9pt; margin: 0; }
+
+  .issue-link {
+    display: inline-block; background: var(--tag-bg); color: var(--brand);
+    padding: 2pt 8pt; border-radius: 3pt; font-size: 9pt; font-weight: 500;
+    margin: 2pt 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     封面
+     ════════════════════════════════════════════════════════════ -->
+<section class="cover">
+  <div class="cover-tagline">2026 · 犀牛鸟开源人才培养</div>
+  <div class="cover-org">腾讯开源 · 开源课题实战</div>
+  <div class="cover-title">项目申请书</div>
+  <div class="cover-sub">tRPC · 多租户与节点部署架构设计</div>
+  <div class="cover-divider"></div>
+  <div class="cover-name">牛晨勋</div>
+  <div class="cover-school">中南大学 · 数据科学与大数据技术 · 2023 级</div>
+  <div class="cover-badges">
+    <a href="https://github.com/Stelquis"><span class="sb"><span class="sb-l" style="background:#24292e;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E" alt="" />GitHub</span><span class="sb-r" style="background:#888;">Stelquis</span></span></a>
+    <a href="https://cnb.cool/u/Stelquis"><img src="CNB.svg" alt="CNB" height="20" style="vertical-align:middle"></a>
+    <a href="mailto:17837343195@163.com"><span class="sb"><span class="sb-l" style="background:#24292e;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z'/%3E%3C/svg%3E" alt="" />邮箱</span><span class="sb-r" style="background:#ea4335;">17837343195@163.com</span></span></a>
+  </div>
+  <div class="cover-quote">"Always a learner, always learning from the best."</div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     正文
+     ════════════════════════════════════════════════════════════ -->
+
+<div class="page-header">
+  <div class="page-header-title">项目申请书</div>
+  <div class="page-header-meta">
+    <span><strong>项目：</strong>tRPC · 多租户与节点部署</span>
+    <span><strong>申请人：</strong>牛晨勋</span>
+    <span><strong>学校：</strong>中南大学 · 数据科学与大数据技术 · 2023 级</span>
+    <span><strong>邮箱：</strong>17837343195@163.com / 3420761503@qq.com</span>
+  </div>
+</div>
+
+<!-- ══════════ 一、背景与动机 ══════════ -->
+<h2>📌 一、背景与动机</h2>
+
+<p>
+tRPC-Agent-Python 当前提供了一套完整的 Agent 构建、编排、工具接入、会话记忆等能力，但在生产级部署上仍处于"单机可跑"的阶段。当需要将同一个 Agent 服务同时开放给多个业务方时，就暴露出几个现实问题：
+</p>
+
+<ul>
+  <li>不同租户的模型配置（一个用 DeepSeek、一个用 GPT-4）如何隔离？</li>
+  <li>每个租户的会话数据、知识库、审计日志是混在一起还是分开存？</li>
+  <li>如果 Agent 流量大了，能否横向加机器而不中断现有会话？</li>
+</ul>
+
+<p>
+这些问题的本质是 <span class="hl">多租户隔离 + 节点水平扩展</span> 两个架构维度的缺失。我选择这个课题，是因为它恰好位于"框架功能完备"和"生产可用"之间的过渡地带——解决了它，Agent 框架才能真正从示例走向企业级服务。
+</p>
+
+<div class="badge-row">
+  <img src="https://img.shields.io/badge/前置学习-源码已读-1B365D?style=flat-square" alt="源码已读" />
+  <img src="https://img.shields.io/badge/实验-已跑通-2e7d32?style=flat-square" alt="实验已跑通" />
+  <img src="https://img.shields.io/badge/PR-已提交-1565c0?style=flat-square" alt="PR已提交" />
+  <img src="https://img.shields.io/badge/框架-tRPC--Agent--Python-1B365D?style=flat-square" alt="tRPC-Agent-Python" />
+</div>
+
+<!-- ══════════ 二、技术方案 ══════════ -->
+<h2>🔧 二、技术方案</h2>
+
+<h3>2.1 核心模块设计</h3>
+
+<p>整个方案围绕 <span class="hl">四个核心模块</span> 展开，每个模块解决一个独立的架构问题：</p>
+
+<div class="card">
+  <div class="card-title">🏗️ 模块一：租户模型与配置隔离</div>
+  <p>设计 Tenant 数据模型，核心字段包括：<code>tenant_id</code>（唯一标识）、<code>model_config</code>（模型提供商、API Key 引用、模型名称）、<code>tool_whitelist</code>（允许使用的工具列表）、<code>channel_binding</code>（IM 通道配置）、<code>audit_policy</code>（审计等级与日志保留策略）。每个租户独立存储配置，运行时不交叉读取。</p>
+  <p><span class="hl">⚡ 难点：</span>API Key 不能明文存储，但又要能在运行时被 Worker 读取。方案是在 Tenant 表中只存 Key 的引用 ID，实际密钥由密钥管理服务持有，Worker 按需获取。</p>
+</div>
+
+<div class="card">
+  <div class="card-title">🌐 模块二：节点部署拓扑与无状态 Worker</div>
+  <p>设计四类节点：<span class="hl">Agent Gateway</span>（统一入口，按 tenant_id + session_id 路由请求）、<span class="hl">Agent Worker</span>（无状态，只负责执行 Agent 逻辑，不持有任何会话数据）、<span class="hl">Storage Adapter</span>（统一数据访问层）、<span class="hl">Telemetry Collector</span>（全链路追踪）。关键决策是：<span class="hl">不依赖 Sticky Session</span>——所有会话状态存入共享 Redis/SQL 后端，Worker 自由扩缩容。</p>
+  <p><span class="hl">🔑 突破口：</span>tRPC-Agent 的 SessionService 抽象层本就是多后端可切换的，已有 InMemory、SQL、Redis 三种实现。Storage Adapter 只需要在此基础上包一层租户路由逻辑。</p>
+</div>
+
+<div class="card">
+  <div class="card-title">🗄️ 模块三：统一数据访问抽象</div>
+  <p>设计 <span class="hl">StorageRouter</span>，根据 tenant_id 查找该租户的后端配置，将请求路由到正确的存储实例。覆盖的数据类型：<span class="tag">Session</span> <span class="tag">Memory</span> <span class="tag">Summary</span> <span class="tag">Knowledge</span> <span class="tag">AuditLog</span>。</p>
+  <p><span class="hl">⚡ 难点：</span>不同后端的写入一致性模型不同——Redis 是最终一致，SQL 是强一致。需明确每个数据类型的一致性取舍。</p>
+</div>
+
+<div class="card">
+  <div class="card-title">💬 模块四：IM Channel Adapter</div>
+  <p>设计 Adapter 接口，将外部 IM 消息统一转换为 tRPC-Agent 的 <code>NewMessage</code> 输入。计划覆盖企业微信（WeCom）和 Telegram 两类通道，重点处理消息验签、消息去重、用户身份映射、群聊/单聊的 session_id 生成规则。</p>
+</div>
+
+<h3>2.2 可行性分析</h3>
+
+<div class="metrics">
+  <div class="metric-item">
+    <div class="metric-value">乐观锁</div>
+    <div class="metric-label">并发写入一致性<br>Redis WATCH/MULTI/EXEC</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">双写切换</div>
+    <div class="metric-label">数据迁移方案<br>新旧后端同时写入 → 切换读流量</div>
+  </div>
+  <div class="metric-item">
+    <div class="metric-value">SETNX 去重</div>
+    <div class="metric-label">IM 消息幂等<br>5 分钟 TTL 去重缓存</div>
+  </div>
+</div>
+
+<!-- ══════════ 三、时间规划 ══════════ -->
+<h2>📅 三、时间规划</h2>
+
+<p><span class="hl">实战周期：</span>2026 年 8 月 1 日 ~ 9 月 10 日</p>
+
+<div class="timeline">
+  <div class="tl-item">
+    <div class="tl-week">第 1 周</div>
+    <div class="tl-content">
+      <div class="tl-title">📖 基础调研与设计</div>
+      <div class="tl-desc">精读 A2A/AG-UI 服务端源码，设计 Tenant 数据模型，完成存储层抽象接口</div>
+      <div class="tl-deliverable">→ Tenant 模型设计文档 + 抽象接口代码</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-week">第 2 周</div>
+    <div class="tl-content">
+      <div class="tl-title">⚙️ 核心开发</div>
+      <div class="tl-desc">实现 StorageRouter + Redis/SQL 双后端适配，实现 Agent Gateway 租户路由</div>
+      <div class="tl-deliverable">→ 多租户存储层可运行 + 单元测试</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-week">第 3 周</div>
+    <div class="tl-content">
+      <div class="tl-title">💬 IM 集成</div>
+      <div class="tl-desc">实现企业微信 + Telegram Channel Adapter，完成消息转换与验签</div>
+      <div class="tl-deliverable">→ 双通道 IM 适配器可运行</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-week">第 4 周</div>
+    <div class="tl-content">
+      <div class="tl-title">🔩 打磨交付</div>
+      <div class="tl-desc">Filter 扩展（租户级工具白名单、预算限制）、Docker Compose 部署方案、PR 提交</div>
+      <div class="tl-deliverable">→ 完整示例 + 部署文档 + PR</div>
+    </div>
+  </div>
+</div>
+
+<h3>期望获得的成长与收益</h3>
+
+<div class="goal-grid">
+  <div class="goal-item">
+    <h4>🏗️ 架构设计能力</h4>
+    <p>通过多租户与节点部署的实战，理解生产级 Agent 平台的架构设计范式——从"单机可跑"到"企业级服务"的演进路径。</p>
+  </div>
+  <div class="goal-item">
+    <h4>🤝 开源协作经验</h4>
+    <p>深度参与 tRPC 社区的 PR 评审流程，学习与社区维护者的协作方式，理解开源项目的治理和贡献规范。</p>
+  </div>
+  <div class="goal-item">
+    <h4>📐 系统化思维</h4>
+    <p>在一致性取舍、数据迁移、租户隔离等现实约束下做工程决策，提升从"功能实现"到"系统设计"的思维层次。</p>
+  </div>
+</div>
+
+<h3>期望熟悉的技术与模块</h3>
+
+<p>
+  <span class="tag">tRPC-Agent SDK</span>
+  <span class="tag">A2A 协议</span>
+  <span class="tag">AG-UI 协议</span>
+  <span class="tag">Filter 系统</span>
+  <span class="tag">Session/Memory 多后端</span>
+  <span class="tag">Redis Stream</span>
+  <span class="tag">OpenTelemetry</span>
+  <span class="tag">Docker Compose</span>
+  <span class="tag">Kubernetes</span>
+  <span class="tag">企业微信 API</span>
+  <span class="tag">Telegram Bot API</span>
+</p>
+
+<!-- ══════════ 四、开源经历 ══════════ -->
+<h2>🌟 四、开源经历</h2>
+
+<h3>4.1 本次参与的 Issue 与心得体会</h3>
+
+<p>本次申请的是 tRPC 项目下的 <span class="hl">多租户与节点部署</span> 课题。在确定申请后，我做了大量的前置准备工作：</p>
+
+<p>
+<span class="issue-link">📋 PR #212</span>
+<span class="issue-link">📋 Issue #89 — Session/Memory 多后端回放一致性测试</span>
+<span class="issue-link">📋 Issue #90 — Tool Script Safety Guard</span>
+<span class="issue-link">📋 Issue #92 — Skills + 沙箱 + 数据库代码评审 Agent</span>
+</p>
+
+<p><strong>心得体会：</strong></p>
+<p>从源码阅读到动手实验，再到提交功能 PR，整个过程让我对 tRPC-Agent 框架有了从"用户"到"理解者"的转变。最有感触的是两点：</p>
+<p>第一，<span class="hl">理解框架的设计哲学比调用 API 更重要。</span>读 <code>_llm_agent.py</code> 时我发现，Agent 的核心循环不是复杂的黑魔法，而是"LLM 推理 → 工具调用 → 结果回填 → 再次推理"的交替循环。理解了这一点，就能预判哪些地方可以扩展（Filter 链）、哪些地方需要谨慎修改（Tool Loop 的并发安全）。</p>
+<p>第二，<span class="hl">开源贡献的价值不仅在"合入"。</span>我提交的 3 个 PR 虽然尚未合并，但评审过程中维护者的反馈让我学到了很多：代码规范、测试覆盖、文档质量——这些是课堂上学不到的工程实践。</p>
+
+<h3>4.2 开发经验与技术栈</h3>
+
+<p>虽然没有长期参与其他开源项目，但通过以下项目的完整交付，我具备了扎实的上手能力：</p>
+
+<div class="project-block">
+  <div class="meta"><span class="tag tag-amber">ChinaVis 2026</span> <span class="tag tag-blue">队长</span> 2026.03 ~ 2026.06</div>
+  <ul>
+    <li>搭建 30+ Python 脚本数据处理管线，处理 1,473 部非结构化剧本，提取 29 维角色特征、8 项网络拓扑指标</li>
+    <li>运用卡方检验、ANOVA、KMeans 聚类等 15+ 种统计方法，<span class="hl">全部核心发现 p &lt; 0.001</span></li>
+    <li>FastAPI + LangChain 集成 DeepSeek 大模型，总代码量约 45,000 行</li>
+  </ul>
+  <div class="badge-row">
+    <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white" alt="LangChain" />
+    <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  </div>
+</div>
+
+<div class="project-block">
+  <div class="meta"><span class="tag tag-amber">ACM 挑战赛</span> 2025.12 ~ 2026.01</div>
+  <ul>
+    <li>设计自适应预加载算法，<span class="hl">综合得分提升 45.41%</span>，带宽浪费降低 21.03%</li>
+    <li>核心算法仅 204 行，Docker + CNB 云原生环境，双平台自动化测试</li>
+  </ul>
+  <div class="badge-row">
+    <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white" alt="NumPy" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  </div>
+</div>
+
+<h3>4.3 技术栈掌握程度</h3>
+
+<table class="compact">
+  <thead>
+    <tr><th>技术领域</th><th>具体技能</th><th>掌握程度</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Python 生态</strong></td><td>FastAPI、异步编程、类型注解、pytest</td><td><span class="tag tag-green">精通</span></td></tr>
+    <tr><td><strong>AI Agent 框架</strong></td><td>tRPC-Agent SDK、LangChain、Tool Calling、Filter 机制</td><td><span class="tag tag-green">熟练</span></td></tr>
+    <tr><td><strong>数据处理</strong></td><td>NumPy、Pandas、SciPy、scikit-learn</td><td><span class="tag tag-green">精通</span></td></tr>
+    <tr><td><strong>数据存储</strong></td><td>SQLite、SQL、Redis 基础</td><td><span class="tag tag-blue">熟练</span></td></tr>
+    <tr><td><strong>DevOps</strong></td><td>Docker、Git、Linux、CNB 云原生</td><td><span class="tag tag-blue">熟练</span></td></tr>
+    <tr><td><strong>前端</strong></td><td>React、TypeScript、D3.js</td><td><span class="tag tag-amber">掌握</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ══════════ 五、选择理由与贡献意愿 ══════════ -->
+<h2>🎯 五、选择理由与贡献意愿</h2>
+
+<p><strong>为什么选择 tRPC？</strong></p>
+<p>第一，技术匹配度高。我此前在 tRPC-Agent 框架上的前置学习不是"看过文档"的程度，而是逐行读过核心源码、动手改过代码、提交过功能开发的深度。这个课题的租户模型设计、存储抽象层、Filter 扩展，恰好是我已经接触过的领域的延伸。</p>
+<p>第二，这个课题有真实的工程价值。"多租户"和"节点部署"不是一个学术问题，而是任何一个想要把 Agent 框架推向生产环境的项目都会遇到的现实问题。我不希望做完一个课题后产出只停留在仓库里，而是希望它真的能被用到实际场景中。</p>
+
+<p><strong>贡献意愿：</strong></p>
+<p>开源贡献不是一次性的 PR，而是持续的参与。我希望通过这个课题深入理解 tRPC-Agent 的服务化架构，成为社区活跃的贡献者。具体来说：</p>
+<ul>
+  <li>课题完成后持续跟进 PR 评审，将实现落地到框架主干</li>
+  <li>长期参与 tRPC 社区的 Issue 讨论和代码贡献</li>
+  <li>将实战经验沉淀为文档，帮助更多开发者上手</li>
+</ul>
+
+<div class="callout">
+  <strong>总结：</strong>我已在路上，不是从零开始。前置学习、源码阅读、动手实验、功能开发——每一步都留下了可验证的证据。这个课题是我现有能力的一个自然延伸，也是我期待在 tRPC 社区长期深耕的方向。
+</div>
+
+<div class="footer-note">
+  申请项目：tRPC（第一志愿）· Tencent YOLO-Master（第二志愿）· WeKnora（第三志愿）
+</div>
+
+</body>
+</html>

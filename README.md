@@ -1,119 +1,60 @@
-# 🚀 Stelquis 工作空间
+# 👋 Hi, I'm Niu
 
-> 一个 AI 时代开发者的知识库、工具箱与思考集
+**Artificial Intelligence · Data Science · Cloud-Native · CSU**
 
-[//]: # (本仓库为个人工作空间，记录学习、项目与思考)
 
----
-
-## 📋 目录总览
-
-| 目录 | 说明 | 🔗 |
-|------|------|:---:|
-| 📖 `course/` | 课程笔记 — 斯坦福 CS146S 等课程精读 | [进入 →](course/) |
-| 💭 `thinking/` | 深度思考 — 技术趋势、开源、AI 原创文章 | [进入 →](thinking/) |
-| 📦 `repo/` | 外部仓库 — 以 Git 子模块方式集成的开源工具 | [进入 →](repo/) |
-| 📄 `resume/` | 个人简历 — 数据科学 · 分布式 · 云原生 | [进入 →](resume/) |
-| 🎨 `asset/` | 静态资源 — 图片、SVG、样式等 | [进入 →](asset/) |
-| 📚 `docs/` | 文档资料 — 各类参考文档与技术笔记 | [进入 →](docs/) |
-| 💼 `offer/` | 面经汇总 — 面试经验与 Offer 记录 | [进入 →](offer/) |
-| 🛠️ `project/` | 项目实践 — 个人项目与实验代码 | [进入 →](project/) |
-| 📊 `report/` | 研究报告 — 技术调研与行业分析报告 | [进入 →](report/) |
-| 🔧 `scripts/` | 实用脚本 — 自动化工具与辅助脚本 | [进入 →](scripts/) |
+[![GitHub](https://img.shields.io/badge/GitHub-Stelquis-181717?logo=github&logoColor=white)](https://github.com/Stelquis)
+[![CNB](resume/assets/photos/CNB.svg)](https://cnb.cool/u/Stelquis)
+[![Gitee](https://img.shields.io/badge/Gitee-star--n-C71D23?logo=gitee&logoColor=white)](https://gitee.com/star-n)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/chenxun-niu-3420ba401/)
 
 ---
 
-## 📖 课程笔记
+## 📌 About
 
-记录 AI 编程领域的经典课程与前沿知识。
-
-| 课程 | 内容 | 状态 |
-|------|------|:----:|
-| 🎓 **Stanford CS146S** | 《The Modern Software Developer》课程精读全系列（W1~W9, 16 篇） | ✅ 已完成 |
-| 📝 CS146S 公众号笔记 | 公众号「Singularity 伴你成长」课程笔记完整汇编 | ✅ 已归档 |
-
----
-
-## 💭 深度思考
-
-原创文章，探讨技术趋势与行业洞察。
-
-| 文章 | 主题 | 日期 |
-|------|------|:----:|
-| 📄 **代码不再是稀缺品，开源为什么反而更重要了？** | AI 时代开源的真正价值——从「大教堂与集市」到「印刷机与演讲台」 | 2026-07-22 |
-
----
-
-## 📦 外部仓库集成
-
-以下仓库以 **Git 子模块** 方式集成，方便一键拉取最新代码：
-
-```bash
-# 一键拉取所有子模块最新代码
-git submodule update --remote --recursive
-```
-
-| 仓库 | 说明 | ⭐ | 来源 |
-|------|------|:--:|------|
-| 📄 **[Kami](https://github.com/tw93/Kami)** | 排版专业文档与落地页的设计系统 | 10k | [tw93/Kami](https://github.com/tw93/Kami) |
-| 📰 **[weekly-review](https://github.com/SiyuanJia/weekly-review)** | 周报模板与自动化工具 | | [SiyuanJia/weekly-review](https://github.com/SiyuanJia/weekly-review) |
-| 🛠️ **[Khazix-Skills](https://github.com/KKKKhazix/Khazix-Skills)** | AI 编码技能集合，涵盖多种工程场景 | | [KKKKhazix/Khazix-Skills](https://github.com/KKKKhazix/Khazix-Skills) |
-| 🔗 **[WeRead-MCP](https://github.com/Stelquis/WeRead-MCP)** | 微信读书 MCP 服务，Rust 实现 | | [Stelquis/WeRead-MCP](https://github.com/Stelquis/WeRead-MCP) |
-
----
-
-## 🎨 技术栈
-
-### 语言与工具
-
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
-![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)
-![Markdown](https://img.shields.io/badge/Markdown-000000?style=flat&logo=markdown&logoColor=white)
-
-### 平台与工具
-
-![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white)
-![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)
-![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat&logo=visual-studio-code&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
-
----
-
-## 🔄 快速开始
-
-```bash
-# 克隆本仓库（含所有子模块）
-git clone --recurse-submodules <repo-url>
-
-# 如果已克隆但未拉取子模块
-git submodule init
-git submodule update
-
-# 更新所有子模块到最新版本
-git submodule update --remote --recursive
-```
-
----
-
-## 📊 仓库统计
+**Always a learner, always learning from the best.**
 
 ```
-📁 总目录数:  10
-📦 子模块数:   4
-📝 文章数:   17+ 篇
-🕐 更新于:   2026-07-22
+第一性原理     │ 拆解 → 重构
+建立连接       │ 散沙 → 网络
+迭代           │ v0.1 → v1.0
+复利           │ 每天 × 365 = 37×
+熵减           │ 不整理 → 遗忘
+反脆弱         │ 风灭烛，却旺火
 ```
 
+**🌊[NebulaTide 哲学](https://cnb.cool/OrionDawn/NebulaTide)**
+
+> 🌌 **混沌是创造的温床** — 思绪初生时从来不是条理分明的，它像星云弥漫、缠绕、没有边界。习惯急着整理，却忘了混沌本身就是创造的温床。不急着开灯，在星云的暗处，有些东西正在缓慢发光。
+>
+> 🌊 **潮汐是自然的呼吸** — 涨潮时向外奔涌，执行、碰撞、试错；退潮时弯腰捡拾，那些散落的贝壳开始显形。复盘不是自责的仪式，不是 KPI 的清算，它是呼吸——吸气时扩张，呼气时沉淀。没有对错，只有节律。
+>
+> 🧭 **编织是顺势的方向** — 当贝壳足够多，你会看见隐形的线。不是强行画一条"正确道路"，而是让方向自然浮现。不预测遥远的未来，只感知此刻的流向，把复盘得到的珍珠串成下一程的罗盘。规划不是对抗不确定性，而是与不确定性共舞。
+>
+> ⏳ **节奏是不快，但别停** — 每个 commit 都微小到几乎看不见，但在时间的杠杆下，它会自己滚起来。
+
 ---
 
-## 📄 许可证
+## 🚀 Projects
 
-本仓库内容采用 [MIT](LICENSE) 许可证。
+🎭 **[梨园星图](https://cnb.cool/OrionDawn/HumanVIZ)** — **京剧剧本多维可视分析系统** *(2026.03~06)* · 针对 1,473 部剧本提取角色关系与叙事模式，ChinaVis 2026 参赛作品
+
+📹 **[短视频流自适应预加载算法](https://cnb.cool/OrionSeeker/Data-processing-method-Project)** — **ACM Multimedia 2022 挑战赛** *(2025.12~2026.01)* · 综合得分 +45%，QoE 提升 +7.5%，带宽浪费降低 -21%
+
+🤖 **[DeepAstraDraft](https://cnb.cool/OrionDawn/AstraDraft)** — **生产级 CAD 图纸智能问答 Agent** *(2026.06~07)* · 解析 DWG/DXF 图纸，构建 123 项参数语义索引，自然语言问答，准确率 93.1%
+
+🐦 **[Starling（椋鸟）](https://cnb.cool/OrionDawn/Starling)** — **AI 同声传译助手** *(2026.05~06)* · 粘贴 B 站英文视频链接，自动解析、ASR 识别、流式翻译、双语字幕卡片
+
+🧠 **[Neural-Link OS Agent](https://cnb.cool/OrionSeeker/SuperFusion)** — **智能系统管理代理** *(2026.05~07)* · 自然语言驱动命令生成与执行，多系统适配，四级风险控制，本地与 SSH 远程管理
+
+🕷️ **[PySpider](https://cnb.cool/OrionSeeker/WebSpider)** — **高性能分布式爬虫** *(2025.09~12)* · 44 线程并发，160,000+ 网页抓取，锁竞争降低 98%
+
+🧬 **[GeneX](https://cnb.cool/OrionSeeker/GeneX)** — **生物信息学复现实验** *(2026.04~07)* · 分子性质预测(GCN+EGNN)、DNA甲基化→基因表达预测、药物重定位
 
 ---
 
-<p align="center">
-  <sub>✨ 用 ❤️ 和 AI 构建 · Keep Learning, Keep Building ✨</sub>
-</p>
+## 📫 Contact
+
+[![Gmail](https://img.shields.io/badge/Gmail-stelquis%40gmail.com-EA4335?logo=gmail&logoColor=white)](mailto:stelquis@gmail.com)
+[![QQ Mail](https://img.shields.io/badge/QQ-3420761503%40qq.com-764ba2?logo=tencent-qq&logoColor=white)](mailto:3420761503@qq.com)
+[![163 Mail](https://img.shields.io/badge/163-17837343195%40163.com-C11D2E?logo=mail.ru&logoColor=white)](mailto:17837343195@163.com)

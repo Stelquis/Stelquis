@@ -1,4 +1,3 @@
-
 # 短视频流自适应预加载算法设计与实现
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
