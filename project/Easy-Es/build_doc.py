@@ -1,0 +1,1203 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""把 Kami long-doc 模板填充为开源之夏项目申请书，并渲染 PDF。
+
+内容真源是本文件的章节常量（CH_BASIC / CH_UNDERSTAND / ...）。
+修改内容请改这里，不要直接改 申请书.html，它每次运行都会被覆盖。
+
+语域约定：这是项目申请书，不是设计文档也不是技术随笔。
+  - 直接陈述内容，不旁白文档自身在做什么
+  - 不写「需要主动回应」「值得说明」「我把…写在这里」这类元话语
+  - 不使用自我评价与自我表扬用语
+  - 小标题写内容，不写态度
+
+Kami 排版约束（scripts/checks.py 机器校验，违反会导致 --check-markdown 失败）：
+  1. 禁用 em dash（U+2014），改用逗号、句号、冒号或括号
+  2. 禁止 ** 与反引号，强调一律用 <strong> / <code>
+  3. 禁止整行由 -*_ 组成的 Markdown 分隔线
+  4. 含中文的图不要用 SVG，用 div + CSS Grid，字号用 pt
+  5. &mdash; 等实体渲染后同样会变成 U+2014，同样违规
+"""
+
+from pathlib import Path
+
+KAMI = Path("/workspace/repo/Kami")
+OUT = Path("/workspace/project/Easy-Es")
+TEMPLATE = KAMI / "assets/templates/long-doc.html"
+FONTS = KAMI / "assets/fonts"
+
+target = OUT / "申请书.html"
+pdf_out = OUT / "开源之夏2026-Easy-Es-AI-Harness-项目申请书.pdf"
+
+# 覆盖 Kami 模板的 .chapter{break-before:page}：章节改为连续排版，不再每章另起一页。
+# 不改子模块模板（Kami 是 git submodule，改动会污染上游），
+# 改为注入一段位于模板自带 <style> 之后的样式，靠层叠顺序覆盖。
+# 章节之间用间距 + 细分隔线区分；.chapter-num 加 break-after:avoid，
+# 避免章节编号与 h1 被拆到两页（h1 本身已有 break-after:avoid，两者串起来即为整组保护）。
+PAGE_FLOW_OVERRIDE = """
+<style>
+  .chapter { break-before: auto; }
+  .chapter + .chapter {
+    margin-top: 24pt;
+    padding-top: 18pt;
+    border-top: 0.6pt solid #d8d4c7;
+  }
+  .chapter-num { break-after: avoid; }
+</style>
+"""
+
+# ---------------------------------------------------------------- 正文片段
+
+COVER = """
+<section class="cover">
+  <div>
+    <div class="cover-eyebrow">开源之夏 2026 · 项目申请书</div>
+    <div class="cover-title">为 Easy-Es 引入一套<br>AI Harness 自动化 PR 流水线</div>
+    <div class="cover-sub">从社区噪声到可合并代码：一条 human-in-the-loop 的半自动演进链路</div>
+  </div>
+  <div class="cover-meta">
+    <strong>牛晨勋 · 中南大学</strong><br>
+    2026.09<br>
+    开源组织：Dromara ｜ 导师：老汉<br>
+    难度：进阶 ｜ 技术领域：Database
+  </div>
+</section>
+"""
+
+TOC_ITEMS = [
+    ("01", "ch-basic", "项目基本信息"),
+    ("02", "ch-understand", "项目理解"),
+    ("03", "ch-research", "前期调研"),
+    ("04", "ch-prior", "业界先例与设计依据"),
+    ("05", "ch-fit", "个人开源经历与项目匹配度"),
+    ("06", "ch-difficulty", "实现难度评估"),
+    ("07", "ch-goal", "基础实现目标"),
+    ("08", "ch-arch", "技术方案"),
+    ("09", "ch-impl", "实施计划"),
+    ("10", "ch-plan", "四个月进度安排"),
+    ("11", "ch-deliver", "预期产出"),
+    ("12", "ch-accept", "验收标准"),
+    ("13", "ch-conclusion", "范围边界与可行性结论"),
+]
+
+TOC = '<section class="toc">\n  <h2>目录</h2>\n' + "".join(
+    f'''  <div class="toc-item">
+    <span class="toc-num">{n}</span>
+    <a class="toc-title" href="#{anchor}">{title}</a>
+  </div>\n'''
+    for n, anchor, title in TOC_ITEMS
+) + "</section>\n"
+
+
+def chapter(num, anchor, en, title, body):
+    return f"""<section class="chapter" id="{anchor}">
+  <div class="chapter-num">{num} · {en}</div>
+  <h1>{title}</h1>
+{body}
+</section>
+"""
+
+
+BASIC_TABLE = """
+  <table class="compact">
+    <tbody>
+      <tr><td><strong>申请项目</strong></td><td>为 Easy-Es 引入一套 AI Harness 自动化 PR 流水线</td></tr>
+      <tr><td><strong>项目难度</strong></td><td>进阶（经典模式，结项劳务报酬税前 5000 元）</td></tr>
+      <tr><td><strong>技术领域</strong></td><td>Database ｜ 编程语言：Java / Python ｜ 开源协议：Apache-2.0</td></tr>
+      <tr><td><strong>开源组织</strong></td><td>Dromara</td></tr>
+      <tr><td><strong>项目导师</strong></td><td>老汉（1035676261@qq.com）</td></tr>
+      <tr><td><strong>成果仓库</strong></td><td>https://gitee.com/dromara/easy-es</td></tr>
+      <tr><td><strong>开发周期</strong></td><td>4 个月（以项目详情页标注为准，自中选之日起算）</td></tr>
+      <tr><td><strong>支持架构</strong></td><td>RISC-V64</td></tr>
+      <tr><td><strong>申请人</strong></td><td>牛晨勋（GitHub: Stelquis｜CNB: cnb.cool/u/Stelquis）</td></tr>
+      <tr><td><strong>就读院校</strong></td><td>中南大学 · 数据科学与大数据技术 · 本科（2023.09 至 2027.06）</td></tr>
+      <tr><td><strong>投入估算</strong></td><td>约 17 周，按每周 30 小时计，合计约 510 小时</td></tr>
+    </tbody>
+  </table>
+"""
+
+
+CH_BASIC = chapter(
+    "01", "ch-basic", "Basic Info", "项目基本信息",
+    BASIC_TABLE + """
+  <h2>项目背景</h2>
+  <p>任务书对项目背景的表述为：Easy-Es 是一款基于 Elasticsearch 的国产 ORM 框架，
+    致力于降低开发者使用 ES 的门槛；传统的社区维护模式依赖核心作者人工处理 Issue、
+    设计功能、编写代码，面临响应速度慢、人力成本高的问题；利用大模型（LLM）与自动化
+    工具（Harness）辅助甚至主导项目的演进，实现「AI 驱动的开源项目自治」，
+    已成为提升社区活力的重要趋势。</p>
+
+  <p>任务书对已有工作的说明为：社区已积累一定的用户群体与 Issue 反馈，
+    作者目前以手动方式在 GitHub/Gitee 上收集需求，并在本地进行架构设计与代码提交；
+    业界已有部分项目开始尝试 AI 辅助编程（如 GitHub Copilot），
+    但在「全自动化的需求挖掘到 PR 提交」这一完整链路（Harness）上尚处于探索阶段。</p>
+
+  <h2>项目目标</h2>
+  <p>任务书「最终项目实现的目标」列出三条，本项目对每一条的落点如下：</p>
+  <table class="compact">
+    <thead><tr><th>任务书目标</th><th>本项目落点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>自动化闭环</strong>：打通「信息爬取 → 需求分析 → 架构设计 →
+        代码生成 → 自动 PR」的完整链路</td>
+        <td>M1 至 M6 六个模块首尾相接，M7 横切管控，全链路由统一状态机编排（§08）</td></tr>
+      <tr><td><strong>社区减负</strong>：使作者从繁琐日常维护中淡出，
+        转为通过配置与审核 AI 的产出</td>
+        <td>三处强制人工门禁 + 每步产出落盘为结构化产物，
+          审核对象是改动清单与验证报告，而非逐行读代码（§08）</td></tr>
+      <tr><td><strong>可落地的 Demo</strong>：至少实现 1 至 2 个由 AI 自动挖掘并生成的、
+        高质量的功能模块 PR</td>
+        <td>W16 产出 2 个 PR，需求可溯源至具体 Issue 编号（§10、§11）。
+          2 个为达标口径，保底承诺 1 个，见 §07</td></tr>
+    </tbody>
+  </table>
+
+  <h2>五项产出要求与实施要点</h2>
+  <p>任务书列出五项产出要求，其实施要点如下：</p>
+  <table class="compact">
+    <thead><tr><th>#</th><th>产出要求</th><th>优先级</th><th>实施要点</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>基于 Skills 的爬虫，抓 GitHub/Gitee Issue 及 ES 官方动态</td><td>高</td>
+        <td>技术成熟，难点在数据质量而非抓取本身</td></tr>
+      <tr><td>2</td><td>AI 自动选题与进化方向挖掘，支持人工审核与自主指定</td><td>高</td>
+        <td>全链路中最依赖领域判断的一环</td></tr>
+      <tr><td>3</td><td>架构与详细设计文档自动生成 + 自动 Review + 人工把关</td><td>中</td>
+        <td>Java 隐式约定多，生成易、正确难</td></tr>
+      <tr><td>4</td><td>代码实现 + 单测 + 自动 PR 端到端闭环</td><td>高</td>
+        <td>主战场，工作量占比最高</td></tr>
+      <tr><td>5</td><td>使用说明文档 + <strong>基于真实需求</strong>演示生成至少 1 个高质量 PR</td><td>高</td>
+        <td>项目成败判据</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    产出 5 的「基于真实需求」排除了构造演示需求走通流水线的做法，
+    对应验收要求是：<strong>每个 AI 生成的 PR，需求可溯源到具体 Issue 编号或 ES 官方动态条目</strong>。<br><br>
+    产出 2 的「进化方向挖掘」若由 LLM 自由发挥，会产出「建议增强可观测性」这类
+    无法证伪也无法落地的建议。该环节产出将<strong>强制结构化</strong>，
+    不是自由文本，而是带证据链的候选列表。
+  </div>
+
+  <h2>相关仓库</h2>
+  <table class="compact">
+    <thead><tr><th>仓库</th><th>地址</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>Easy-Es 主仓（成果仓库）</td><td>https://gitee.com/dromara/easy-es</td>
+        <td>PR 提交目标；能力图谱语料来源；默认分支 <code>master</code></td></tr>
+      <tr><td>Easy-Es GitHub 镜像</td><td>https://github.com/dromara/easy-es</td>
+        <td>Issue 第二数据源；默认分支 <code>main</code></td></tr>
+      <tr><td>Harness 系统（拟新建）</td><td><code>gitee.com/dromara/easy-es-harness</code></td>
+        <td>本项目系统代码，归属方案见 §09，待确认事项见 §10 Q4</td></tr>
+    </tbody>
+  </table>
+""",
+)
+
+
+CH_UNDERSTAND = chapter(
+    "02", "ch-understand", "Problem Definition", "项目理解",
+    """
+  <h2>任务书所述三条不足的核实</h2>
+  <p>任务书「存在的不足」列出三条。逐条以公开数据核实如下：</p>
+
+  <table>
+    <thead><tr><th>任务书所述不足</th><th>核实结果</th><th>来源</th></tr></thead>
+    <tbody>
+      <tr><td><strong>需求响应滞后</strong><br>依赖作者人工浏览 Issue 与跟踪 ES 官方动态，
+        效率低下、易遗漏高价值需求</td>
+        <td>Gitee 214 + GitHub 104 个 open issue，近期维护者回复率接近 0；
+          其中 #143 / #135 / #157 三条需求实际已实现，至今仍为 open（§03）</td>
+        <td>Issues</td></tr>
+      <tr><td><strong>维护压力集中</strong><br>核心作者承担需求分析、架构设计、
+        编码测试的全部工作</td>
+        <td>GitHub contributors 仅 1 人（<code>xpc1024</code>，77 commits，占比 100%）；
+          提交邮箱由 <code>xpc@dromara.org</code> 转为
+          <code>xingpc37977@hundsun.com</code>（恒生电子，全职）</td>
+        <td>GitHub API / commit 记录</td></tr>
+      <tr><td><strong>缺乏自动化流程</strong><br>没有系统能自动抓取互联网信息、
+        结合现有框架功能智能选题，并自动完成设计文档与代码实现</td>
+        <td>近 4 个月无实质代码提交（期间仅 2026-08-28 一次 README 改动）；
+          <code>feature-boot4</code> 分支已创建但未合入，Spring Boot 4 适配停滞；
+          任务书亦指出该完整链路尚处于探索阶段</td>
+        <td>Gitee / GitHub</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    另有一组数据佐证任务书所述「迭代速度可能放缓」：<code>v3.0.2</code>（2026-05-10）
+    仅含 1 条 bugfix，为项目史上最小 release。
+  </div>
+
+  <h2>三条判断</h2>
+
+  <div class="takeaway">
+    <div class="takeaway-label">判断一 · 项目属于元工程，验收是非线性的</div>
+    交付物不是单个功能，而是能产出功能的系统。即便 90% 的模块正常运行，
+    只要产出的 PR 是垃圾，整体价值就归零。因此验收以<strong>产出质量</strong>而非功能完成度为准。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">判断二 · 脏活占比约 80%</div>
+    建验证闭环 25% ｜ 搭环境 25% ｜ 数据清洗与标注 15% ｜ 能力图谱 15% ｜
+    调 LLM / Prompt / RAG 15% ｜ 架构与设计创新 5%。<br><br>
+    搭环境与建验证闭环合计占 50%，加上数据清洗与标注后达 65%；
+    再计入能力图谱，即<strong>前两个月所覆盖的 80%</strong>。这一分布决定了排期：
+    前两个月先做环境与验证，而非先搭 Agent 框架。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">判断三 · 难度集中在三处</div>
+    ① LLM 能否生成通过 Easy-Es 全套测试的 Java 代码，取决于验证反馈设计<br>
+    ② 能否筛出「值得做且 AI 能做对」的需求，取决于领域判断<br>
+    ③ RISC-V64 的验收口径，需与导师确认（§10）
+  </div>
+""",
+)
+
+
+CH_RESEARCH = chapter(
+    "03", "ch-research", "Field Research", "前期调研",
+    """
+  <p class="lead">数据获取时间：2026 年 9 月 4 日。</p>
+
+  <p>调研范围由任务书的产出要求倒推确定：要自动<strong>生成代码</strong>（产出要求 4），
+    须先掌握 Easy-Es 的改动链路与领域约束，否则生成结果无法通过社区测试；
+    要<strong>自动选题</strong>（产出要求 2），须先摸清 Issue 候选池的实际成分，
+    否则评分器无从设计；要<strong>抓取 Issue 与 ES 官方动态</strong>（产出要求 1），
+    须先确认公开语料中哪些已过时或自相矛盾。以下四项实测分别对应上述三个问题。</p>
+
+  <h2>代码库体量与改动链路</h2>
+
+  <p><strong>体量</strong>（v3.0.2 标签实测）：Java 主源码 198 个文件、
+    <span class="hl">24,647 行</span>；测试 49 个文件、7,254 行。
+    <code>easy-es-core</code> 独占 17,696 行（<strong>71.8%</strong>），
+    是能力图谱与代码生成的主体。条件构造器对外暴露 <strong>898 个方法</strong>
+    （<code>Compare</code> 321 / <code>Func</code> 304 / <code>Geo</code> 150，其余 123）；
+    <code>FieldType</code> 枚举 27 个值，注解 14 个。</p>
+
+  <p><strong>改动链路</strong>：新增一个查询 API 需横跨 5 个文件层级。</p>
+
+  <table>
+    <thead><tr><th>层</th><th>文件</th><th>职责</th><th>行数</th></tr></thead>
+    <tbody>
+      <tr><td>①</td><td><code>conditions/function/Func.java</code>（或 <code>Compare.java</code>）</td>
+        <td>接口声明 + javadoc</td><td>1790 / 2215</td></tr>
+      <tr><td>②</td><td><code>kernel/AbstractWrapper.java</code></td>
+        <td>实现 + 参数校验</td><td>1027</td></tr>
+      <tr><td>③</td><td><code>kernel/AbstractChainWrapper.java</code></td>
+        <td>Lambda / 链式重载</td><td>791</td></tr>
+      <tr><td>④</td><td><code>kernel/WrapperProcessor.java</code></td>
+        <td>ES DSL 序列化</td><td>1101</td></tr>
+      <tr><td>⑤</td><td><code>toolkit/FieldUtils.java</code></td>
+        <td><code>.keyword</code> 后缀判定</td><td>292</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    漏任何一处都会导致<strong>能编译但语义错误</strong>：编译器不会报错，
+    只有测试能发现，而测试失败信息未必能反推出根因。<br><br>
+    <code>LambdaEsQueryWrapper</code> 全文仅 <strong>53 行、4 个方法</strong>
+    （2 个公有构造器、1 个包内构造器、1 个 <code>instance()</code> 覆写），不含任何查询方法；
+    其父类 <code>AbstractLambdaQueryWrapper</code> 是 13 行空壳，实现在
+    <code>AbstractWrapper</code>。按「在 <code>LambdaEsQueryWrapper</code> 里加方法」的直觉去改，
+    会直接改错文件。<br><br>
+    改动高度集中：<code>Compare</code> + <code>Func</code> + <code>AbstractWrapper</code> +
+    <code>WrapperProcessor</code> 共 6,133 行（占主源码 25%），
+    是几乎每个 API 改动都要触碰的窄口，L1 定向单测优先覆盖这四个文件。
+  </div>
+
+  <h2>其余领域约束</h2>
+  <ul>
+    <li><strong><code>.keyword</code> 智能后缀</strong>：按字段索引类型 + 查询类型上下文判定，
+      逻辑在 <code>FieldUtils.java:210-237</code>，可用 <code>smartAddKeywordSuffix=false</code> 关闭。
+      v3.0.0 release note 中「修复聚合 / 排序 / prefix 查询时部分字段未加 .keyword 后缀」
+      佐证其易错性。</li>
+    <li><strong>id 列约定</strong>：v3.0.0 起支持自定义名称，不再强制 <code>id</code>，
+      但默认约定仍为 <code>id</code>。2.x 文档中「实体类必须含 <code>String id</code>」已过时。</li>
+    <li><strong>依赖版本</strong>：底层为 <code>elasticsearch-java</code>，锁死
+      <span class="hl">7.17.28</span>，涉及 <code>elasticsearch-java</code> /
+      <code>elasticsearch</code> / <code>elasticsearch-geo</code> 三个构件；
+      Spring Boot 内置 starter 需排除后显式声明。ES 服务端 7.x / 8.x 均可，JDK 兼容 8 / 17 / 22。</li>
+    <li><strong>覆盖率基线</strong>：官方宣称单元测试综合覆盖率超 <span class="hl">95%</span>。
+      这既提供了 L1 定向单测的高质量语料库，也意味着新增 PR 不附带测试即不符合社区标准。</li>
+  </ul>
+
+  <p><strong>版本节奏</strong>：v3.0.0（2025-05-11）为架构级重构
+    （换 <code>elasticsearch-java</code> 7.17.28、弃 fastjson 换 jackson），2.x 资料已过时；
+    v3.0.1（2026-02-27）引入向量检索 beta；v3.0.2（2026-05-10）仅 1 条 fix。</p>
+
+  <h2>Issue 生态实测</h2>
+  <p>对 GitHub 最新 30 条 open issue（#135 至 #171，2024-09 至 2026-08）人工分类：</p>
+
+  <table>
+    <thead><tr><th>类型</th><th>数量</th><th>占比</th><th>示例</th></tr></thead>
+    <tbody>
+      <tr><td><strong>feature request</strong></td><td>8</td><td><strong>约 27%</strong></td>
+        <td>#169 suggest 自动补全、#168 nginx pathPrefix、#156 flattened 类型、
+          #154 <code>@IndexField(index=true)</code>、#147 动态数据源、#146 时区与缺失的 <code>ge</code> 方法</td></tr>
+      <tr><td><strong>bug</strong></td><td>9</td><td>约 30%</td>
+        <td>#167 管道聚合从第 3 个字段起丢失、#164 <code>_score</code> 排序被强制排到末尾、
+          #170 map 字段序列化</td></tr>
+      <tr><td>求助 / 噪音</td><td>13</td><td>约 43%</td>
+        <td>#171 外部安全问卷、#166「支持 SpringBoot4 吗」、#159 https 如何配置、#141 IDEA 报红</td></tr>
+    </tbody>
+  </table>
+
+  <p>实测分布与依据《避坑指南》作者自述所作的估计（可转化需求低于 10%）差异较大。
+    据此确定两点：候选池充足（feature 加 bug 合计约 57%），候选需求不足的风险下调至低；
+    噪声仍占 43%，分类器保留。相应地，W4 先人工标注 200 至 300 条样本再训练分类器，
+    而非依赖先验推测。</p>
+
+  <h2>三处待澄清的不一致</h2>
+
+  <div class="takeaway">
+    <div class="takeaway-label">一 · 底层客户端表述在 5 处公开材料中各不相同</div>
+    Gitee README 正文已更新为 ElasticsearchClient，而<strong>仓库简介、GitHub README、
+    Gitee 项目标签、官网「特性」区</strong>仍为 RestHighLevelClient。<br><br>
+    若爬虫语料混入仍在流通的 2.x 文档，检索结果会自相矛盾，
+    故能力图谱以 3.x 源码为唯一事实来源。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">二 · Issue 状态与代码实际能力脱节</div>
+    #143「需要 es8.0 以上支持」已由 v3.0.0 完成；
+    #135「能否支持 es8.x 的向量搜索」已由 v3.0.1 引入 beta；
+    #157「createIndex() 无法重复使用」已由 v3.0.1 修复。三者至今仍为 open。<br><br>
+    这说明「某功能是否已实现」即使对 Maintainer 也不易判定，
+    是能力图谱闭环的直接依据。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">三 · RISC-V64 验收口径</div>
+    任务书标注「支持架构：RISC-V64」，官方 README 宣称「兼容 jdk8 至 jdk17 支持 RISC-V 架构」
+    （同一行又写「兼容 jdk8~jdk22」），而 Elastic 官方支持矩阵无 riscv64 构建。
+    处理方案见 §10。
+  </div>
+""",
+)
+
+
+CH_PRIOR = chapter(
+    "04", "ch-prior", "Prior Art", "业界先例与设计依据",
+    """
+  <h2>设计依据：任务书对质量把关的规定</h2>
+
+  <div class="callout">
+    任务书「希望改进的点」在<strong>质量把关</strong>一条中写明：<em>「每个核心阶段
+    （<strong>设计、编码、测试</strong>）的产出均需经过『自动 Review + 人工审核』
+    双重把关，确保代码质量。」</em><br><br>
+    同节对<strong>端到端交付</strong>的描述为：实现从「需求」到「代码合并」的
+    <strong>半 / 全自动化流转</strong>。
+  </div>
+
+  <p>据此，人工审核是任务书规定的交付形态之一，不是为降低实现难度所作的让步。
+    两类把关的分工是：<strong>自动 Review</strong> 承担可机械判定的部分（编译、
+    测试、覆盖率、静态扫描、设计声明与实际 diff 的一致性），
+    <strong>人工审核</strong> 承担需要领域判断的部分（选题价值、语义正确性、
+    是否可合并）。二者串行叠加，不是二选一。</p>
+
+  <p>任务书同时界定了业界现状：<em>「已有部分项目开始尝试使用 AI 辅助编程
+    （如 GitHub Copilot），但在『全自动化的需求挖掘到 PR 提交』这一完整链路
+    （Harness）上尚处于探索阶段。」</em>本项目的落点即在这条完整链路上交付一套
+    可运行系统，而非再做一层代码补全工具。</p>
+
+  <h2>业界已有的分段先例</h2>
+  <table class="compact">
+    <thead><tr><th>先例</th><th>覆盖的段</th><th>可借鉴处</th></tr></thead>
+    <tbody>
+      <tr><td>SWE-agent</td><td>Issue → 补丁 → 测试</td><td>分层验证的环境抽象</td></tr>
+      <tr><td>OpenHands</td><td>Issue → PR 全流程</td><td>端到端编排的状态管理</td></tr>
+      <tr><td>AutoCodeRover</td><td>Issue → 定位 → 补丁</td><td>Java 代码结构化检索</td></tr>
+      <tr><td>AutoPR</td><td>Issue → 修复 → PR</td><td>自动 PR 描述规范</td></tr>
+      <tr><td>Issue2Idea</td><td>Issue → 需求挖掘</td><td>需求挖掘侧最接近的先例</td></tr>
+      <tr><td>PR-Agent / PR Pilot</td><td>PR → 自动评审</td><td>自动 Review 环节</td></tr>
+    </tbody>
+  </table>
+
+  <h2>无人值守的风险与防控</h2>
+  <p>任务书「质量把关」条要求确保代码质量。自动化链路与人工流程的关键差异在于：
+    一旦无人值守，模型的<strong>行为漂移</strong>、<strong>递归循环</strong>与
+    <strong>对外写入动作</strong>都可能在无人察觉的情况下持续累积，
+    其共同点是系统自身无法判断已经偏离目标。</p>
+
+  <div class="callout">
+    因此本项目的防控不以「模型足够可靠」为前提，而以<strong>可降级、可熔断</strong>（P4）
+    为设计约束：重试次数设上限，重复输出相似度检测即熔断，每步产出落盘可回溯，
+    对外的写入动作（分支、Commit、PR、评论）默认不自动执行。对应实现见 §08 与 §09。
+  </div>
+""",
+)
+
+
+CH_FIT = chapter(
+    "05", "ch-fit", "Fit", "个人开源经历与项目匹配度",
+    """
+  <h2>技术要求对照</h2>
+  <p>任务书「项目技术要求」共三条，逐条对照如下（首列为该条在任务书中的编号）：</p>
+  <table>
+    <thead><tr><th>技术要求</th><th>任务书要求</th><th>对应经历</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>了解 Python 编程</td>
+        <td>Python 为主要开发语言（梨园星图 30+ 脚本管线、PySpider 16 万页爬虫）</td></tr>
+      <tr><td>1</td><td>了解 Java 基础</td>
+        <td>Java 为已修课程与列明技能；W1 起进入 Java 工程上下文，W2 手工 PR 补齐</td></tr>
+      <tr><td>1</td><td>熟悉 AI 工程化语言特性</td>
+        <td>梨园星图集成 BGE 嵌入 + KeyBERT + SimCSE，用 DeepSeek + FastAPI + LangChain
+          做别名消歧与关系标注；DeepAstraDraft 构建 123 项参数语义索引</td></tr>
+      <tr><td>1</td><td>熟练掌握 vibe coding</td><td>见下方</td></tr>
+      <tr><td>2</td><td>熟悉 LLM 应用开发、Prompt 工程与 RAG</td>
+        <td>同上；DeepAstraDraft 设计「意图分类 → 规则匹配 → LLM 增强」渐进式推理，
+          58 题测试集准确率 93.1%</td></tr>
+      <tr><td>2</td><td>了解爬虫技术</td>
+        <td>PySpider：生产者-消费者架构，44 线程，64 分片去重器
+          （锁竞争降低 98%，查询小于 1ms，10 万 URL / 800MB）</td></tr>
+      <tr><td>3</td><td>有 AI 辅助编程或自动化流水线经验更优</td>
+        <td>DeepAstraDraft：LangChain + LangGraph 实现 4 子 Agent 协作管线 + 5 个领域 Skill，
+          含无 API Key 时的纯规则降级路径</td></tr>
+    </tbody>
+  </table>
+
+  <h2>vibe coding 实践</h2>
+  <p>该要求的关键在于<strong>在 AI 主导代码产出的模式下保证交付质量</strong>。相关实践：</p>
+
+  <ul>
+    <li><strong>DeepAstraDraft</strong>（CAD 图纸智能问答 Agent）：开发过程用自然语言描述
+      各 Agent 职责与协作方式、由模型产出实现、
+      依据 58 题测试集结果迭代，最终准确率 93.1%。</li>
+    <li><strong>Neural-Link OS Agent</strong>：智能系统管理代理，自然语言驱动命令生成。
+      该项目界定了 vibe coding 的适用边界：<strong>当产出物会改变系统状态时，
+      逐行审查是必要的</strong>，因此设计了四级风险控制。</li>
+  </ul>
+
+  <p>该边界判断在项目中的技术实现见 §08。</p>
+
+  <h2>相关经历</h2>
+
+  <div class="takeaway">
+    <div class="takeaway-label">DeepAstraDraft：多 Agent 编排与降级设计（最直接相关）</div>
+    两点与本项目对应：多阶段管线的状态管理；无 API Key 时降级至纯规则模式
+    （保持同等准确率），后者是 P4 可降级可熔断原则的实践原型。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">湖南电信实习：分类器调试</div>
+    从 48 万条生产工单中清洗提取 2.7 万条训练数据，用 StructBERT + LoRA 做五类意图分类。
+    关键产出是定位并修复「词表文件损坏导致中文全编码为 [UNK]」这一根因，
+    使 Macro-F1 从 0.14 升至 0.81，三种子集成达 0.8909。<br><br>
+    对 M1 分类器的价值在于：分类器效果不佳时，问题常在数据处理链路而非模型。
+    另一项工作（定位 GCJ02 / WGS84 坐标系混用导致的 676m 系统偏移）
+    同样针对「能跑通但结果是错的」这类隐蔽缺陷，与 §06 N1 同形态。
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">梨园星图：大规模非结构化数据处理（ChinaVIS 2026 二等奖）</div>
+    针对 1,473 部京剧剧本搭建 Python 管线（30+ 脚本），提取 29 维角色特征、12 维主题、
+    8 项网络拓扑指标，构建 7,965 角色人次的共现网络，并用卡方检验、ANOVA、KMeans、
+    PCA + 层次聚类完成模式发现。<br><br>
+    与本项目 M1 数据清洗、M2 能力图谱构建属于同类工作：非结构化数据的结构化治理。
+  </div>
+
+  <h2>短板与补强</h2>
+  <table>
+    <thead><tr><th>短板</th><th>补强计划</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ES 领域深度不足</strong><br>（text/keyword 语义、DSL 树、mapping 迁移）</td>
+        <td>W1 至 W2 精读《避坑指南》与文档，配合手工 PR 实战；这是 N1 的根本缓解</td></tr>
+      <tr><td><strong>Java 工程经验浅于 Python</strong></td>
+        <td>W1 起进入 Easy-Es 工程上下文；Maven 多模块与依赖冲突排查通过实战补齐，
+          卡点超 3 天求助</td></tr>
+      <tr><td>首次参与 Dromara 社区</td>
+        <td>W2 的破冰 PR 为融入动作；全程保持周度沟通</td></tr>
+    </tbody>
+  </table>
+""",
+)
+
+
+CH_DIFFICULTY = chapter(
+    "06", "ch-difficulty", "Difficulty", "实现难度评估",
+    """
+  <h2>已有基础</h2>
+
+  <p><strong>调研已完成，W1 无需摸底。</strong>申请前已对 Easy-Es v3.0.2 完成实测：
+    体量统计、5 层改动链路追踪、30 条 Issue 人工分类、5 处文档一致性核对、发布节奏梳理（§03）。
+    W1 可直接进入环境搭建。</p>
+
+  <p><strong>四条可直接复用的工程经验</strong>（各项实测指标见 §05）：</p>
+  <table>
+    <thead><tr><th>已有经验</th><th>对应本项目环节</th></tr></thead>
+    <tbody>
+      <tr><td>PySpider 分布式爬虫</td><td>M1 感知层（W3）</td></tr>
+      <tr><td>湖南电信工单分类器</td><td>M1 分类器（W4）</td></tr>
+      <tr><td>梨园星图数据管线</td><td>M1 数据清洗、M2 能力图谱（W5）</td></tr>
+      <tr><td>DeepAstraDraft 多 Agent 编排</td><td>M3/M4 编排与 P4 降级（W10 至 W14）</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>环境就绪。</strong>Docker 29.6.2 实测可拉取并运行容器，
+    Testcontainers 起真实 ES 已具备条件（L2 依赖此项）；Python 3.12 已装；
+    Gitee / GitHub / DockerHub 网络可达。缺口仅 Java 与 Maven，W1 补齐。</p>
+
+  <p><strong>PR 候选已就绪。</strong>已识别 8 个 feature request
+    （#169 / #168 / #156 / #154 / #147 / #146 等）与 9 个 bug（#167 / #164 等）。
+    W16 的选题不需要从零开始找需求。</p>
+
+  <h2>主要难点</h2>
+  <table>
+    <thead><tr><th>#</th><th>难点</th><th>为何难</th><th>应对</th></tr></thead>
+    <tbody>
+      <tr><td><strong>N1</strong></td><td><strong>Java 语义错误隐蔽</strong></td>
+        <td>编译期与类型系统均不提供信号（§03）</td>
+        <td>分层验证 + 客观信号门禁；测试强制覆盖新增路径</td></tr>
+      <tr><td><strong>N2</strong></td><td><strong>5 层链路一致性</strong></td>
+        <td>漏改不报错，且实现不在 <code>LambdaEsQueryWrapper</code>（§03）</td>
+        <td>AST 对称性检查；改动清单与 diff 比对</td></tr>
+      <tr><td><strong>N3</strong></td><td><strong>验证速度 vs 迭代次数</strong></td>
+        <td>端到端<strong>预估</strong>需 6 至 35 次迭代，而全量测试耗时 5 至 15 分钟（§08）</td>
+        <td>L0/L1/L2 分层，把错误发现成本压到秒级 / 分钟级</td></tr>
+      <tr><td><strong>N4</strong></td><td><strong>噪声筛选</strong></td>
+        <td>求助 / 噪音占 43%，直接喂给 LLM 会放大误判</td>
+        <td>规则前置 + LLM 兜底四分类；人工标注 200 至 300 条样本</td></tr>
+      <tr><td><strong>N5</strong></td><td><strong>ES 领域知识门槛</strong></td>
+        <td>同 §05「短板与补强」第一条</td>
+        <td>见 §05 补强计划（W1 至 W2 集中补，W2 手工 PR 验证）</td></tr>
+      <tr><td><strong>N6</strong></td><td><strong>PR 合并窗口</strong></td>
+        <td>若跨春节，Maintainer 审核停滞，而结项以合并时间为准</td>
+        <td>W16 前置到 W14 末启动，预留 3 周合并窗口</td></tr>
+    </tbody>
+  </table>
+
+  <p>文档中三处出现的迭代次数口径不同：<strong>N3 的 6 至 35 次</strong>为端到端全流程轮次的
+    预估；<strong>§08 架构图中的 15 次</strong>为 M5 验证失败后反馈至 M4 的重试上限，
+    由 M7 管控层设定、状态机执行；
+    <strong>§12 的 8 至 15 次</strong>为分层验证达成设计指标后的目标均值。</p>
+""",
+)
+
+
+CH_GOAL = chapter(
+    "07", "ch-goal", "Base Goal", "基础实现目标",
+    """
+  <p class="lead">任务书「最终项目实现的目标」第三条要求：在开源之夏期间产出一套可落地的
+    自动化流程，至少实现 1 至 2 个由 AI 自动挖掘并生成的高质量功能模块 PR。
+    本项目承诺的最小可交付集合（对应 §12 的「保底」档）如下：</p>
+
+  <ol>
+    <li><strong>Harness 全链路可运行</strong>：M1 至 M7 均可执行，端到端演示通过，
+      对应任务书「自动化闭环」一条所述完整链路</li>
+    <li><strong>1 个手工 PR 被合并</strong>：用于对齐导师偏好与社区规范，
+      并为 AI 生成的 PR 打通合并通道</li>
+    <li><strong>至少 1 个 AI 生成的 PR 通过全量测试并提交</strong>，需求可溯源到具体
+      Issue 编号，对应任务书「至少 1 至 2 个」口径的下限</li>
+    <li><strong>使用说明文档齐备</strong>：含一键启动（Docker Compose）与演示脚本，
+      对应产出要求 5</li>
+  </ol>
+
+  <p>任务书口径的上限（2 个 PR，且为 AI 自动挖掘并生成）不列为保底，
+    而列为 §12 的达标档：保底只承诺下限，达标承诺 2 个 PR 且至少 1 个被合并。</p>
+""",
+)
+
+
+CH_ARCH = chapter(
+    "08", "ch-arch", "Architecture", "技术方案",
+    """
+  <h2>设计原则</h2>
+  <table>
+    <thead><tr><th>#</th><th>原则</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>P1</td><td>客观信号优先</td>
+        <td>质量判定优先采信编译、测试、覆盖率、静态扫描等硬信号；LLM 评审不作放行依据</td></tr>
+      <tr><td>P2</td><td>human-in-the-loop 而非 human-on-the-loop</td>
+        <td>人工介入是流程节点，不是异常时的补救。三处门禁覆盖任务书「质量把关」条要求的
+          设计、编码、测试三阶段：设计确认对应设计阶段；PR 提交前确认一次审核
+          <strong>编码与测试</strong>两阶段的产出（diff 与测试报告）。
+          两者由 M4、M5 连续产出且紧邻，合并在同一节点审核，
+          避免为形式上凑齐三处而将人工介入碎片化</td></tr>
+      <tr><td>P3</td><td>反馈密度优先于编排复杂度</td>
+        <td>依据 §03 实测（漏改不报错、仅测试可发现），工程投入放在「让模型更快知道自己错了」</td></tr>
+      <tr><td>P4</td><td>可降级、可熔断</td>
+        <td>任何环节失败都能安全停在当前状态</td></tr>
+      <tr><td>P5</td><td>不追求通用</td>
+        <td>只针对 Easy-Es 单仓库做深</td></tr>
+    </tbody>
+  </table>
+
+  <h2>系统架构</h2>
+
+  <p>任务书「希望改进的点」列出五项，本项目的模块划分即由这五项逐一推出，
+    不另设与任务书无关的能力：</p>
+
+  <table class="compact">
+    <thead><tr><th>任务书「希望改进的点」</th><th>对应模块</th></tr></thead>
+    <tbody>
+      <tr><td><strong>智能感知</strong>：通过 Skills 自动爬取 GitHub/Gitee 仓库 Issue，
+        并监控 Elasticsearch 官方发展动向</td>
+        <td><strong>M1 感知层</strong>（U1 Issue 抓取器、U2 四分类器）+
+          <code>issue-crawler</code> 技能单元</td></tr>
+      <tr><td><strong>自动选题与决策</strong>：结合当前框架已实现的功能，AI 自动评估并优先
+        筛选高价值需求；支持触发人（Maintainer）从推荐列表中选择，或由用户自主指定功能选题</td>
+        <td><strong>M2 选题层</strong>（U3 能力图谱构建器、U4 选题评分器）；
+          「从推荐列表选择 / 自主指定」由人工门禁 1 选题确认承担</td></tr>
+      <tr><td><strong>AI 深度挖掘与演进</strong>：对选定需求深度挖掘、产出进化方向，
+        并依次自动完成架构设计、详细设计</td>
+        <td><strong>M3 设计层</strong>（U5 设计生成器、U6 一致性校验器）</td></tr>
+      <tr><td><strong>质量把关</strong>：每个核心阶段（设计、编码、测试）的产出均需经过
+        「自动 Review + 人工审核」双重把关</td>
+        <td><strong>M5 验证层</strong>（U9 / U10 / U11 承担自动 Review）+
+          三处人工门禁承担人工审核</td></tr>
+      <tr><td><strong>端到端交付</strong>：自动完成代码实现、单元测试，并生成 Pull Request，
+        实现从「需求」到「代码合并」的半 / 全自动化流转</td>
+        <td><strong>M4 生成层</strong>（U7 代码生成器、U8 单测生成器）+
+          <strong>M6 交付层</strong>（U12 PR 组装器）</td></tr>
+    </tbody>
+  </table>
+
+  <p>唯一不对应任务书任一条的是 <strong>M7 管控层</strong>。它不提供功能，
+    而是任务书「质量把关」条中「确保代码质量」得以成立的前提：
+    自动化链路在无人值守时无法自行判断是否已偏离目标（§04），
+    故熔断、重试上限与全链路审计属安全约束，不是可选增强。</p>
+
+  <style>
+    .arch{border:1px solid #1B365D;margin:1.1em 0;font-size:0}
+    .arch-row{padding:.45em .7em;background:#eae7dc}
+    .arch-h{font-weight:600;font-size:9.5pt;color:#1B365D;line-height:1.3}
+    .arch-s{font-size:8pt;color:#3a3a38;line-height:1.35;margin-top:.15em}
+    .arch-mods{display:grid;grid-template-columns:repeat(6,1fr)}
+    .mod{border-right:1px solid #1B365D;padding:.45em .4em;background:#f5f4ed}
+    .mod:last-child{border-right:none}
+    .mod-h{font-weight:600;font-size:9pt;color:#1B365D;margin-bottom:.25em;line-height:1.3}
+    .mod ul{margin:0;padding:0;list-style:none}
+    .mod li{font-size:7.4pt;color:#3a3a38;line-height:1.45}
+    .mod.hi{background:#eceae0;box-shadow:inset 0 0 0 1.4px #1B365D}
+    .arch-guard{border-bottom:1px solid #1B365D}
+    .arch-orch{border-top:1px solid #1B365D;border-bottom:1px solid #1B365D}
+    .arch-gates{display:grid;grid-template-columns:repeat(3,1fr);background:#eae7dc}
+    .gate{padding:.45em .7em;border-right:1px solid #1B365D}
+    .gate:last-child{border-right:none}
+    .gate-h{font-weight:600;font-size:9pt;color:#1B365D;line-height:1.3}
+    .gate-s{font-size:8pt;color:#3a3a38;line-height:1.35}
+  </style>
+  <figure>
+    <div class="arch">
+      <div class="arch-row arch-guard">
+        <div class="arch-h">M7　管控层　Guardrails</div>
+        <div class="arch-s">Token 上限 · 执行超时 · 重复输出熔断 · 死循环检测 · 全链路审计
+          （横切约束 M1 至 M6）</div>
+      </div>
+
+      <div class="arch-mods">
+        <div class="mod">
+          <div class="mod-h">M1 感知层</div>
+          <ul><li>Gitee Issues</li><li>GitHub Issues</li><li>ES Release 动态</li>
+            <li>规则 + LLM 分类</li></ul>
+        </div>
+        <div class="mod">
+          <div class="mod-h">M2 选题层</div>
+          <ul><li>能力图谱 RAG</li><li>是否已实现校验</li><li>可测性 / 价值评分</li>
+            <li>候选排序</li></ul>
+        </div>
+        <div class="mod">
+          <div class="mod-h">M3 设计层</div>
+          <ul><li>架构设计生成</li><li>详细设计生成</li><li>一致性校验</li>
+            <li>AST 对称性检查</li></ul>
+        </div>
+        <div class="mod">
+          <div class="mod-h">M4 生成层</div>
+          <ul><li>Java 代码生成</li><li>单元测试生成</li><li>基于 diff 定向</li>
+            <li>领域硬约束注入</li></ul>
+        </div>
+        <div class="mod hi">
+          <div class="mod-h">M5 验证层</div>
+          <ul><li>L0 编译 &lt; 30s</li><li>L1 定向 &lt; 2min</li><li>L2 全量回归</li>
+            <li>客观信号采集</li></ul>
+        </div>
+        <div class="mod">
+          <div class="mod-h">M6 交付层</div>
+          <ul><li>分支管理</li><li>Commit 规范</li><li>PR 描述生成</li>
+            <li>状态追踪</li></ul>
+        </div>
+      </div>
+
+      <div class="arch-row arch-orch">
+        <div class="arch-h">统一状态机编排（Python）　·　每步产出落盘为结构化 JSON / Markdown</div>
+        <div class="arch-s">显式状态迁移 + 重试上限 + 失败分支，非 Agent 自主决策；
+          M5 验证失败时沿虚线反馈至 M4 重试（上限 15 次）</div>
+      </div>
+
+      <div class="arch-gates">
+        <div class="gate"><div class="gate-h">人工门禁 1</div>
+          <div class="gate-s">选题确认</div></div>
+        <div class="gate"><div class="gate-h">人工门禁 2</div>
+          <div class="gate-s">设计确认</div></div>
+        <div class="gate"><div class="gate-h">人工门禁 3</div>
+          <div class="gate-s">PR 提交前确认</div></div>
+      </div>
+    </div>
+    <figcaption>图 1　系统分层架构。M5 为技术内核：M1 至 M4、M6 均可降级或以人工接管兜底，
+      而 M5 的反馈密度决定整条链路能否在重试上限内收敛。</figcaption>
+  </figure>
+
+  <p>编排采用<strong>显式状态机</strong>而非 Agent 自主决策，取的是
+    <strong>可预测、可回放、易熔断</strong>：失败可定位到具体步骤并重放至出错点。
+    三处人工门禁为强制流程节点，对应 P2（选型对比见「方案选型」）。</p>
+
+  <h2>实现单元分解</h2>
+  <table class="compact">
+    <thead><tr><th>#</th><th>实现单元</th><th>输入</th><th>产出</th><th>通过标准</th></tr></thead>
+    <tbody>
+      <tr><td>U1</td><td>Issue 抓取器</td><td>Gitee/GitHub API、ES Release Notes</td>
+        <td>SQLite 候选池</td><td>增量同步无遗漏，字段完整</td></tr>
+      <tr><td>U2</td><td>四分类器</td><td>候选池原始条目</td>
+        <td><code>feature_request</code>/<code>bug</code>/<code>question</code>/<code>noise</code></td>
+        <td>准确率 ≥ 85%</td></tr>
+      <tr><td>U3</td><td>能力图谱构建器</td><td>3.x 源码（<code>core</code>/<code>annotation</code>/<code>common</code>）</td>
+        <td>两级切分索引 + BGE/BM25 混合检索</td><td>30 至 50 条测试集命中率 ≥ 80%</td></tr>
+      <tr><td>U4</td><td>选题评分器</td><td>候选 + 检索结果</td>
+        <td>八字段结构化条目（含 <code>source_issue</code>）</td><td>需求 100% 可溯源</td></tr>
+      <tr><td>U5</td><td>设计生成器</td><td>选定需求 + 相关代码上下文</td>
+        <td><code>architecture.md</code> / <code>detailed_design.md</code></td><td>改动清单完整</td></tr>
+      <tr><td>U6</td><td>一致性校验器</td><td>设计声明 vs 实际 diff</td>
+        <td>校验报告</td><td>能检出漏改的链路层级</td></tr>
+      <tr><td>U7</td><td>代码生成器</td><td>设计文档 + 硬约束</td>
+        <td>基于 diff 的定向改动</td><td>改动面不超出设计声明</td></tr>
+      <tr><td>U8</td><td>单测生成器</td><td>新增代码</td><td>对应测试用例</td>
+        <td>覆盖率不低于现有 95% 基线</td></tr>
+      <tr><td>U9</td><td>L0 验证器</td><td>编译产物</td>
+        <td>编译 + checkstyle/spotbugs + 依赖校验</td><td>耗时 &lt; 30s，拦截率 ≥ 60%</td></tr>
+      <tr><td>U10</td><td>L1 验证器</td><td>受影响模块</td><td>定向单测结果</td>
+        <td>耗时 &lt; 2min，再拦截 ≥ 25%</td></tr>
+      <tr><td>U11</td><td>L2 验证器</td><td>全仓</td>
+        <td>Testcontainers 起真实 ES 的回归结果</td><td>覆盖三条测试线</td></tr>
+      <tr><td>U12</td><td>PR 组装器</td><td>通过验证的 diff</td>
+        <td>分支 / Commit / PR 描述（关联 Issue）</td><td>符合社区 PR 模板</td></tr>
+      <tr><td>U13</td><td>管控器</td><td>全流程</td><td>Token / 超时 / 熔断 / 审计</td>
+        <td>重复输出相似度检测先于重试上限（15 次）触发熔断</td></tr>
+    </tbody>
+  </table>
+
+  <h2>方案选型</h2>
+  <table>
+    <thead><tr><th>方案</th><th>优点</th><th>缺点</th><th>选择</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A：Agent 自主决策</strong></td><td>灵活，可处理未预期情况</td>
+        <td>行为不可预测，易失控</td><td>否</td></tr>
+      <tr><td><strong>B：显式状态机</strong></td><td>可预测、可回放、易熔断、易调试</td>
+        <td>灵活性受限，需预定义路径</td><td><strong>选 B</strong></td></tr>
+      <tr><td><strong>C：整文件重写</strong></td><td>实现简单</td>
+        <td>易引入无关变更，diff 噪声大</td><td>否</td></tr>
+      <tr><td><strong>D：基于 diff 定向修改</strong></td><td>改动面可控、diff 可审计</td>
+        <td>需准确定位插入点</td><td><strong>选 D</strong></td></tr>
+      <tr><td><strong>E：纯向量检索</strong></td><td>语义匹配好</td>
+        <td>对 Java 标识符等强关键词召回率低</td><td>否</td></tr>
+      <tr><td><strong>F：BM25 + 向量混合</strong></td><td>符号与语义兼顾</td>
+        <td>实现稍复杂</td><td><strong>选 F</strong></td></tr>
+    </tbody>
+  </table>
+  <p>选 D 并用 AST 定位辅助插入点确定（借鉴 AutoCodeRover 思路）。</p>
+
+  <h2>语言与工具选型</h2>
+  <p>Easy-Es 是 100% Java 仓库，但任务书「编程语言」一栏同时列出 JavaPython，
+    且产出要求第一条为「开发基于 Skills 的爬虫模块」。
+    本项目编排层用 Python、产出代码用 Java，两层各司其职。</p>
+
+  <div class="callout">
+    三条佐证：任务书「编程语言」同列 <strong>JavaPython</strong>；
+    措辞差异明显（「了解 <strong>Python 编程</strong>」对「了解 <strong>Java 基础</strong>」）；
+    技术要求要求「熟悉 <strong>AI 工程化语言特性</strong>」，该生态事实标准语言为 Python。
+  </div>
+
+  <p>Java 侧难度不因主体用 Python 而降低。5 层改动链路与 <code>.keyword</code> 约定
+    全部落在 Java 侧，是主要技术风险（N1 / N2），W1 至 W2 集中补强。</p>
+
+  <p><strong>工具链</strong>：Python 3.12 + 显式状态机；可插拔 LLM 适配层
+    （默认 DeepSeek / Qwen，<strong>模型版本可锁定</strong>）；BGE 嵌入 + 本地向量库 +
+    BM25 混合；Gitee OpenAPI / GitHub REST API；Maven + JDK 8/17/22 + Testcontainers；
+    SQLite + 文件系统；Docker Compose 一键启动。</p>
+
+  <h2>vibe coding 的工程化约束</h2>
+
+  <p>任务书技术要求第一条列出「<strong>熟练掌握 vibe coding</strong>」。
+    vibe coding 指不逐行审查 AI 产出的代码，而是描述意图、运行观察、依据结果迭代，
+    将正确性判断从读代码转移到看行为。</p>
+
+  <div class="callout">
+    这一模式的前提，是<strong>行为反馈足够快且可信</strong>。
+  </div>
+
+  <p>而 Easy-Es 恰是该前提最脆弱的场景：改动链路漏任何一层的结果是
+    <strong>能编译但语义错误</strong>；全量测试需 Testcontainers 起真实 ES 耗时 5 至 15 分钟，
+    若每次迭代都等 15 分钟，日迭代次数被压到十几次。
+    典型失败形态是「跑通了」但结果不对。</p>
+
+  <p>本项目不把 vibe coding 当作工具使用，而作为需被工程化约束的对象：</p>
+
+  <table>
+    <thead><tr><th>vibe coding 的缺陷</th><th>技术响应</th></tr></thead>
+    <tbody>
+      <tr><td>反馈慢，迭代次数被压缩</td>
+        <td><strong>M5 分层验证</strong>（L0 / L1 / L2 分档指标见 U9 至 U11）</td></tr>
+      <tr><td>反馈不可信，「跑通」误判为「对了」</td>
+        <td><strong>P1 客观信号优先</strong>，LLM 自评不作放行依据</td></tr>
+      <tr><td>无终止条件，易陷循环</td>
+        <td><strong>M7</strong>：重复输出相似度检测即熔断，重试上限 15 次</td></tr>
+      <tr><td>责任边界模糊</td>
+        <td><strong>P2</strong>：三处强制人工门禁，每步产出落盘可回溯</td></tr>
+    </tbody>
+  </table>
+
+  <div class="takeaway">
+    <div class="takeaway-label">结论</div>
+    本项目的实质，是为 vibe coding 补上其在 Java 生产仓库中缺失的一环：
+    <strong>可信、快速、分层的验证反馈</strong>。<br><br>
+    模型能力给定时，vibe coding 的产出质量上限由验证反馈质量决定。
+  </div>
+""",
+)
+
+
+CH_IMPL = chapter(
+    "09", "ch-impl", "Implementation", "实施计划",
+    """
+  <h2>仓库归属与结项合规</h2>
+  <p>任务书「项目成果仓库」字段指定为 <code>https://gitee.com/dromara/easy-es</code>。
+    据此，AI 生成的功能模块 PR 必须提交至该仓库，这也是结项的核心依据；
+    Harness 系统代码的归属任务书未作规定，需另行确认（Q4）。</p>
+  <table>
+    <thead><tr><th>成果</th><th>归属仓库</th><th>合规依据</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>AI 生成的功能模块 PR</strong><br>（结项核心依据）</td>
+        <td><code>gitee.com/dromara/easy-es</code><br>项目详情页指定</td>
+        <td>满足结项标准「以 PR/MR 形式提交到项目所在的开源组织仓库中并完成合并」</td>
+      </tr>
+      <tr>
+        <td><strong>Harness 系统代码</strong><br>（过程产物，计入代码贡献量）</td>
+        <td>优先争取 <code>gitee.com/dromara/easy-es-harness</code>；
+          退而求其次放个人仓库</td>
+        <td>退至个人仓<strong>不影响结项资格</strong>，仅影响代码贡献量评分</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    Harness 不并入 easy-es 主仓：该项目为 Apache-2.0 纯 Java 项目，
+    混入数千行 Python 编排代码会污染主仓结构并干扰既有 CI。
+  </div>
+
+  <h2>与上游仓库的边界</h2>
+  <p>源码、Issue、构建与测试信号均为<strong>只读</strong>；代码改动只在独立工作副本的
+    feature 分支上进行，不直接写主仓；PR 提交前经人工门禁。
+    <strong>PR 评论写入为最高危操作</strong>，默认关闭自动评论，
+    仅在人工确认后单次执行，全局频次上限为每日不超过 3 次。</p>
+
+  <h2>系统形态</h2>
+  <p>产出要求 1 明确要求「<strong>基于 Skills</strong> 的爬虫模块」，
+    故本项目以 Skills 规范封装四个技能单元（<code>issue-crawler</code> /
+    <code>capability-index</code> / <code>design-draft</code> / <code>pr-composer</code>），
+    其中 <code>issue-crawler</code> 即该条所要求的爬虫模块（对应 M1 感知层）。
+    同时提供纯 CLI 入口，不依赖特定 Agent 运行时亦可独立运行；
+    通过 Docker Compose 一键启动，便于复现与验证。</p>
+""",
+)
+
+
+CH_PLAN = chapter(
+    "10", "ch-plan", "Timeline", "四个月进度安排",
+    """
+  <h2>阶段划分</h2>
+  <p>任务书「开发周期」为 <strong>4 个月</strong>，「支持架构」为
+    <strong>RISC-V64</strong>。据此将周期划分为四个阶段，覆盖 W1 至 W17，
+    其中 W17 整周预留为缓冲（见「缓冲与沟通」）。
+    RISC-V64 的验收口径任务书未作说明，列为待确认事项 Q1。</p>
+  <table>
+    <thead><tr><th>阶段</th><th>主题</th><th>覆盖周次</th><th>阶段产出</th></tr></thead>
+    <tbody>
+      <tr><td>第 1 月</td><td>环境搭建与数据感知</td><td>W1 至 W4</td>
+        <td>可编译环境、基线数据报告、1 个手工 PR、爬虫与分类器</td></tr>
+      <tr><td>第 2 月</td><td>能力图谱与分层验证</td><td>W5 至 W8</td>
+        <td>检索服务、选题引擎、L0/L1 验证器</td></tr>
+      <tr><td>第 3 月</td><td>设计生成与验证闭环</td><td>W9 至 W13</td>
+        <td>L2 验证器、设计生成器、代码生成器、生成至验证闭环</td></tr>
+      <tr><td>第 4 月</td><td>端到端交付与 PR 产出</td><td>W14 至 W17</td>
+        <td>交付与管控模块、完整流水线、2 个 PR、文档与结项材料</td></tr>
+    </tbody>
+  </table>
+
+  <h2>周度计划</h2>
+  <table class="compact">
+    <thead><tr><th>周次</th><th>主题</th><th>任务</th><th>产出</th></tr></thead>
+    <tbody>
+      <tr><td><strong>W1</strong></td><td>环境基线</td>
+        <td>装 JDK 8/17 + Maven；解决 7.17.28 依赖冲突；跑通编译；记录基线数据；
+          与导师确认 Q1/Q2/Q3（Q4 顺带确认）</td><td>可编译环境 + 基线数据报告</td></tr>
+      <tr><td><strong>W2</strong></td><td>破冰 PR</td>
+        <td>读源码与 PR 模板；<strong>手工提交 1 个 Easy-Es PR</strong>；跑通全量测试；
+          精读《避坑指南》补 ES 知识</td><td>1 个 PR（D1）+ 偏好记录</td></tr>
+      <tr><td>W3</td><td>M1 感知层（U1）</td><td>Gitee / GitHub API 增量抓取；SQLite 落库</td>
+        <td>爬虫模块 + 原始候选库</td></tr>
+      <tr><td>W4</td><td>M1 分类器（U2）</td>
+        <td>规则层实现；<strong>人工标注 200 至 300 条样本</strong>；LLM 分类层调优</td>
+        <td>分类器 + 标注集 + 准确率报告</td></tr>
+      <tr><td>W5</td><td>M2.1 能力图谱（U3）</td>
+        <td>源码两级切分；BGE + BM25 混合索引；以 3.x 源码为唯一事实来源</td>
+        <td>检索服务 + 索引</td></tr>
+      <tr><td>W6</td><td>M2 选题引擎（U4）</td>
+        <td>结构化评分字段；检索命中率测试集验证（含 #143/#135/#157）</td>
+        <td>选题引擎 + 命中率报告</td></tr>
+      <tr><td>W7</td><td>M5-L0（U9）</td><td>编译 + 静态检查 + 依赖校验流水线</td>
+        <td>L0 验证器（小于 30s）</td></tr>
+      <tr><td>W8</td><td>M5-L1（U10）</td><td>定向单测执行器（<code>-pl</code> + <code>-Dtest</code>）</td>
+        <td>L1 验证器（小于 2min）</td></tr>
+      <tr><td>W9</td><td>M5-L2 + 门禁（U11）</td>
+        <td>Testcontainers 起真实 ES；三条测试线全量回归；客观信号采集</td>
+        <td>L2 验证器 + 信号采集器</td></tr>
+      <tr><td>W10</td><td>M3 设计生成（U5）</td><td>架构 + 详细设计生成；改动链路约束注入</td>
+        <td>设计生成器 + 2 份样例设计</td></tr>
+      <tr><td>W11</td><td>M3 Review（U6）</td>
+        <td>一致性校验（设计声明 vs 实际 diff）；AST 对称性检查</td><td>Review 校验器</td></tr>
+      <tr><td>W12</td><td>M4 代码生成（U7、U8）</td>
+        <td>基于 diff 定向生成；<strong>单元测试生成（社区 95% 覆盖率硬约束）</strong></td>
+        <td>代码生成器</td></tr>
+      <tr><td>W13</td><td>M4 + M5 联调</td><td>生成至验证闭环跑通；迭代策略调优</td>
+        <td>闭环可运行 + 迭代统计</td></tr>
+      <tr><td>W14</td><td>M6 + M7（U12、U13）</td><td>分支 / Commit / PR 自动化；五项熔断实现</td>
+        <td>交付模块 + 管控层</td></tr>
+      <tr><td>W15</td><td>端到端串联</td>
+        <td>全链路打通；<strong>三处人工门禁接入（选题 / 设计 / PR 提交前）</strong>；
+          状态机持久化与回放</td>
+        <td>完整流水线 + 端到端演示</td></tr>
+      <tr><td><strong>W16</strong></td><td><strong>实战产出</strong></td>
+        <td>运行流水线，产出第 1 至 2 个 AI 挖掘的功能 PR
+          （需求可溯源至 Issue 编号），提交审核</td><td><strong>2 个 PR（核心交付）</strong></td></tr>
+      <tr><td>W17</td><td>文档与结项</td><td>使用说明文档；演示脚本；结项报告</td>
+        <td>文档 + 结项材料</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    若中选晚于 2026 年 10 月，按 N6 预案执行：W16 的 PR 产出前置至 W14 末启动，
+    W3 至 W6 压缩至 3 周。
+  </div>
+
+  <h2>缓冲与沟通</h2>
+  <p>每周预留约 4.5 小时（15%）应对 Debug 与返工；W2 末、W9 末、W13 末设检查点；
+    W17 整周为整周缓冲。</p>
+
+  <p><strong>降级预案</strong>：若 W13 闭环未跑通，砍掉 U6 的 AST 检查，
+    仅保留文件级一致性校验；若 W16 仅产出 1 个 PR，优先保证质量而非数量。</p>
+
+  <p><strong>沟通</strong>：每周向导师同步进度（文字简报 + 关键产出链接）；
+    W2 / W9 / W13 / W16 请求评审与纠偏；技术卡点超过 3 天立即求助。</p>
+
+  <h2>需导师确认事项</h2>
+  <table class="compact">
+    <thead><tr><th>#</th><th>问题</th><th>默认假设与方案</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Q1</strong></td><td>「支持架构 RISC-V64」的验收口径</td>
+        <td>「开发周期」与「支持架构」同为项目详情页系统字段，
+          且 2026 年活动以 RISC-V 为生态重心，推测其指 Harness 系统本身的可移植性；
+          官方 README 已宣称支持 RISC-V，但 Elastic 无 riscv64 构建。<br><br>
+          <strong>方案</strong>：① Harness 全栈架构无关（Python + Docker），
+          在 x86_64 / aarch64 验证；② 测试目标设计为<strong>可插拔</strong>，
+          RISC-V64 实例就绪即可挂载；③ 若需端到端验证，申请云实例并列为冲刺档</td></tr>
+      <tr><td><strong>Q2</strong></td>
+        <td>产出 5 中「高质量 PR」的判定是「生成并提交」还是「被合并」？
+          若需合并，哪些模块属禁区</td>
+        <td>假设需合并；索引托管与数据迁移路径视为禁区</td></tr>
+      <tr><td><strong>Q3</strong></td>
+        <td>开发基线（<code>master</code> 分支还是 <code>v3.0.2</code> tag）
+          与 PR 目标仓库（Gitee 还是 GitHub）</td>
+        <td>假设 Gitee + 与导师确认的基线。另需确认：GitHub 镜像有 104 个 open issue，
+          M1 是否双源抓取</td></tr>
+      <tr><td><strong>Q4</strong></td>
+        <td>Harness 代码能否在 Dromara 组织下新建 <code>easy-es-harness</code> 仓库</td>
+        <td>优先争取组织下新仓；若不支持退至个人仓库，不影响结项</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    附：Issue <strong>#171</strong>（2026-08-11）指出 <code>tomcat-embed-core:9.0.82</code>
+    存在经 re-bundling 隐藏的 CVE，至今无维护者回复，
+    与官网「墨菲安全扫描零风险」表述有出入。该条目涉及依赖升级，属敏感路径，
+    <strong>不作为默认选题</strong>，仅在导师明确认可后纳入。
+  </div>
+""",
+)
+
+
+CH_DELIVER = chapter(
+    "11", "ch-deliver", "Deliverables", "预期产出",
+    """
+  <table class="compact">
+    <thead><tr><th>#</th><th>交付物</th><th>对应产出要求</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td>Easy-Es 功能 / 修复 PR ×1（W2，手工，用于建立基线与对齐偏好）</td>
+        <td>前置准备</td></tr>
+      <tr><td>D2</td><td><strong>AI 自动生成的功能模块 PR ×2</strong>（W16，通过全量测试，
+        需求可溯源至 Issue 编号）</td><td>产出 4、5</td></tr>
+      <tr><td>D3</td><td>Harness 系统源码（M1 至 M7，含 U1 至 U13 实现单元），
+        Docker Compose 一键启动</td><td>产出 1、2、3、4</td></tr>
+      <tr><td>D4</td><td>Skills 技能单元 ×4（issue-crawler / capability-index / design-draft /
+        pr-composer）</td><td>产出 1</td></tr>
+      <tr><td>D5</td><td>使用说明文档 + 演示脚本</td><td>产出 5</td></tr>
+      <tr><td>D6</td><td>能力图谱构建产物 + 检索命中率测试报告</td><td>产出 2</td></tr>
+      <tr><td>D7</td><td>分层验证基线数据报告（L0/L1/L2 耗时与拦截率实测）</td><td>产出 4</td></tr>
+      <tr><td>D8</td><td>结项报告</td><td>组委会要求</td></tr>
+    </tbody>
+  </table>
+""",
+)
+
+
+CH_ACCEPT = chapter(
+    "12", "ch-accept", "Acceptance", "验收标准",
+    """
+  <p class="lead">验收口径以任务书为准。产出要求 5 要求「基于真实需求演示生成至少 1 个
+    高质量 PR」；项目目标第三条要求「至少实现 1 至 2 个由 AI 自动挖掘并生成的、
+    高质量的功能模块 PR」。据此分为保底、达标、冲刺三档。</p>
+
+  <h2>分档标准</h2>
+  <table>
+    <thead><tr><th>档位</th><th>标准</th></tr></thead>
+    <tbody>
+      <tr><td><strong>保底</strong><br>（必须达成）</td>
+        <td>同 §07 基础实现目标</td></tr>
+      <tr><td><strong>达标</strong><br>（目标）</td>
+        <td>保底 + D2 的 2 个 PR 均通过测试并提交，其中至少 1 个被合并；
+          M5 达成设计指标（L0 小于 30s / L1 小于 2min / 单 PR 小于 40min）</td></tr>
+      <tr><td><strong>冲刺</strong></td>
+        <td>达标 + 检索命中率 ≥ 80%；单 PR 平均迭代次数 ≤ 10；
+          完成 RISC-V64 环境兼容性验证（视 Q1 结论）</td></tr>
+    </tbody>
+  </table>
+
+  <h2>量化指标</h2>
+  <p>其中「AI 生成 PR 的需求可溯源率 100%」直接对应产出要求 5 的<strong>「基于真实需求」</strong>：
+    可溯源即排除构造演示需求走通流水线的做法，是任务书对该条的硬性限定。</p>
+  <table class="compact">
+    <thead><tr><th>指标</th><th>目标值</th></tr></thead>
+    <tbody>
+      <tr><td>候选需求池分类器准确率</td><td>≥ 85%</td></tr>
+      <tr><td>能力图谱检索命中率（30 至 50 条测试集，含 #143 / #135 / #157）</td><td>≥ 80%</td></tr>
+      <tr><td>L0 拦截率</td><td>≥ 60%</td></tr>
+      <tr><td>L0 + L1 合计拦截率</td><td>≥ 85%</td></tr>
+      <tr><td>单 PR 平均迭代次数</td><td>8 至 15 次</td></tr>
+      <tr><td>单 PR 端到端总耗时</td><td>小于 40 分钟</td></tr>
+      <tr><td>AI 生成 PR 通过全量测试的比例</td><td>≥ 50%</td></tr>
+      <tr><td>AI 生成 PR 的需求可溯源率</td><td>100%</td></tr>
+    </tbody>
+  </table>
+""",
+)
+
+
+CH_CONCLUSION = chapter(
+    "13", "ch-conclusion", "Scope & Feasibility", "范围边界与可行性结论",
+    """
+  <h2>基础阶段明确不包含的内容</h2>
+  <p>为避免范围蔓延，以下内容明确不在基础实现目标内：</p>
+
+  <table>
+    <thead><tr><th>不包含</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>通用化框架</td>
+        <td>P5 原则，仅针对 Easy-Es 单仓库；不做「以后也能用于其他项目」的抽象</td></tr>
+      <tr><td>索引托管与数据迁移路径的改动</td>
+        <td>属高风险敏感路径，设为禁区（Q2）</td></tr>
+      <tr><td>移除人工门禁 / 转向全自治</td>
+        <td>与任务书「质量把关」条要求的三阶段人工审核冲突（§04）</td></tr>
+      <tr><td>Web UI</td>
+        <td>以 CLI + 结构化产物为主，降低范围与维护成本</td></tr>
+      <tr><td>多模型自动路由与成本优化</td>
+        <td>与本项目目标无关，属过度工程</td></tr>
+      <tr><td>依赖升级类改动（如 Issue #171）</td>
+        <td>涉及依赖版本，需导师明确认可后才纳入</td></tr>
+    </tbody>
+  </table>
+
+  <h2>可行性结论</h2>
+  <p>技术路径可行。半自动而非全自治的依据来自任务书：其「质量把关」条要求设计、编码、
+    测试三阶段的产出均经「自动 Review + 人工审核」双重把关（§04）。
+    技术上的必要性在于：Easy-Es 漏改的表现是「能编译但语义错误」（§03），
+    通过测试不等于语义正确，因此决策点必须留人。
+    核心矛盾有解（§08），分层验证把错误发现成本从 15 分钟压到 30 秒，
+    使 6 至 35 次迭代（§06 N3）在 40 分钟内完成；主要难点逐条有对策（§06），
+    已有基础可直接复用（§06）。</p>
+
+  <p>主要不确定性为导师侧的三项确认（Q1 架构口径、Q2 PR 判定标准、Q3 基线），
+    均已在 §10 提出，不影响主体方案，可在 W1 内收敛。</p>
+""",
+)
+
+
+# ---------------------------------------------------------------- 拼装
+
+def main() -> None:
+    html = TEMPLATE.read_text(encoding="utf-8")
+
+    # 1) 字体路径改为绝对路径（输出文件不在 Kami 目录内）
+    html = html.replace(
+        'url("../fonts/TsangerJinKai02-W04.ttf")',
+        f'url("file://{FONTS}/TsangerJinKai02-W04.ttf")',
+    ).replace(
+        'url("../fonts/TsangerJinKai02-W05.ttf")',
+        f'url("file://{FONTS}/TsangerJinKai02-W05.ttf")',
+    )
+
+    # 2) head 元信息
+    html = html.replace("{{文档标题}}", "为 Easy-Es 引入一套 AI Harness 自动化 PR 流水线 · 项目申请书")
+    html = html.replace("{{作者}}", "牛晨勋 · 中南大学")
+    html = html.replace(
+        "{{摘要}}",
+        "开源之夏 2026 项目申请书：为 Easy-Es 构建 human-in-the-loop 的半自动 AI Harness 流水线，"
+        "打通需求挖掘到自动 PR 的完整链路。",
+    )
+    html = html.replace("{{关键词}}", "Easy-Es, Elasticsearch, AI Harness, Agent, RAG, 开源之夏, OSPP 2026")
+
+    # 2.5) 注入分页覆盖样式，须位于模板自带 <style> 之后（即 </head> 之前）才能生效
+    html = html.replace("</head>", PAGE_FLOW_OVERRIDE + "\n</head>")
+
+    # 3) 替换 body 全部内容
+    start = html.index("<body>") + len("<body>")
+    end = html.index("</body>")
+    body = "\n".join(
+        [
+            COVER,
+            TOC,
+            CH_BASIC,
+            CH_UNDERSTAND,
+            CH_RESEARCH,
+            CH_PRIOR,
+            CH_FIT,
+            CH_DIFFICULTY,
+            CH_GOAL,
+            CH_ARCH,
+            CH_IMPL,
+            CH_PLAN,
+            CH_DELIVER,
+            CH_ACCEPT,
+            CH_CONCLUSION,
+        ]
+    )
+    html = html[:start] + "\n" + body + "\n" + html[end:]
+
+    target.write_text(html, encoding="utf-8")
+    print(f"HTML 写入: {target}  ({len(html)} chars)")
+
+    # 4) 渲染 PDF
+    import shutil
+    from weasyprint import HTML
+
+    tmp = Path("/tmp/kami_render/申请书.html")
+    tmp.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(KAMI / "assets" / "fonts", tmp.parent / "fonts", dirs_exist_ok=True)
+    # 相对路径版本，确保 WeasyPrint 能解析 ../fonts
+    tmp_html = html.replace(f'url("file://{FONTS}/', 'url("../fonts/')
+    tmp.write_text(tmp_html, encoding="utf-8")
+
+    HTML(filename=str(tmp)).write_pdf(str(pdf_out))
+    print(f"PDF 写入: {pdf_out}")
+
+
+if __name__ == "__main__":
+    main()

@@ -20,7 +20,6 @@
   // 主题配置
   // ================================================================
 
-  "workbench.colorTheme": "Light+",
   "workbench.iconTheme": "vs-seti",
   "workbench.secondarySideBar.defaultVisibility": "hidden",
 

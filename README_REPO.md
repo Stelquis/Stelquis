@@ -41,6 +41,8 @@
 | 文章 | 主题 | 日期 |
 |------|------|:----:|
 | 📄 **代码不再是稀缺品，开源为什么反而更重要了？** | AI 时代开源的真正价值——从「大教堂与集市」到「印刷机与演讲台」 | 2026-07-22 |
+| 📄 **当政策开始写代码：从北京两份AI文件看一个时代的转身** | 从「补短板」到「建生态」——北京 AI 政策的认知跃迁 | 2026-07-23 |
+| 📄 **当AI课免费了，什么才是真正的门槛** | AI 时代的教育平权——从知识稀缺到管道稀缺 | 2026-07-26 |
 
 ---
 
@@ -59,6 +61,8 @@ git submodule update --remote --recursive
 | 📰 **[weekly-review](https://github.com/SiyuanJia/weekly-review)** | 周报模板与自动化工具 | | [SiyuanJia/weekly-review](https://github.com/SiyuanJia/weekly-review) |
 | 🛠️ **[Khazix-Skills](https://github.com/KKKKhazix/Khazix-Skills)** | AI 编码技能集合，涵盖多种工程场景 | | [KKKKhazix/Khazix-Skills](https://github.com/KKKKhazix/Khazix-Skills) |
 | 🔗 **[WeRead-MCP](https://github.com/Stelquis/WeRead-MCP)** | 微信读书 MCP 服务，Rust 实现 | | [Stelquis/WeRead-MCP](https://github.com/Stelquis/WeRead-MCP) |
+| 🚀 **[tRPC-Agent-Go](https://github.com/trpc-group/trpc-agent-go)** | Go 生产级 Agent 框架 — LLM Agent、图工作流、工具调用 | | [trpc-group/trpc-agent-go](https://github.com/trpc-group/trpc-agent-go) |
+| 🐍 **[tRPC-Agent-Python](https://github.com/trpc-group/trpc-agent-python)** | Python 生产级 Agent 框架 — 多范式编排、RAG、可观测性 | | [trpc-group/trpc-agent-python](https://github.com/trpc-group/trpc-agent-python) |
 
 ---
 
@@ -101,9 +105,9 @@ git submodule update --remote --recursive
 
 ```
 📁 总目录数:  10
-📦 子模块数:   4
-📝 文章数:   17+ 篇
-🕐 更新于:   2026-07-22
+📦 子模块数:   6
+📝 文章数:   19+ 篇
+🕐 更新于:   2026-07-26
 ```
 
 ---

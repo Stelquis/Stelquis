@@ -1,12 +1,18 @@
-[submodule "repo/Kami"]
-	path = repo/Kami
+[submodule "repos/Kami"]
+	path = repos/Kami
 	url = https://github.com/tw93/Kami.git
-[submodule "repo/weekly-review"]
-	path = repo/weekly-review
+[submodule "repos/weekly-review"]
+	path = repos/weekly-review
 	url = https://github.com/SiyuanJia/weekly-review.git
-[submodule "repo/khazix-skills"]
-	path = repo/khazix-skills
+[submodule "repos/khazix-skills"]
+	path = repos/khazix-skills
 	url = https://github.com/KKKKhazix/Khazix-Skills.git
-[submodule "repo/WeRead-MCP"]
-	path = repo/WeRead-MCP
+[submodule "repos/WeRead-MCP"]
+	path = repos/WeRead-MCP
 	url = https://github.com/Stelquis/WeRead-MCP.git
+[submodule "repos/trpc-agent-python"]
+	path = repos/trpc-agent-python
+	url = https://github.com/trpc-group/trpc-agent-python.git
+[submodule "repos/trpc-agent-go"]
+	path = repos/trpc-agent-go
+	url = https://github.com/trpc-group/trpc-agent-go.git

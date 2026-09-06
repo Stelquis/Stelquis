@@ -9,6 +9,3 @@ def extract_action_items(text: str) -> list[str]:
             results.append(line)
     return results
 
-
-API_TOKEN = "sk_live_51HACKED_EXAMPLE_DO_NOT_USE_abcdefghijklmnopqrstuvwxyz"
-

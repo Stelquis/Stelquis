@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔭 横纵分析报告：模型微调 — 从全量重训到四两拨千斤</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --accent: #1d4ed8;
+    --accent-light: #eff6ff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --blue: #3b82f6;
+    --orange: #ea580c;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --indigo: #6366f1;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%);
+    color: white;
+    padding: 48px 40px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header h1 small { font-size:16px; font-weight:400; color:#93c5fd; display:block; margin-top:4px; }
+  .header .meta { color: #93c5fd; font-size: 14px; }
+  .header .badge { display:inline-block; background:var(--indigo); padding:2px 12px; border-radius:12px; font-size:12px; margin-top:12px; }
+
+  .toc { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px 32px; margin-bottom:32px; }
+  .toc h2 { font-size:18px; margin-bottom:12px; color:var(--accent); }
+  .toc ul { list-style:none; padding:0; }
+  .toc li { padding:3px 0; }
+  .toc a { color:var(--text); text-decoration:none; }
+  .toc a:hover { color:var(--accent); }
+  .toc .sub { padding-left:20px; font-size:14px; color:var(--text-secondary); }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:32px; margin-bottom:24px; }
+  .card h2 { font-size:22px; color:var(--accent); border-bottom:2px solid var(--accent-light); padding-bottom:8px; margin-bottom:20px; }
+  .card h3 { font-size:18px; color:var(--text); margin-top:24px; margin-bottom:12px; }
+  .card h4 { font-size:15px; color:var(--text); margin-top:16px; margin-bottom:8px; }
+  .card p { margin-bottom:12px; color:var(--text-secondary); }
+  .card ul, .card ol { margin:8px 0 12px 24px; color:var(--text-secondary); }
+  .card li { margin-bottom:6px; }
+  .card strong { color:var(--text); }
+
+  .tag { display:inline-block; padding:2px 10px; border-radius:6px; font-size:12px; font-weight:600; margin-right:4px; }
+  .tag-green { background:#d1fae5; color:#065f46; }
+  .tag-yellow { background:#fef3c7; color:#92400e; }
+  .tag-blue { background:#dbeafe; color:#1e40af; }
+  .tag-red { background:#fee2e2; color:#991b1b; }
+  .tag-purple { background:#ede9fe; color:#5b21b6; }
+  .tag-orange { background:#ffedd5; color:#9a3412; }
+  .tag-cyan { background:#cffafe; color:#155e75; }
+  .tag-pink { background:#fce7f3; color:#9d174d; }
+  .tag-indigo { background:#eef2ff; color:#4338ca; }
+
+  table { width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:10px 12px; text-align:left; }
+  th { background:var(--accent-light); color:var(--text); font-weight:600; }
+  tr:hover { background:#f1f5f9; }
+
+  .insight { background:linear-gradient(135deg,#eff6ff,#dbeafe); border-left:4px solid var(--blue); padding:16px 20px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .insight p { color:var(--text); margin:0; }
+
+  .callout { background:#fffbeb; border-left:4px solid var(--yellow); padding:16px 20px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .callout p { margin:0; }
+  .callout ul { margin:8px 0 0 20px; }
+
+  .story-box {
+    background:#f0fdf4;
+    border:1px solid #bbf7d0;
+    border-left:4px solid var(--green);
+    border-radius:0 10px 10px 0;
+    padding:16px 20px;
+    margin:12px 0;
+  }
+  .story-box .story-title { font-weight:700; color:#065f46; font-size:14px; margin-bottom:4px; }
+  .story-box p { margin:0; font-size:14px; color:var(--text); }
+
+  .timeline { position:relative; padding-left:28px; margin:16px 0; }
+  .timeline::before { content:''; position:absolute; left:8px; top:0; bottom:0; width:2px; background:#e2e8f0; }
+  .tl-item { position:relative; margin-bottom:20px; }
+  .tl-item::before { content:''; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid white; }
+  .tl-item .tl-year { font-size:13px; font-weight:700; color:var(--accent); }
+  .tl-item .tl-title { font-weight:600; color:var(--text); }
+  .tl-item .tl-desc { font-size:14px; color:var(--text-secondary); }
+
+  .footer { text-align:center; padding:32px; color:var(--text-secondary); font-size:13px; }
+  pre { background:#f1f5f9; padding:12px; border-radius:8px; font-size:13px; overflow-x:auto; margin:12px 0; }
+
+  @media (max-width:640px) {
+    body { padding:12px; }
+    .header { padding:28px 20px; }
+    .header h1 { font-size:22px; }
+    .card { padding:20px; }
+    table, th, td { font-size:12px; padding:6px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🔭 横纵分析报告：模型微调
+      <small>从全量重训到四两拨千斤 — 大模型适配技术的完整图谱</small>
+    </h1>
+    <div class="meta">
+      研究对象：模型微调（Model Fine-tuning）概念<br>
+      类型：技术概念 · 所属领域：大语言模型 / 迁移学习 / 参数高效微调<br>
+      研究日期：2026-07-24 &nbsp;·&nbsp; 方法论：横纵分析法
+    </div>
+    <span class="badge">模型微调 · PEFT · LoRA · QLoRA · DoRA · 持续学习 · 灾难性遗忘</span>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>📋 目录</h2>
+    <ul>
+      <li><a href="#sec0">一、一句话定义</a></li>
+      <li><a href="#sec1">二、纵向分析：从诞生到当下</a>
+        <ul class="sub">
+          <li><a href="#sec1-1">1. 微调之前：迁移学习的萌芽（2006–2017）</a></li>
+          <li><a href="#sec1-2">2. 关键转折：BERT 与"预训练+微调"范式确立（2018）</a></li>
+          <li><a href="#sec1-3">3. 全量微调时代：成本之痛浮现（2018–2020）</a></li>
+          <li><a href="#sec1-4">4. PEFT 革命：LoRA 与 Adapter 登场（2021–2022）</a></li>
+          <li><a href="#sec1-5">5. 量化+微调：QLoRA 让平民也能训大模型（2023–2024）</a></li>
+          <li><a href="#sec1-6">6. 偏好对齐时代：从"会做"到"做好"（2024–2025）</a></li>
+          <li><a href="#sec1-7">7. 前沿分化：DoRA、蒸馏与持续学习（2025–2026）</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec2">三、横向分析：微调路线全景对比</a>
+        <ul class="sub">
+          <li><a href="#sec2-1">1. 六条主流路线全维度对比</a></li>
+          <li><a href="#sec2-2">2. 路线选择决策树</a></li>
+          <li><a href="#sec2-3">3. 微调 vs 不微调：什么场景必须微调</a></li>
+          <li><a href="#sec2-4">4. 2026年产业界微调实况</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec3">四、横纵交叉：洞察与推演</a>
+        <ul class="sub">
+          <li><a href="#sec3-1">1. 历史如何塑造当下格局</a></li>
+          <li><a href="#sec3-2">2. 三个剧本：未来三年微调走向</a></li>
+          <li><a href="#sec3-3">3. 给实践者的行动清单</a></li>
+        </ul>
+      </li>
+      <li><a href="#sec4">五、信息来源</a></li>
+    </ul>
+  </div>
+
+  <!-- Section 0 -->
+  <div class="card" id="sec0">
+    <h2>一、一句话定义</h2>
+    <div class="insight">
+      <p><strong>模型微调</strong>（Model Fine-tuning）是在一个已经预训练好的大模型基础上，用特定任务的少量标注数据做"定向训练"，让模型从一个"什么都知道一点的通才"，转化成"在你关心的领域里精通的行家"。它解决的矛盾是：通用模型足够博学，但不接地气；从零训练一个专用模型又贵得离谱——微调就是这两者之间的最佳折中。</p>
+    </div>
+    <table>
+      <tr><th style="width:130px">维度</th><th>内容</th></tr>
+      <tr><td>研究对象</td><td><strong>模型微调</strong>（Fine-tuning）——将预训练大模型适配到特定下游任务的技术体系</td></tr>
+      <tr><td>技术范围</td><td>全量微调（Full FT）→ PEFT（LoRA / QLoRA / DoRA / Adapter / Prompt Tuning）→ 偏好对齐（RLHF / DPO / GRPO）→ 蒸馏 → 持续学习微调</td></tr>
+      <tr><td>核心矛盾</td><td>"适配效果"与"资源成本"之间的永恒拉锯——参数更新越多效果越好，但算力、显存、存储成本也越高</td></tr>
+      <tr><td>核心问题</td><td>2026 年的今天，手头有一个大模型、一个具体任务、有限的资源——该用什么方式微调？</td></tr>
+      <tr><td>一句话比喻</td><td>预训练模型像一个读过万卷书的大学生，微调就是让他去行业里实习三个月——不再泛泛而谈，而是真正懂行。</td></tr>
+    </table>
+  </div>
+
+  <!-- Section 1: Vertical -->
+  <div class="card" id="sec1">
+    <h2>二、纵向分析：从诞生到当下</h2>
+    <p>微调不是什么新鲜概念。它脱胎于迁移学习（Transfer Learning），在过去十年间经历了从"学术技巧"到"工业标准"的完整历程。这段历史的核心驱动力只有一个：<strong>模型越来越大，必须找到更聪明的方式来适配它们</strong>。</p>
+
+    <!-- 1.1 -->
+    <h3 id="sec1-1">1.1 微调之前：迁移学习的萌芽（2006–2017）</h3>
+    <p>今天的"微调"概念，最早可以追溯到 2006–2007 年深度学习复兴初期的迁移学习研究。当时的想法很朴素：如果在一个任务上训练好的神经网络，能不能把学到的特征迁移到另一个任务上？</p>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year">2006</span>
+        <div class="tl-title">深度信念网络与逐层预训练</div>
+        <div class="tl-desc">Hinton 提出深度信念网络（DBN），用逐层无监督预训练 + 有监督微调的方式训练深层网络。这是"预训练 + 微调"范式的雏形，虽然当时的"微调"目的是为了让深层网络收敛，而非今天的领域适配。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2012–2014</span>
+        <div class="tl-title">ImageNet 预训练 + 微调成为视觉领域标配</div>
+        <div class="tl-desc">AlexNet 在 ImageNet 上大获成功后，研究者发现：在 ImageNet 上预训练的模型，即使冻结大部分层、只微调最后一层分类器，在其他视觉任务上也能取得远超随机初始化的结果。这成为迁移学习的标准实践。</div>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year">2015–2017</span>
+        <div class="tl-title">词向量 + 微调的 NLP 前夜</div>
+        <div class="tl-desc">Word2Vec、GloVe 等词向量成为 NLP 任务的标配：用预训练词向量初始化嵌入层，然后微调整个模型。但受限于 LSTM/GRU 架构本身的容量，此时的"微调"效果远不如后来 BERT 时代那么显著。</div>
+      </div>
+    </div>
+    <div class="insight">
+      <p><strong>关键观察：</strong>这个阶段的核心贡献不在于微调本身的技术突破，而在于确立了一个认知——<strong>"先在大数据上预训练一个通用模型，再在小数据上微调适配"</strong>是比"从零训练"更聪明的策略。这个认知为后来的 LLM 微调革命铺平了道路。</p>
+    </div>
+
+    <!-- 1.2 -->
+    <h3 id="sec1-2">1.2 关键转折：BERT 与"预训练+微调"范式确立（2018）</h3>
+    <p>2018 年 10 月，Google 发布 BERT（Bidirectional Encoder Representations from Transformers）。这篇论文的重要性怎么强调都不为过——它不仅在 NLP 基准上刷新了几乎所有记录，更重要的是，它确立了一个影响至今的范式：</p>
+    <pre style="background:#f1f5f9;padding:12px;border-radius:8px;font-size:13px;overflow-x:auto;">
+大规模无监督预训练 → 保存完整模型 → 下游任务上端到端全量微调
+    </pre>
+    <p>BERT 论文的核心贡献在于，它证明了：<strong>在预训练模型上做全量微调（更新所有参数），而不是只微调顶层，效果要好得多。</strong>这一发现彻底改变了 NLP 的研发方式。</p>
+    <table>
+      <tr><th>关键事实</th><th>数据</th></tr>
+      <tr><td>BERT-base 参数</td><td>110M — 以当时的标准已经算"大模型"</td></tr>
+      <tr><td>全量微调需要的显存</td><td>约 3–4GB（FP32），单卡 V100（16GB）绰绰有余</td></tr>
+      <tr><td>微调后的效果</td><td>在 11 个 NLP 任务上刷新 SOTA，GLUE 得分 80.5%（此前最好 72.8%）</td></tr>
+      <tr><td>范式影响</td><td>"BERT + 微调"成为 2018–2021 年间 NLP 的事实标准，催生了 RoBERTa、ALBERT、DistilBERT 等整个家族</td></tr>
+    </table>
+    <div class="callout">
+      <p><strong>为什么 BERT 微调如此有效？</strong>核心原因在于表征的复用。预训练阶段模型学会了丰富的语言知识（语法、语义、指代关系等），这些知识编码在数十亿个参数中。微调阶段只需要在已有表征基础上"微调"出任务相关的决策边界，不需要重新学习语言本身。一个形象的类比：预训练 = 学好数学和物理（通用知识），微调 = 学怎么用这些知识解微积分题（具体应用）。</p>
+    </div>
+
+    <!-- 1.3 -->
+    <h3 id="sec1-3">1.3 全量微调时代：成本之痛浮现（2018–2020）</h3>
+    <p>BERT 之后，模型规模开始加速膨胀。GPT-2（1.5B, 2019）、T5（11B, 2019）、GPT-3（175B, 2020）——每一代都比上一代大一个数量级。微调这些模型的成本也指数级上升。</p>
+    <p>一个 175B 参数的模型，用 FP16 存储就需要 350GB 显存。加上优化器状态（Adam 需要额外的梯度 + 一阶/二阶动量 ≈ 2× 参数占用），全量微调 GPT-3 需要的总显存接近 <strong>1.2TB</strong>——这相当于 15 块 A100 80GB 集群。</p>
+    <table>
+      <tr><th>模型</th><th>参数量</th><th>全量微调显存（FP16）</th><th>单次训练成本</th><th>这时发生了什么</th></tr>
+      <tr><td>BERT-base（2018）</td><td>110M</td><td>~3–4GB</td><td>~$10</td><td>全量微调还很轻松，任何实验室都能做</td></tr>
+      <tr><td>GPT-2（2019）</td><td>1.5B</td><td>~12GB</td><td>~$50</td><td>单卡还能跑，但已经有点吃力</td></tr>
+      <tr><td>T5（2019）</td><td>11B</td><td>~88GB</td><td>~$300</td><td>需要多卡并行，门槛开始抬高</td></tr>
+      <tr><td>GPT-3（2020）</td><td>175B</td><td>~1.2TB</td><td>~$10,000+</td><td>全量微调几乎不可能，连大公司都吃力</td></tr>
+    </table>
+    <p>全量微调还有另一个更隐蔽的问题：<strong>灾难性遗忘</strong>（Catastrophic Forgetting）。当模型在一个小数据集上全量微调后，它对通用知识的记忆会被覆盖。有研究表明，BERT 经过全量微调后，在通用语言理解基准上的表现会下降 3–8 个百分点。更极端的案例中，全参数微调后模型在普通话测试上的准确率从 87.5% 暴跌到 63.2%。</p>
+    <div class="insight">
+      <p><strong>这个阶段的核心矛盾逐渐清晰：</strong>模型越大，全量微调不仅越贵，而且越容易忘事。业界迫切需要一种"既省钱又不遗忘"的替代方案——这直接催生了 PEFT（参数高效微调）的诞生。</p>
+    </div>
+
+    <!-- 1.4 -->
+    <h3 id="sec1-4">1.4 PEFT 革命：LoRA 与 Adapter 登场（2021–2022）</h3>
+    <p>2021 年出现了两个关键突破，彻底改变了微调的姿势。</p>
+
+    <h4>Adapter：第一次尝试让"插件"替代"全改"</h4>
+    <p>2019 年，Houlsby 等人提出的 Adapter 方法率先尝试了一个新思路：不修改预训练模型的权重，而是在 Transformer 层的中间插入一个小型的"适配器"模块（一个 bottleneck 结构的 MLP，参数约占总量的 2–4%）。微调时只训练这些 Adapter 模块，预训练权重完全冻结。</p>
+    <p>效果怎样？在 BERT 上，Adapter 仅用 3.6% 的可训练参数就达到了接近全量微调的性能。但它也有代价：Adapter 模块串行插入在 Transformer 层之间，推理时会引入额外的计算延迟（+5–15%）。</p>
+
+    <h4>LoRA：低秩分解的四两拨千斤</h4>
+    <p>2021 年 10 月，微软研究院的 Hu et al. 发表了一篇名为《LoRA: Low-Rank Adaptation of Large Language Models》的论文。这篇论文后来成为了整个 PEFT 领域的基石——截至 2026 年已经被引用超过 1 万次。</p>
+    <div class="story-box">
+      <div class="story-title">💡 LoRA 的核心直觉</div>
+      <p>研究者发现了一个有意思的现象：模型在做全量微调时，权重的更新矩阵 ΔW 的"有效秩"往往很低——也就是说，ΔW 虽然是一个 d×d 的大矩阵，但它实际上包含的有用信息可以被压缩到很小的维度里。基于这个发现，LoRA 把 ΔW 分解成了两个小矩阵 A 和 B 的乘积：ΔW = A × B（其中 A 是 d×r，B 是 r×d，r 远小于 d）。微调时只训练 A 和 B，基础权重 W₀ 完全冻结。</p>
+    </div>
+    <table>
+      <tr><th>对比</th><th>全量微调</th><th>LoRA</th></tr>
+      <tr><td>可训练参数（GPT-3 175B）</td><td>1750 亿（100%）</td><td>~3700 万（0.02%）</td></tr>
+      <tr><td>可训练参数（LLaMA-7B）</td><td>70 亿（100%）</td><td>~400 万（0.06%，r=16）</td></tr>
+      <tr><td>显存需求（7B）</td><td>~112GB</td><td>~16GB</td></tr>
+      <tr><td>推理额外开销</td><td>无（模型已合并）</td><td>0%（可合并回原权重）</td></tr>
+      <tr><td>效果（vs 全量）</td><td>基准</td><td>仅差 0.2–0.8 个百分点</td></tr>
+    </table>
+    <p>LoRA 之所以能称为"革命"，不只是因为它省了显存和算力。更重要的是，它带来了一种新的<strong>模块化思维</strong>：一个基座模型 + 多个 LoRA 插件 = 多种不同能力。你可以为"客服"、"代码"、"翻译"分别训练不同的 LoRA 模块，部署时动态切换——不用维护多个完整模型。</p>
+    <div class="callout">
+      <p><strong>LoRA 的关键参数解释：</strong></p>
+      <ul style="margin-bottom:0;">
+        <li><strong>rank（r）</strong>：控制 LoRA 的表达能力上限。r=4 适合简单适配，r=8 是常用起点，r=16 是推荐平衡点，r=32/64 接近全量微调效果但收益递减。经验上，r=16 + alpha=32 在大多数场景下效果不错。</li>
+        <li><strong>alpha（α）</strong>：缩放系数，控制 LoRA 更新的幅度。实际缩放因子 = alpha / r，通常设为 r 的 2 倍。</li>
+        <li><strong>target_modules</strong>：在哪些层上挂 LoRA。仅 q_proj+v_proj 是最低配置，覆盖 4 个 attention 模块是推荐配置，再覆盖 MLP 层可获得最大性能。</li>
+      </ul>
+    </div>
+
+    <h4>同期其他 PEFT 方法</h4>
+    <table>
+      <tr><th>方法</th><th>核心思路</th><th>参数量</th><th>推理代价</th><th>特点</th></tr>
+      <tr><td>Adapter</td><td>在 Transformer 层间插入小模块</td><td>2–4%</td><td>+5–15% 延迟</td><td>多任务切换方便，适合 SaaS 场景</td></tr>
+      <tr><td>Prefix Tuning</td><td>在注意力层前加入可训练 prefix</td><td>0.1%</td><td>几乎无</td><td>适合少样本场景</td></tr>
+      <tr><td>Prompt Tuning</td><td>在输入层加入可训练的 soft prompt</td><td>Prompt 层（数 MB）</td><td>无</td><td>参数最少，小模型表现一般</td></tr>
+      <tr><td>P-Tuning v2</td><td>改进的 prompt 调优，多层注入</td><td>Prompt 层</td><td>无</td><td>比 Prompt Tuning 效果更好</td></tr>
+      <tr><td>BitFit</td><td>只训练所有 bias 参数</td><td>&lt;0.1%</td><td>无</td><td>简单到极致，但效果有限</td></tr>
+    </table>
+
+    <!-- 1.5 -->
+    <h3 id="sec1-5">1.5 量化+微调：QLoRA 让平民也能训大模型（2023–2024）</h3>
+    <p>LoRA 虽然大幅降低了可训练参数，但基础模型本身仍然需要加载到显存中——一个 7B 模型加上 LoRA 适配器仍然需要约 16GB 显存。如果要微调 65B 模型，约需 130GB，依然需要多卡集群。</p>
+    <p>2023 年，Dettmers et al. 发表 QLoRA，三个创新把这扇门彻底踢开：</p>
+    <ol>
+      <li><strong>4-bit NormalFloat（NF4）量化</strong>：专为正态分布的权重设计的量化格式，比普通 INT4 量化浪费更少的信息</li>
+      <li><strong>双重量化（Double Quantization）</strong>：对量化常数再做一次量化，进一步节省显存</li>
+      <li><strong>分页优化器（Paged Optimizers）</strong>：当 GPU 显存不足时，自动将优化器状态分页到 CPU 内存</li>
+    </ol>
+    <table>
+      <tr><th>模型</th><th>全量微调</th><th>LoRA（FP16）</th><th>QLoRA（4-bit）</th></tr>
+      <tr><td>7B</td><td>~112GB</td><td>~16GB</td><td>~6GB ✅ 单卡 RTX 4090</td></tr>
+      <tr><td>13B</td><td>~208GB</td><td>~30GB</td><td>~10GB ✅ 单卡 RTX 4090</td></tr>
+      <tr><td>33B</td><td>~528GB</td><td>~65GB</td><td>~24GB ✅ 单卡 A100-40/RTX 5090</td></tr>
+      <tr><td>65B</td><td>~1.04TB</td><td>~130GB</td><td>~48GB ✅ 单卡 A100-80</td></tr>
+    </table>
+    <p>QLoRA 的实现质量惊人：65B 模型微调后的 Guanaco-65B 在 Vicuna 基准上达到了 ChatGPT 性能的 <strong>99.3%</strong>，而训练只需要一块 A100-80GB 显卡。这在以前是不可想象的。</p>
+    <div class="insight">
+      <p><strong>为什么 QLoRA 被称为"微调民主化"的里程碑？</strong>因为它的出现意味着：一个学生、一个独立开发者、一个小团队——只要有一块消费级 GPU（RTX 4090 24GB），就能微调 7B–13B 模型。微调从"大公司专属"变成了"人人可及"。</p>
+    </div>
+
+    <!-- 1.6 -->
+    <h3 id="sec1-6">1.6 偏好对齐时代：从"会做"到"做好"（2024–2025）</h3>
+    <p>到了 2024 年，微调已经不只是"让模型学会一个任务"——而是"让模型学会人类的偏好"。这个阶段的核心技术是 RLHF 及其各种简化变体。</p>
+    <table>
+      <tr><th>方法</th><th>全称</th><th>核心思路</th><th>需要的模型数量</th><th>复杂度</th></tr>
+      <tr><td>RLHF（PPO）</td><td>人类反馈强化学习</td><td>训练奖励模型 → PPO 策略优化</td><td>4 个（策略+参考+奖励+价值）</td><td><span class="tag tag-red">极高</span></td></tr>
+      <tr><td>DPO</td><td>直接偏好优化</td><td>用偏好对直接计算策略梯度，无需奖励模型</td><td>2 个（策略+参考）</td><td><span class="tag tag-yellow">中等</span></td></tr>
+      <tr><td>GRPO</td><td>群体相对策略优化</td><td>对同一 prompt 采样多个回答，用组内相对质量做信号</td><td>1 个</td><td><span class="tag tag-green">低</span></td></tr>
+      <tr><td>ORPO</td><td>联合偏好优化</td><td>将 SFT 和偏好对齐合并为一步</td><td>1 个</td><td><span class="tag tag-green">低</span></td></tr>
+      <tr><td>KTO</td><td>卡尼曼-特沃斯基优化</td><td>只需要"好/坏"二分类标注，不需要配对数据</td><td>1 个</td><td><span class="tag tag-green">低</span></td></tr>
+    </table>
+    <p>2025 年初，DeepSeek-R1 通过 GRPO 证明了：模型可以在没有监督推理轨迹的情况下，<strong>仅通过强化学习自主发现推理策略</strong>——在 AIME 2024 上达到 71.0% Pass@1。这标志着微调从"模仿学习"进入"探索发现"的新阶段。</p>
+    <div class="callout">
+      <p><strong>一条主线：</strong>微调的目标正在从"让模型学会做这件事"（SFT）→ "让模型用正确的方式做这件事"（DPO/GRPO）。这两个阶段通常串行执行——先用 SFT 注入领域知识，再用偏好对齐约束行为风格。</p>
+    </div>
+
+    <!-- 1.7 -->
+    <h3 id="sec1-7">1.7 前沿分化：DoRA、蒸馏与持续学习（2025–2026）</h3>
+    <p>2025–2026 年，微调领域进入了"百花齐放"的阶段。几个值得关注的前沿方向：</p>
+
+    <h4>DoRA：权重分解，更接近全量微调的表现</h4>
+    <p>2024 年 NVIDIA 提出的 DoRA（Weight-Decomposed Low-Rank Adaptation）发现了一个关键现象：LoRA 和全量微调在权重更新的<strong>模式</strong>上有本质差异。全量微调倾向于做大幅度的方向修正和小幅度的幅度修正，而 LoRA 把两者混在一起了。DoRA 将权重分解为"幅度"和"方向"两个分量，仅对方向分量应用 LoRA 更新。</p>
+    <p>结果：在 LLaMA-7B 的常识推理任务上，DoRA 平均比 LoRA 高出 +2.62 分（79.75 vs 77.13），甚至超过了全量微调的基线（77.99）。更重要的是，DoRA 在 HuggingFace PEFT 中只需要加一个参数：<code>use_dora=True</code>。</p>
+
+    <h4>QDoRA：最好的两个世界</h4>
+    <p>将 QLoRA 的量化省显存和 DoRA 的高精度结合起来——QDoRA 在 LLaMA3-8B 的 Orca-Math 基准上不仅显著优于 QLoRA，甚至略微超过了全量微调。这可能是 2026 年最具性价比的微调方案。</p>
+
+    <h4>蒸馏 + 微调：先学通才，再缩减规模</h4>
+    <p>一个实用的流水线在 2025–2026 年成为产业标准："大模型微调 → 蒸馏为小模型 → 量化部署"。例如，13B 模型蒸馏到 1.8B 后，准确率损失仅 2.6%，但推理速度提升 3 倍、显存减少 83%。</p>
+
+    <h4>持续学习微调：让模型"边用边学"</h4>
+    <p>这是 2026 年最活跃的前沿方向之一。核心问题是：当模型部署后，如何让它持续学习新任务而不遗忘旧知识？Macaron-V1（MoLoRA 专家系统）、FST（快慢分层训练）、自蒸馏等方法正在将"持续学习"从理论推向工程实践。这也是本 repo 中 <code>llm-continual-learning-telecom-scenario.html</code> 报告的主题。</p>
+
+    <h4>PEFT + 持续学习：天然绝配</h4>
+    <p>研究表明，PEFT 方法在持续学习场景中具有天然优势——因为绝大多数参数被冻结，学习新任务时几乎不会干扰旧知识的表征。在经典的 CIFAR-100 持续学习实验中，LoRA 等 PEFT 方法的"真实遗忘"（True Forgetting）为 0.00，而全量微调的遗忘高达 0.20–0.31。这意味着：<strong>PEFT 不只是一个节省算力的方案，它本身也是一种防遗忘方案。</strong></p>
+
+    <div class="insight">
+      <p><strong>纵轴总结：</strong>从 2018 年 BERT 的 110M 参数全量微调，到 2026 年 QDoRA 在单卡上微调 70B 模型——微调的成本降低了超过 <strong>100 倍</strong>，效果差距缩小到 1% 以内。但更重要的是，微调的"姿势"本身在进化：从"改全部参数"到"只改少量参数"，从"让模型学会做"到"让模型学会怎么做更好"，从"一次性学习"到"持续学习"。</p>
+    </div>
+  </div>
+
+  <!-- Section 2: Horizontal -->
+  <div class="card" id="sec2">
+    <h2>三、横向分析：微调路线全景对比</h2>
+
+    <h3 id="sec2-1">3.1 六条主流路线全维度对比（7B 模型基准）</h3>
+    <table>
+      <tr><th>路线</th><th>代表方法</th><th>可训练参数</th><th>显存需求</th><th>单次训练成本（估）</th><th>推理额外开销</th><th>效果（vs 全量）</th><th>适合场景</th></tr>
+      <tr>
+        <td><span class="tag tag-red">全量微调</span></td>
+        <td>Full FT</td>
+        <td>100%（70 亿）</td>
+        <td>~112GB</td>
+        <td>~$190</td>
+        <td>0%</td>
+        <td>基准</td>
+        <td>资源充足、需要最大效果的场景</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-purple">LoRA</span></td>
+        <td>LoRA r=16</td>
+        <td>0.1–1%</td>
+        <td>~16GB</td>
+        <td>~$28</td>
+        <td>0%（可合并）</td>
+        <td>−0.2~0.8%</td>
+        <td>⭐ 最通用、生态最成熟</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-blue">QLoRA</span></td>
+        <td>4-bit NF4 + LoRA</td>
+        <td>0.1–1%</td>
+        <td>~6GB</td>
+        <td>~$20</td>
+        <td>0%（可合并）</td>
+        <td>−1.1%</td>
+        <td>显存受限、单卡消费级 GPU</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">DoRA</span></td>
+        <td>权重分解 + LoRA</td>
+        <td>0.1–1%</td>
+        <td>~16GB</td>
+        <td>~$30</td>
+        <td>0%（可合并）</td>
+        <td>+0.5~2.6%（超全量）</td>
+        <td>追求最佳效果、有 16GB+ 显存</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">QDoRA</span></td>
+        <td>4-bit NF4 + DoRA</td>
+        <td>0.1–1%</td>
+        <td>~6GB</td>
+        <td>~$22</td>
+        <td>0%（可合并）</td>
+        <td>≈ 全量甚至略超</td>
+        <td>⭐ 2026 性价比最优解</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-cyan">蒸馏</span></td>
+        <td>Teacher→Student</td>
+        <td>全新学生模型</td>
+        <td>取决于师生模型</td>
+        <td>~$50</td>
+        <td>−60~80%（小模型更快）</td>
+        <td>−2~5%（13B→1.8B）</td>
+        <td>需要极致低延迟、高并发的部署</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <p><strong>💰 经济学结论：</strong>把"全量微调"当作 100 分的基准，用 QDoRA 只需要不到 1/5 的成本就能达到 ≈100 分，用 QLoRA 只需要不到 1/9 的成本就能达到 ≈99 分。微调经济学已经彻底变了——省下的钱不是"妥协"，而是"效率"。</p>
+    </div>
+
+    <h3 id="sec2-2">3.2 路线选择决策树</h3>
+    <p>面对这么多微调方法，该怎么选？以下决策树覆盖了最常见的场景：</p>
+    <table>
+      <tr><th>你的条件</th><th>推荐方案</th><th>理由</th></tr>
+      <tr>
+        <td>手头充裕（8×A100 or more），需要极致效果</td>
+        <td><span class="tag tag-red">全量微调</span></td>
+        <td>完整参数空间，无任何近似损失。适合前沿研究、高风险场景</td>
+      </tr>
+      <tr>
+        <td>显存 24GB（RTX 4090/5090），微调 7B–13B</td>
+        <td><span class="tag tag-orange">DoRA 或 QDoRA</span></td>
+        <td>DoRA 效果好于 LoRA，QDoRA 还能省更多显存。2026 年的"甜点"选择</td>
+      </tr>
+      <tr>
+        <td>显存 16GB（RTX 3080/3090），微调 7B</td>
+        <td><span class="tag tag-blue">QLoRA / QDoRA</span></td>
+        <td>量化 + 低秩适配，显存刚好够用。推荐 QDoRA 以获得更好的效果</td>
+      </tr>
+      <tr>
+        <td>单卡 A100/H100，微调 33B–70B</td>
+        <td><span class="tag tag-blue">QLoRA / QDoRA</span></td>
+        <td>QLoRA 让 65B 模型也能在单卡上微调——这在两年前是不可想象的</td>
+      </tr>
+      <tr>
+        <td>需要处理大量并发请求，延迟敏感</td>
+        <td><span class="tag tag-cyan">先微调再蒸馏+量化</span></td>
+        <td>大模型微调 → 蒸馏成小模型 → 量化部署，这是工业级部署的标准流水线</td>
+      </tr>
+      <tr>
+        <td>新意图不断涌现，需频繁更新模型</td>
+        <td><span class="tag tag-purple">LoRA + 持续学习</span></td>
+        <td>LoRA 模块隔离 + 自蒸馏防遗忘，每次只更新一个模块，其他不受影响</td>
+      </tr>
+      <tr>
+        <td>完全新手，第一次做微调</td>
+        <td><span class="tag tag-purple">LoRA（r=16, alpha=32）</span></td>
+        <td>LoRA 是生态最成熟、文档最丰富的方案。从它开始，做熟了再尝试 DoRA/QDoRA</td>
+      </tr>
+    </table>
+
+    <h3 id="sec2-3">3.3 微调 vs 不微调：什么场景必须微调</h3>
+    <p>不是所有场景都需要微调。有时候一个好的 prompt 工程设计或 RAG（检索增强生成）就足够了。以下是对照表：</p>
+    <table>
+      <tr><th>判断维度</th><th>走微调路线</th><th>不走微调（Prompt / RAG）</th></tr>
+      <tr><td>输出格式要求</td><td>需要严格的 JSON/工单结构</td><td>自由文本回答即可</td></tr>
+      <tr><td>领域专业性</td><td>术语独特、通用模型完全不懂</td><td>通用知识即可覆盖</td></tr>
+      <tr><td>风格一致性</td><td>要求回复风格高度统一</td><td>风格要求宽松</td></tr>
+      <tr><td>延迟要求</td><td>需要 &lt; 500ms 的实时响应</td><td>可以接受 1–5s 的 LLM 延迟</td></tr>
+      <tr><td>数据可用性</td><td>有 500+ 条高质量标注数据</td><td>标注数据稀缺或没有</td></tr>
+      <tr><td>数据隐私</td><td>数据不能出域，需本地部署</td><td>可调用云端 API</td></tr>
+      <tr><td>任务稳定性</td><td>任务相对稳定，不频繁变更</td><td>任务频繁新增或调整</td></tr>
+      <tr><td>离线可用性</td><td>需要离线 / 弱网环境下可用</td><td>始终在线</td></tr>
+    </table>
+    <div class="insight">
+      <p><strong>一句话分界线：</strong>如果通用模型通过 prompt 工程已经能达到 85%+ 的效果，先别微调——用 RAG + prompt 优化到极致。只有当 85% 不够、格式/风格/术语要求苛刻、或者需要在低延迟/离线环境下运行时，微调才值得考虑。微调不是"upgrade"，而是"precision tool"。</p>
+    </div>
+
+    <h3 id="sec2-4">3.4 2026 年产业界微调实况</h3>
+    <p>2026 年，微调已经不是"要不要做"的问题，而是"用什么方式做"的问题。以下是几个关键趋势：</p>
+    <table>
+      <tr><th>趋势</th><th>具体表现</th></tr>
+      <tr><td><strong>QLoRA 成为默认起点</strong></td><td>大多数项目从 QLoRA 开始，因为 6GB 的门槛意味着几乎任何 GPU 都能跑。如果有余力再升级到 DoRA 或 QDoRA。</td></tr>
+      <tr><td><strong>"微调 + RAG"双引擎成为黄金标准</strong></td><td>微调负责行为层（语气、格式、领域表达），RAG 负责知识层（实时信息）。两者不是替代关系，是互补关系。</td></tr>
+      <tr><td><strong>蒸馏 pipeline 标准化</strong></td><td>大模型微调 → 蒸馏成小模型 → 量化部署，这条流水线已成为产业标准。典型路径：Qwen-7B（微调）→ 1.8B（蒸馏）→ 4-bit（量化）。</td></tr>
+      <tr><td><strong>全量微调的主要用户只剩大模型厂商</strong></td><td>OpenAI、Google、Meta 等做预训练的公司仍然需要全量微调来做模型对齐。但对于绝大多数应用开发团队来说，PEFT 已经足够了。</td></tr>
+      <tr><td><strong>框架生态成熟</strong></td><td>Unsloth（单卡最快）、Axolotl（生产级多卡）、LLaMA-Factory（最全方法 + Web UI）、HuggingFace TRL（标准库）——四个框架覆盖了从新手到生产的所有需求。</td></tr>
+      <tr><td><strong>GPU 门槛继续降低</strong></td><td>RTX 4090（24GB）：QLoRA 7B–13B 无压力。RTX 5090（32GB）：QLoRA 30B、DoRA 7B。H100（80GB）：QLoRA 70B。B200（192GB）：BF16 全量 70B。</td></tr>
+    </table>
+  </div>
+
+  <!-- Section 3: Cross Analysis -->
+  <div class="card" id="sec3">
+    <h2>四、横纵交叉：洞察与推演</h2>
+
+    <h3 id="sec3-1">3.1 历史如何塑造当下格局</h3>
+    <p>把纵轴（技术演进）和横轴（当前格局）放在一起看，几个有趣的模式浮现出来：</p>
+
+    <ol>
+      <li><strong>"一放就乱、一管就死"的桥段在微调领域反复重演。</strong>全量微调给了最大的自由度，但同时也带来了灾难性遗忘和天价成本。于是 PEFT 把自由度锁起来，只留一个"窗户"——效果接近全量，但代价大幅降低。但这个"窗户"的大小（rank r）又成了一个新问题。r 太小表达能力不够，r 太大又回归了全量的老路。微调领域的所有技术演进，本质上都是在"自由度"和"可控性"之间寻找新的平衡点。</li>
+
+      <li><strong>"省钱"的故事只是表面，"模块化"才是真正的颠覆。</strong>大多数人把 LoRA 看作一个"省显卡显存"的工具，但回头看，LoRA 真正的贡献是带来了<strong>模块化适配</strong>的思维范式。一个基座模型 + 多个 LoRA 插件 = 多种能力。这个"乐高积木"式的架构，让 AI 系统从"一个模型解决所有问题"走向"多个专家模块协作解决复杂问题"——Macaron-V1 的 MoLoRA 和 MinT 基础设施系统就是这条思路的延续。</li>
+
+      <li><strong>"民主化"的代价是选择困难。</strong>2018 年你只需要决定"要不要微调 BERT"。2026 年你要在 10+ 种方法、3–5 个框架、不同 rank/alpha/量化精度之间做选择。选择空间的爆炸说明了这个领域的成熟度——但也意味着实践者需要更多的决策知识。这也是这份报告存在的理由。</li>
+    </ol>
+
+    <h3 id="sec3-2">3.2 三个剧本：未来三年微调走向</h3>
+
+    <h4>📈 最可能的剧本：PEFT 全面取代全量微调（概率 60%）</h4>
+    <p>QDoRA 已经证明在某些任务上能超越全量微调。随着 DoRA 及其后继方法的持续改进，"PEFT 不如全量"的说法将在大部分场景中失效。到 2028 年，全量微调将主要局限在预训练阶段和极少数的前沿研究用途。对于 95% 的实践者来说，"微调"就是"PEFT"。</p>
+    <p>支撑这一判断的逻辑：① QDoRA 在 2025 年的基准测试中已经超过了全量微调，差距只会拉大不会缩小；② 模型参数仍在大幅增长（2026 年的前沿模型已是万亿参数级别），全量微调的绝对成本只会越来越难以承受；③ PEFT 生态（框架、社区、最佳实践）已经成熟到可以支撑生产级部署。</p>
+
+    <h4>⚠️ 最危险的剧本：微调被 prompt 工程 + RAG 替代（概率 15%）</h4>
+    <p>如果基座模型本身的能力增长足够快——快到 zero-shot 效果就接近微调的效果——那么微调的存在意义将被削弱。GPT-5 系列的 routing 系统已经展示了一种可能性：系统自动判断请求复杂度，路由到不同规模的模型，不需要用户手动微调。</p>
+    <p>但这一剧本的概率并不高，因为：① 即使在 GPT-5 级别的模型上，领域特定术语和格式约束仍然需要微调来保证可靠性；② 蒸馏 + 量化微调的低延迟优势是 prompt 工程无法替代的；③ 数据隐私和本地部署的刚性需求保证了微调的必要性。</p>
+
+    <h4>🚀 最乐观的剧本：持续学习微调成为新范式（概率 25%）</h4>
+    <p>LoRA 模块化 + 自蒸馏防遗忘 + FST 分层训练 = 真正的"边用边学"。在这个剧本中，模型部署后不是冻结的，而是通过人工反馈和运营数据持续微调——每天增量训练 1 小时，模型能力持续增长，永远不会"过时"。</p>
+    <p>电信客服场景是这个剧本最自然的应用：新套餐上架 → 300 条标注数据 → 12 分钟微调 → 模型即刻学会新意图。不需要停服，不影响旧意图。这个剧本的关键瓶颈不在技术上（LoRA + 自蒸馏的方案已经可行），而在组织流程上——如何建立稳定的反馈闭环、如何管理多版本 LoRA 模块、如何确保增量更新的质量。</p>
+
+    <div class="insight">
+      <p><strong>我的判断：</strong>最可能的路径是"剧本一"（PEFT 主导）和"剧本三"（持续学习）的叠加。短期内（1–2 年），QDoRA 成为产业标准，几乎所有项目都走 QLoRA/QDoRA + 蒸馏的流水线。长期（3–5 年），持续学习从"可选特性"变成"默认能力"——不是因为你选择了持续学习，而是因为 PEFT 的模块化架构本身就支持持续学习，你只是在用它的自然延伸。</p>
+    </div>
+
+    <h3 id="sec3-3">3.3 给实践者的行动清单</h3>
+    <p>如果我只给你三个建议：</p>
+    <ol>
+      <li><strong>从 QLoRA 开始，有条件就上 QDoRA。</strong>QLoRA 把 7B 模型微调的门槛降到了 6GB——这意味着你手头几乎任何 GPU 都能跑。QDoRA 在相同显存下效果更好，且只在 HuggingFace PEFT 配置中加一个 <code>use_dora=True</code> 而已。</li>
+      <li><strong>把"微调 + 蒸馏 + 量化"当成一条完整的流水线。</strong>不要在微调完成后就直接部署大模型。先蒸馏到小模型（13B→1.8B 损失仅 2.6%，但推理速度快 3 倍），再量化到 4-bit（进一步省显存、提并发）。这条流水线是 2026 年产业界验证过的最佳实践。</li>
+      <li><strong>如果你在持续更新模型，一定要上模块化 PEFT + 防遗忘机制。</strong>如果你频繁更新模型（每周新增意图/数据），全量微调和普通 LoRA 都会逐渐累积遗忘问题。建议：按业务模块分组 LoRA + 自蒸馏损失约束（KL 散度）+ 每次微调混入 20% 历史数据抽样。这三步改动不超过 10 行代码，但能有效防止模型"学新的、忘旧的"。</li>
+    </ol>
+  </div>
+
+  <!-- Section 4: Sources -->
+  <div class="card" id="sec4">
+    <h2>五、信息来源</h2>
+    <ol style="font-size:13px;color:var(--text-secondary);">
+      <li>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding — Devlin et al., NAACL 2019</li>
+      <li>LoRA: Low-Rank Adaptation of Large Language Models — Hu et al., ICLR 2022</li>
+      <li>QLoRA: Efficient Finetuning of Quantized LLMs — Dettmers et al., NeurIPS 2023</li>
+      <li>DoRA: Weight-Decomposed Low-Rank Adaptation — Liu et al. (NVIDIA), arXiv 2024</li>
+      <li>Scaling Down: On the Robustness of PEFT vs Full Fine-Tuning — arXiv 2025.22355</li>
+      <li>Parameter-Efficient Continual Fine-Tuning: A Survey — arXiv 2504.13822</li>
+      <li>GE-PEFT: Gated Expandable PEFT for Continual Learning — OpenReview 2024</li>
+      <li>Trans-PEFT: Transferable PEFT on Evolving Base Models — ACL 2025</li>
+      <li>A Comprehensive Survey of LLM Fine-Tuning — IJSREAT 2026</li>
+      <li>Parameter-Efficient Fine-Tuning for Large Models: A Comprehensive Survey — arXiv 2403.14608</li>
+      <li>LoRA, QLoRA, DoRA — Which Fine-Tuning Method Should You Actually Use? — Towards AI, 2026</li>
+      <li>LLM Fine-Tuning 2026: LoRA vs QLoRA vs DoRA vs Full FT Compared — AppScale Blog, 2026</li>
+      <li>The evolution of fine-tuning: LoRA, adapters, and other PEFT methods — Medium/Khayyam H., 2025</li>
+      <li>Fine Tuning in AI: Powerful History of How LLMs Specialize — TechHistoryLab, 2026</li>
+      <li>Advanced LoRA Fine-Tuning: How to Pick LoRA, QLoRA, DoRA, PiSSA, OLoRA, EVA, and LoftQ — Kaitchup, 2025</li>
+      <li>Fine-tuning LLMs: A Practitioner's Guide — Jose Nobile, 2026</li>
+      <li>LLM Model Evolution 2024–2026 — llm-evolution.com</li>
+    </ol>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>本报告由 AtomCode 按照横纵分析法（hv-analysis）框架生成</p>
+    <p>方法论来源：数字生命卡兹克（Khazix）· 横纵分析法</p>
+    <p>© 2026 · 仅供研究参考</p>
+  </div>
+
+</div>
+</body>
+</html>

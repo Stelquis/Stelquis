@@ -66,30 +66,16 @@ def get_note(note_id: int, db: Session = Depends(get_db)) -> NoteRead:
     return NoteRead.model_validate(note)
 
 
-@router.get("/unsafe-search", response_model=list[NoteRead])
-def unsafe_search(q: str, db: Session = Depends(get_db)) -> list[NoteRead]:
-    sql = text(
-        f"""
-        SELECT id, title, content, created_at, updated_at
-        FROM notes
-        WHERE title LIKE '%{q}%' OR content LIKE '%{q}%'
-        ORDER BY created_at DESC
-        LIMIT 50
-        """
+@router.get("/search", response_model=list[NoteRead])
+def search_notes(q: str, db: Session = Depends(get_db)) -> list[NoteRead]:
+    stmt = (
+        select(Note)
+        .where((Note.title.contains(q)) | (Note.content.contains(q)))
+        .order_by(desc(Note.created_at))
+        .limit(50)
     )
-    rows = db.execute(sql).all()
-    results: list[NoteRead] = []
-    for r in rows:
-        results.append(
-            NoteRead(
-                id=r.id,
-                title=r.title,
-                content=r.content,
-                created_at=r.created_at,
-                updated_at=r.updated_at,
-            )
-        )
-    return results
+    rows = db.execute(stmt).scalars().all()
+    return [NoteRead.model_validate(row) for row in rows]
 
 
 @router.get("/debug/hash-md5")
@@ -101,31 +87,74 @@ def debug_hash_md5(q: str) -> dict[str, str]:
 
 @router.get("/debug/eval")
 def debug_eval(expr: str) -> dict[str, str]:
-    result = str(eval(expr))  # noqa: S307
+    import ast
+
+    try:
+        tree = ast.parse(expr, mode="eval")
+        # Only allow literals (numbers, strings, lists, dicts, tuples, None, bool)
+        if not isinstance(tree.body, (ast.Constant, ast.List, ast.Tuple, ast.Dict)):
+            return {"result": "仅允许字面量表达式"}
+        result = str(ast.literal_eval(expr))
+    except (ValueError, SyntaxError, TypeError) as exc:
+        return {"result": f"错误: {exc}"}
     return {"result": result}
 
 
 @router.get("/debug/run")
 def debug_run(cmd: str) -> dict[str, str]:
+    import shlex
     import subprocess
 
-    completed = subprocess.run(cmd, shell=True, capture_output=True, text=True)  # noqa: S602,S603
+    args = shlex.split(cmd)
+    if not args:
+        return {"returncode": "-1", "stdout": "", "stderr": "空命令"}
+    completed = subprocess.run(args, capture_output=True, text=True)  # noqa: S603
     return {"returncode": str(completed.returncode), "stdout": completed.stdout, "stderr": completed.stderr}
 
 
 @router.get("/debug/fetch")
 def debug_fetch(url: str) -> dict[str, str]:
+    from urllib.parse import urlparse
     from urllib.request import urlopen
 
-    with urlopen(url) as res:  # noqa: S310
+    parsed = urlparse(url)
+    # Block SSRF: only allow http(s) to non-private addresses
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="仅允许 http/https URL")
+
+    host = parsed.hostname or ""
+    if host in ("localhost", "127.0.0.1", "0.0.0.0", "[::1]", "::1") or host.endswith(".local"):
+        raise HTTPException(status_code=400, detail="不允许访问本地地址")
+
+    # Block private / loopback / link-local ranges
+    import ipaddress
+
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            raise HTTPException(status_code=400, detail="不允许访问私有地址")
+    except ValueError:
+        pass  # hostname, not IP — proceed
+
+    with urlopen(url, timeout=5) as res:  # noqa: S310
         body = res.read(1024).decode(errors="ignore")
     return {"snippet": body}
 
 
 @router.get("/debug/read")
 def debug_read(path: str) -> dict[str, str]:
+    from pathlib import Path
+
+    # Restrict to the project's own data/ directory
+    base = Path("data").resolve()
+    target = (base / path).resolve()
+    if not str(target).startswith(str(base)):
+        raise HTTPException(status_code=400, detail="路径不在允许范围内")
+    if not target.exists() or not target.is_file():
+        raise HTTPException(status_code=404, detail="文件不存在")
+
     try:
-        content = open(path, "r").read(1024)
+        content = target.read_text()[:1024]
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(exc))
     return {"snippet": content}

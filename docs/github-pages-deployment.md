@@ -1,5 +1,7 @@
 # 个人主页 GitHub Pages 部署记录
 
+> ⚠️ **当前状态（2026-09-07）**：`.github/workflows/pages.yml` 已移除——仓库暂无需要部署的网页。后续要恢复部署时，按下方「GitHub Actions 工作流」的 YAML 重建该文件即可，其余流程不变。
+
 ## 背景
 
 为了把本仓库作为个人主页展示，同时让 CNB / Gitee / GitHub 仓库主页正常显示 README，做了以下改造：

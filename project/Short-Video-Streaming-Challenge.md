@@ -132,7 +132,7 @@ scikit-learn>=1.0.0
 
 ```bash
 
-   docker build -t short-video-streaming .
+   docker build -f .ide/Dockerfile -t short-video-streaming .
 
 ```
 
@@ -164,7 +164,7 @@ scikit-learn>=1.0.0
 
 .
 
-├── Dockerfile                    # Docker 开发环境配置
+├── .ide/Dockerfile               # Docker 开发环境配置
 
 ├── .cnb.yml                      # CNB 云原生构建配置
 

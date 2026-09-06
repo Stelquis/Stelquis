@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>开源课题实战项目申请书 — tRPC 多租户与节点部署</title>
+<meta name="author" content="牛晨勋">
+<meta name="description" content="申请 tRPC 开源课题实战项目：多租户与节点部署架构设计">
+<meta name="keywords" content="tRPC, Agent, 多租户, 节点部署, 申请书">
+<meta name="generator" content="Kami">
+<style>
+ /* 标题字体：楷体 */
+ @font-face {
+ font-family: "KaiTi";
+ src: url("../../repo/Kami/assets/fonts/TsangerJinKai02-W04.ttf") format("truetype"),
+ url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W04.ttf") format("truetype");
+ font-weight: 400;
+ font-style: normal;
+ }
+ @font-face {
+ font-family: "KaiTi";
+ src: url("../../repo/Kami/assets/fonts/TsangerJinKai02-W05.ttf") format("truetype"),
+ url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W05.ttf") format("truetype");
+ font-weight: 500;
+ font-style: normal;
+ }
+ @page {
+ size: A4;
+ margin: 18mm 20mm 20mm 20mm;
+ background: #f5f4ed;
+ @bottom-center {
+ content: "— " counter(page) " —";
+ font-family: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+ font-size: 8pt;
+ color: #6b6a64;
+ }
+ }
+ @page:first { @bottom-center { content: ""; } }
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+ :root {
+ --parchment: #f5f4ed; --ivory: #faf9f5; --near-black:#141413;
+ --dark-warm: #3d3d3a; --olive: #504e49; --stone: #6b6a64;
+ --brand: #1B365D; --border: #e8e6dc; --border-soft:#e5e3d8;
+ --tag-bg: #E4ECF5;
+ --kai: "KaiTi", "AR PL KaitiM GB", "AR PL KaitiM Big5", "Symbola", serif;
+ --serif: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Symbola", system-ui, -apple-system, sans-serif;
+ --sans: var(--serif);
+ }
+ html, body { background: var(--parchment); }
+ @media screen { body { max-width: 210mm; margin: 0 auto; padding: 18mm 20mm 20mm 20mm; } }
+ body {
+ color: var(--near-black); font-family: var(--serif); font-size: 10.5pt;
+ line-height: 1.6; letter-spacing: 0.3pt; widows: 2; orphans: 2;
+ }
+ a { color: var(--brand); text-decoration: none; }
+
+ /* ═══════ 封面 ═══════ */
+ .cover {
+ display: flex; flex-direction: column; justify-content: center;
+ min-height: 260mm; text-align: center;
+ break-after: page;
+ }
+ .cover-tagline { font-size: 15pt; color: var(--brand); letter-spacing: 4pt; text-transform: uppercase; margin-bottom: 12pt; font-family: var(--kai); }
+ .cover-org { font-size: 15pt; color: var(--stone); margin-bottom: 48pt; font-family: var(--kai); }
+ .cover-title { font-size: 51pt; font-weight: 500; line-height: 1.15; color: var(--near-black); margin-bottom: 9pt; font-family: var(--kai); }
+ .cover-sub { font-size: 22pt; color: var(--olive); line-height: 1.45; margin-bottom: 36pt; font-family: var(--kai); }
+ .cover-divider { width: 84pt; height: 4pt; background: var(--brand); margin: 0 auto 36pt auto; border-radius: 2pt; }
+ .cover-name { font-size: 21pt; color: var(--near-black); margin-bottom: 6pt; font-family: var(--kai); }
+ .cover-school { font-size: 16pt; color: var(--stone); margin-bottom: 30pt; }
+ .cover-badges { margin-bottom: 36pt; line-height: 42px; }
+ .cover-badges img { margin: 2px 2px; height: 20px; vertical-align: middle; }
+ .sb {
+ display: inline-block; height: 20px; margin: 2px 2px; vertical-align: middle;
+ border-radius: 3px; overflow: hidden; text-decoration: none;
+ font-size: 11px;
+ line-height: 20px; font-weight: 400; text-transform: uppercase;
+ }
+ .sb-l {
+ display: inline-block; color: #fff; height: 20px; vertical-align: top;
+ padding: 0 7px 0 6px;
+ }
+ .sb-l img { height: 11px; vertical-align: middle; margin: 0 4px 0 0; position: relative; top: -1px; border: none; }
+ .sb-r {
+ display: inline-block; color: #fff; height: 20px; vertical-align: top;
+ padding: 0 7px;
+ }
+ .cover-quote { font-size: 11pt; color: var(--stone); line-height: 1.5; max-width: 70%; margin: 0 auto; font-style: italic; }
+
+ /* ═══════ 正文 ═══════ */
+ .page-header {
+ border-bottom: 1.5pt solid var(--brand);
+ padding-bottom: 8pt; margin-bottom: 14pt;
+ }
+ .page-header-title { font-size: 18pt; font-weight: 500; line-height: 1.3; color: var(--near-black); margin-bottom: 3pt; font-family: var(--kai); }
+ .page-header-meta { font-size: 8.5pt; color: var(--stone); display: flex; flex-wrap: wrap; gap: 3pt 12pt; }
+ .page-header-meta strong { color: var(--dark-warm); font-weight: 500; }
+
+ h2 {
+ font-size: 14pt; font-weight: 500; line-height: 1.3;
+ margin: 16pt 0 8pt 0; color: var(--near-black);
+ border-left: 2.5pt solid var(--brand); border-radius: 1.5pt;
+ padding-left: 8pt; break-after: avoid; font-family: var(--kai);
+ }
+ h3 { font-size: 11.5pt; font-weight: 500; line-height: 1.3; margin: 12pt 0 5pt 0; color: var(--dark-warm); break-after: avoid; font-family: var(--kai); }
+ p { margin: 0 0 8pt 0; line-height: 1.6; }
+ .hl { color: var(--brand); font-weight: 500; }
+ strong { font-weight: 500; }
+ ul, ol { margin: 4pt 0 8pt 0; padding-left: 18pt; line-height: 1.55; }
+ ul li::marker { color: var(--brand); }
+ ol li::marker { color: var(--brand); font-weight: 500; }
+
+ table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 10pt 0; break-inside: avoid; }
+ th { text-align: left; font-weight: 500; color: var(--dark-warm); padding: 5pt 7pt; border-bottom: 1pt solid var(--border); }
+ td { padding: 4pt 7pt; border-bottom: 0.3pt solid var(--border-soft); vertical-align: top; }
+ .compact th { padding: 3pt 5pt; font-size: 8.5pt; }
+ .compact td { padding: 2pt 5pt; font-size: 8.5pt; line-height: 1.4; }
+
+ .callout {
+ background: var(--ivory); border-left: 2pt solid var(--brand);
+ padding: 8pt 12pt; border-radius: 3pt; margin: 10pt 0;
+ line-height: 1.55; break-inside: avoid; font-size: 10pt;
+ }
+
+ .tag {
+ display: inline-block; background: var(--tag-bg); color: var(--brand);
+ font-size: 8pt; font-weight: 500; padding: 1pt 5pt; border-radius: 2pt; margin: 1pt 2pt;
+ }
+ .tag-green { background: #e8f5e9; color: #2e7d32; }
+ .tag-amber { background: #fff8e1; color: #f57f17; }
+ .tag-blue { background: #e3f2fd; color: #1565c0; }
+ .tag-red { background: #fce4ec; color: #c62828; }
+
+ .badge-row { margin: 6pt 0 8pt 0; }
+ .badge-row img { height: 18px; vertical-align: middle; margin: 1pt 1pt; }
+
+ .card {
+ background: var(--ivory); border: 0.5pt solid var(--border);
+ border-radius: 4pt; padding: 10pt 12pt; margin: 8pt 0; break-inside: avoid;
+ }
+ .card-title { font-size: 10pt; font-weight: 500; color: var(--brand); margin-bottom: 3pt; font-family: var(--kai); }
+ .card p { font-size: 9.5pt; margin: 0 0 4pt 0; }
+ .card ul { font-size: 9pt; margin: 2pt 0 0 0; }
+
+ .metrics { display: flex; gap: 8pt; margin: 10pt 0; break-inside: avoid; }
+ .metric-item { flex: 1; background: var(--ivory); border-radius: 4pt; padding: 8pt 6pt; text-align: center; border: 0.5pt solid var(--border); }
+ .metric-value { font-size: 14pt; font-weight: 500; color: var(--brand); font-variant-numeric: tabular-nums; line-height: 1.2; }
+ .metric-label { font-size: 7.5pt; color: var(--stone); margin-top: 2pt; }
+
+ .timeline { margin: 10pt 0; break-inside: avoid; }
+ .tl-item { display: flex; gap: 10pt; margin-bottom: 6pt; padding-left: 0; }
+ .tl-week { width: 48pt; flex-shrink: 0; text-align: center; background: var(--brand); color: #fff; border-radius: 3pt; font-size: 8.5pt; font-weight: 500; padding: 3pt 0; height: fit-content; }
+ .tl-content { flex: 1; padding: 2pt 0; }
+ .tl-content .tl-title { font-size: 10pt; font-weight: 500; color: var(--near-black); font-family: var(--kai); }
+ .tl-content .tl-desc { font-size: 9pt; color: var(--olive); line-height: 1.4; }
+ .tl-content .tl-deliverable { font-size: 8.5pt; color: var(--stone); }
+
+ .project-block { margin: 8pt 0 10pt 0; }
+ .project-block .meta { font-size: 9pt; color: var(--stone); margin-bottom: 2pt; }
+ .project-block ul { font-size: 9.5pt; }
+
+ .stage-bar { display: flex; gap: 4pt; margin: 8pt 0; break-inside: avoid; }
+ .stage-item { flex: 1; text-align: center; padding: 4pt 2pt; border-radius: 3pt; font-size: 7.5pt; line-height: 1.3; }
+ .stage-done { background: #e8f5e9; color: #2e7d32; }
+ .stage-cur { background: #e3f2fd; color: #1565c0; font-weight: 500; }
+ .stage-next { background: var(--tag-soft); color: var(--stone); }
+
+ .footer-note { margin-top: 14pt; padding-top: 8pt; border-top: 0.5pt solid var(--border-soft); font-size: 9pt; color: var(--stone); text-align: center; }
+
+ .goal-grid { display: flex; gap: 8pt; margin: 10pt 0; break-inside: avoid; }
+ .goal-item { flex: 1; background: var(--ivory); border-radius: 4pt; padding: 10pt; border: 0.5pt solid var(--border); }
+ .goal-item h4 { font-size: 10pt; font-weight: 500; color: var(--brand); margin-bottom: 4pt; font-family: var(--kai); }
+ .goal-item p { font-size: 9pt; margin: 0; }
+
+ .issue-link {
+ display: inline-block; background: var(--tag-bg); color: var(--brand);
+ padding: 2pt 8pt; border-radius: 3pt; font-size: 9pt; font-weight: 500;
+ margin: 2pt 0;
+ }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+ 封面
+ ════════════════════════════════════════════════════════════ -->
+<section class="cover">
+ <div class="cover-tagline">2026 · 犀牛鸟开源人才培养</div>
+ <div class="cover-org">腾讯开源 · 开源课题实战</div>
+ <div class="cover-title">项目申请书</div>
+ <div class="cover-sub">tRPC · 多租户与节点部署架构设计</div>
+ <div class="cover-divider"></div>
+ <div class="cover-name">牛晨勋</div>
+ <div class="cover-school">中南大学 · 数据科学与大数据技术 · 2023 级</div>
+ <div class="cover-badges">
+ <a href="https://github.com/Stelquis"><span class="sb"><span class="sb-l" style="background:#24292e;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E" alt="" />GitHub</span><span class="sb-r" style="background:#888;">Stelquis</span></span></a>
+ <a href="https://cnb.cool/u/Stelquis"><img src="CNB.svg" alt="CNB" height="20" style="vertical-align:middle"></a>
+ <a href="mailto:17837343195@163.com"><span class="sb"><span class="sb-l" style="background:#24292e;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z'/%3E%3C/svg%3E" alt="" />邮箱</span><span class="sb-r" style="background:#ea4335;">17837343195@163.com</span></span></a>
+ </div>
+ <div class="cover-quote">"Always a learner, always learning from the best."</div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+ 正文
+ ════════════════════════════════════════════════════════════ -->
+
+<div class="page-header">
+ <div class="page-header-title">项目申请书</div>
+ <div class="page-header-meta">
+ <span><strong>项目：</strong>tRPC · 多租户与节点部署</span>
+ <span><strong>申请人：</strong>牛晨勋</span>
+ <span><strong>学校：</strong>中南大学 · 数据科学与大数据技术 · 2023 级</span>
+ <span><strong>邮箱：</strong>17837343195@163.com / 3420761503@qq.com</span>
+ </div>
+</div>
+
+<!-- ══════════ 课题背景 ══════════ -->
+<h2>▶ 课题背景</h2>
+
+<div class="callout">
+ ◆ <strong>tRPC-Agent</strong> 是腾讯开源的生产级 <strong>AI Agent 开发框架</strong>，框架核心围绕 <span class="hl">LlmAgent</span> 的 <code>推理 → 工具调用 → 回填 → 再推理</code> 交替循环设计，内置 <span class="hl">Filter</span> 治理链、多后端 <span class="hl">Session/Memory</span> 抽象、<span class="hl">Skill</span> 技能体系、<span class="hl">GraphAgent</span> 图编排引擎以及 <span class="hl">A2A / AG-UI</span> 跨语言通信协议。
+</div>
+
+<p>框架目前提供两个稳定语言版本，版本定位互补：</p>
+
+<div class="card">
+<div class="card-title">tRPC-Agent-Python</div>
+ <p><span class="tag">SDK 完整</span><span class="tag">企业微信</span><span class="tag">Filter 治理</span><span class="tag">A2A</span><span class="tag">AG-UI</span></p>
+ <p>SDK 能力完整，内建 <strong>OpenClaw</strong> 运行时（含企业微信通道、Telegram 通道、CLI 交互），多后端 Session 服务（<code>InMemory</code> / <code>SQL</code> / <code>Redis</code>），多后端 Memory 服务，<strong>Filter 治理体系</strong>和 <strong>A2A/AG-UI 服务端</strong>，适合快速开发和 Agent 逻辑编排。</p>
+</div>
+
+<div class="card">
+<div class="card-title">tRPC-Agent-Go</div>
+ <p><span class="tag">架构对等</span><span class="tag">九种后端</span><span class="tag">Guardrail</span><span class="tag">高吞吐</span></p>
+ <p>架构对等，Session 后端覆盖更广（<code>SQLite</code> / <code>MySQL</code> / <code>PostgreSQL</code> / <code>Redis</code> / <code>MongoDB</code> / <code>ClickHouse</code> 等九种），Memory 后端同样丰富，内建 <strong>Guardrail 插件体系</strong>和 <strong>OpenClaw Gateway</strong> 实现，<strong>goroutine</strong> 并发模型天然适合高吞吐网络层。</p>
+</div>
+
+<p>◆ 两个版本通过 <span class="hl">A2A 协议</span> 可跨语言互通，为多语言混合部署提供了协议基础。</p>
+<p>本实战任务以 tRPC-Agent 框架为基础，在其现有能力之上构建 <span class="hl">多租户隔离</span> 与 <span class="hl">分布式部署</span> 层，可拆解为五个核心子问题：</p>
+
+<div class="project-block">
+ <div class="card">
+<div class="card-title">◆ 子问题一：租户模型与配置管理</div>
+ <p>设计 <strong>Tenant</strong> 数据模型，核心字段涵盖 <code>tenant_id</code>、<code>app_config</code>、<code>model_config</code>、<code>tool_whitelist</code>、<code>channel_binding</code>、<code>data_backend</code>、<code>audit_policy</code>。每个租户拥有<strong>独立的配置空间</strong>，模型配置、工具权限、数据后端选择和审计策略运行时互不干扰。</p>
+ </div>
+ <div class="card">
+<div class="card-title">◆ 子问题二：租户感知路由与数据分片</div>
+ <p>在 <strong>Gateway</strong> 和 <strong>Storage</strong> 层引入 <code>tenant_id</code> 路由机制，使不同租户的消息、会话、记忆和知识库能路由到各自指定的后端实例。每个租户可独立选择数据后端类型（<span class="tag">InMemory</span><span class="tag">Redis</span><span class="tag">SQL</span><span class="tag">向量库</span><span class="tag">对象存储</span>）。</p>
+ </div>
+ <div class="card">
+<div class="card-title">◆ 子问题三：Gateway ↔ Worker 分离与水平扩展</div>
+ <p>将 Agent 执行从网关进程中 <strong>解耦</strong> 为独立的 Worker 池。Worker 为 <strong>无状态</strong> 设计，不持有会话状态，所有状态写入共享后端（<code>Redis</code> / <code>SQL</code>），实现按流量水平扩缩容，<span class="hl">不依赖 Sticky Session</span>。</p>
+ </div>
+ <div class="card">
+<div class="card-title">◆ 子问题四：IM 通道标准化接入与租户绑定</div>
+ <p>设计统一的 <strong>Channel Adapter</strong> 接口，将企业微信、微信公众号等 IM 消息标准化为 Agent 输入。通过 <strong>用户身份映射</strong> 机制将 IM 用户的 <code>open_id</code> 绑定到具体 <code>tenant_id</code>，处理消息验签、去重和群聊/单聊 <code>session_id</code> 生成。</p>
+ </div>
+ <div class="card">
+<div class="card-title">◆ 子问题五：管理面（Admin API）与运维</div>
+ <p>提供租户 <strong>CRUD</strong>、配置变更、策略调整、灰度发布与配置回滚的标准化管理接口。配套 <span class="tag">OpenTelemetry</span><span class="tag">全链路 Trace</span><span class="tag">审计日志</span>，支持 <strong>Docker Compose</strong> 最小部署与 <strong>Kubernetes</strong> 生产部署方案。</p>
+ </div>
+</div>
+
+<!-- ══════════ 技术方案 ══════════ -->
+<h2>▶ 技术方案</h2>
+
+<p>前述五个子问题可以归结为一条极简的主线：<span class="hl">两台机器、两个租户、两条消息同时到达，系统能正确处理</span>。展开来说就是：两个不同租户的用户，各自发一条消息到同一个 Agent 服务，它们能不能互不干扰地得到各自的回复？这就是本方案要回答的核心问题。</p>
+
+<p>"互不干扰"意味着两条线：<span class="hl">配置不串</span>（A 租户用 DeepSeek、B 租户用 GPT-4，各自配置各自生效）和<span class="hl">数据不混</span>（A 的会话和记忆不会出现在 B 的查询结果里）。"同一个 Agent 服务"意味着所有租户共享同一套计算节点和接入层，不能为每个租户单独部署一套。</p>
+
+<p>围绕"配置不串、数据不混、水平扩展"三条要求，方案从三个层面递进设计：</p>
+
+<div class="card">
+<div class="card-title">① 数据层：配置即命名空间</div>
+ <p>多租户的根本是<span class="hl">按 tenant_id 分片</span>。一张 <code>tenants</code> 表存所有租户配置（<code>model_config</code>、<code>tool_whitelist</code>、<code>channel_binding</code>、<code>data_backend</code>、<code>audit_policy</code>），每个配置项以 <code>tenant_id</code> 为前缀。框架已有的 <code>SessionService</code>（Python 的 <code>Sql/RedisSessionService</code>、Go 的 <code>session/redis</code>）只需在键空间上追加 <code>tenant_id</code> 前缀即可实现数据隔离。流程是：Gateway 收到请求 → 提取 <code>tenant_id</code> → Worker 根据 <code>tenant_id</code> 加载对应 config → 读写对应键空间的数据。API Key 只存引用 ID，详细配置以 JSON 字段存于 tenants 表，简单可扩展，不做物理隔离。</p>
+ <p>不做物理隔离是权衡后的选择——物理隔离需要为每个租户独立部署一套后端实例，管理成本随租户数线性增长，在多租户共享计算节点的架构下反而引入了更大的运维复杂度。逻辑隔离加 <code>tenant_id</code> 前缀覆盖了当前阶段的核心诉求：配置不串、数据不混。同时也保留了升级路径——需要时只需改动 <code>StorageRouter</code> 的路由策略即可切换到独立后端，不影响上层 Agent 逻辑。</p>
+</div>
+
+<div class="card">
+<div class="card-title">② 计算层：无状态即水平扩展</div>
+ <p>Worker 要能自由扩缩，前提是<span class="hl">不持有任何会话状态</span>。这一点框架天然支持：Python 和 Go 的 SessionService 实现都将 event、state 写入了共享后端（Redis / SQL），Worker 只需 <code>get_session()</code> 就能恢复现场。Gateway 按 <code>tenant_id</code> 哈希分配 Worker，同一 session 尽量保持亲和（亲和信息存 Redis），但不依赖 Sticky Session——Worker 宕机后亲和信息丢失，Gateway 自动重分配，会话数据在共享后端不受影响。</p>
+ <p>亲和信息带 TTL，核心作用是减少 Session 在不同 Worker 间迁移的频率，而非保证固定绑定。TTL 超时或 Worker 宕机后，Gateway 重新哈希分配，新 Worker 从共享后端拉取完整会话状态继续执行。这里的关键在于"中断不丢失"而非"不断线"——IM 通道天然能接受异步回复，短暂的重分配延迟在用户体验上可接受。探活机制通过健康检查接口实现，Python 版复用 OpenClaw 通道层，Go 版使用 gRPC health probe。</p>
+</div>
+
+<div class="card">
+<div class="card-title">③ 接入层：IM 通道即标准化适配器</div>
+ <p>不同 IM 通道有各自的 webhook 格式和消息协议，但进入 Worker 后都走同一套 Agent 逻辑。设计 Channel Adapter 接口，将企业微信回调、微信公众号事件等标准化为 <code>InboundMessage</code>（<code>channel / from / to / thread / text</code>），再转为 <code>Runner.run_async()</code> 输入。企业微信通道复用 Python OpenClaw 已有的 <code>channels/_wecom.py</code>（含流式回复），微信公众号为本次新增。消息去重通过 <code>channel + message_id</code> 做 SETNX 5 分钟 TTL 实现。session_id 按 <code>sha256(channel + tenant_id + user_open_id)</code> 生成，群聊追加 <code>group_id</code>。</p>
+ <p>Adapter 的职责止于消息格式转换——验签、去重、身份映射在 Adapter 层完成，之后的业务逻辑全部交给 Worker。这样做的好处是每接入一个新通道只需新增一个 Adapter 实现，Worker 和下游逻辑完全不动。session_id 加入 <code>tenant_id</code> 是为了跨租户场景下同一用户在两个租户的会话天然隔离；群聊追加 <code>group_id</code> 是为了区分群内 @机器人和单聊的消息流——两者在当前 Agent 事件模型中需要不同的 session 生命周期管理。</p>
+</div>
+
+<h3>治理与运维</h3>
+
+<div class="two-col">
+ <section>
+ <h4>Filter 治理</h4>
+ <ul class="dash">
+ <li>工具白名单：Python 版用 <code>@register_tool_filter</code> 注册租户级 Filter（复用 Issue #90 SafetyFilter 的决策链）</li>
+ <li>Go 版通过 Guardrail 插件的 approval 机制实现危险工具二次确认</li>
+ <li>敏感信息脱敏：12 种正则模式，IM token / API Key / 密码在日志中以 <code>***</code> 呈现</li>
+ <li>审计日志字段：<code>tenant_id</code>、<code>channel</code>、<code>user_id</code>、<code>session_id</code>、<code>agent_name</code>、<code>tool_name</code>、<code>decision</code>、<code>latency</code>、<code>error_type</code>、<code>cost</code>、<code>trace_id</code></li>
+ </ul>
+ </section>
+ <section>
+ <h4>监控与故障恢复</h4>
+ <ul class="dash">
+ <li>OpenTelemetry trace 串起 <code>IM → Gateway → Runner → Tool → Session/Memory → IM</code> 全链路</li>
+ <li>Worker 宕机：探活超时 → 重分配 session，会话状态在共享后端不丢失</li>
+ <li>数据库不可用：Memory 降级为本地 InMemory 缓存，恢复后异步同步</li>
+ <li>模型超时：设 <code>max_retries</code>，返回错误信息给用户并记录审计</li>
+ <li>数据迁移：双写 → 一致性校验（可复用 Issue #89 DiffEngine）→ 切换读流量 → 下线旧后端</li>
+ </ul>
+ </section>
+</div>
+
+<div class="metrics">
+ <div class="metric-item">
+ <div class="metric-value">1 个 Gateway</div>
+ <div class="metric-label">统一入口<br>按 tenant_id 路由</div>
+ </div>
+ <div class="metric-item">
+ <div class="metric-value">N 个 Worker</div>
+ <div class="metric-label">无状态执行<br>Docker Compose 一键拉起</div>
+ </div>
+ <div class="metric-item">
+ <div class="metric-value">K8s</div>
+ <div class="metric-label">生产部署<br>HPA 自动扩缩</div>
+ </div>
+</div>
+
+<p>三层合在一起就是：数据层按 tenant_id 分片管好"配置不串、数据不混"，计算层通过无状态 Worker 管好水平扩展，接入层用 Channel Adapter 管好多通道统一接入。这是本课题的整体方案框架。以下以周为单位规划交付节奏：</p>
+
+<!-- ══════════ 一、时间规划 ══════════ -->
+<h2>▶ 时间规划</h2>
+
+<p><span class="hl">实战周期：</span>2026 年 8 月 1 日 ~ 9 月 10 日。组委会将分别在 8 月初、8 月底联系项目导师获取入围学生的实战情况与评价，以下以"周"为单位安排：</p>
+
+<div class="timeline">
+ <div class="tl-item">
+ <div class="tl-week">第 1 周</div>
+ <div class="tl-content">
+ <div class="tl-title">● 调研与设计 · 数据层基建</div>
+ <div class="tl-desc">设计 <strong>Tenant 数据模型</strong>（<code>tenants</code> / <code>agent_apps</code> / <code>channel_bindings</code> / <code>audit_logs</code>），完成 <strong>StorageRouter</strong> 抽象接口，评估现有 <code>SessionService</code> 各后端（InMemory / SQL / Redis）的键空间改造方案</div>
+ <div class="tl-deliverable">■ Tenant 模型设计文档 + StorageRouter 接口代码 + 键空间改造方案</div>
+ </div>
+ </div>
+ <div class="tl-item">
+ <div class="tl-week">第 2 周</div>
+ <div class="tl-content">
+ <div class="tl-title">⚙ 核心开发 · 计算层解耦</div>
+ <div class="tl-desc">实现 <strong>StorageRouter</strong> 多后端适配（Redis / SQL），实现 <strong>Agent Gateway</strong> 的 <code>tenant_id</code> 路由与 Worker 池无状态调度，接入 <span class="hl">OpenTelemetry</span> 全链路 trace</div>
+ <div class="tl-deliverable">■ 多租户存储层可运行 + Gateway 路由 + 单元测试</div>
+ </div>
+ </div>
+ <div class="tl-item">
+ <div class="tl-week">第 3 周</div>
+ <div class="tl-content">
+ <div class="tl-title">✴ IM 集成 · 接入层标准化</div>
+ <div class="tl-desc">实现 <strong>企业微信</strong>（复用 OpenClaw <code>channels/_wecom.py</code>）+ <strong>微信公众号/客服</strong> 的 Channel Adapter，完成回调验签、SETNX 去重、<code>open_id → tenant_id</code> 映射、群聊/单聊 <code>session_id</code> 生成、平台限制处理</div>
+ <div class="tl-deliverable">■ 双通道 IM 适配器可运行（Telegram 预留接口）</div>
+ </div>
+ </div>
+ <div class="tl-item">
+ <div class="tl-week">第 4 周</div>
+ <div class="tl-content">
+ <div class="tl-title">● 打磨交付 · 治理 + 部署 + PR</div>
+ <div class="tl-desc">实现 <strong>Filter 治理</strong>（租户级工具白名单 / 敏感信息脱敏 / 危险工具二次确认）、<strong>Admin API</strong>（租户 CRUD / 配置回滚）、<strong>Docker Compose</strong> 一键部署方案、提交 PR</div>
+ <div class="tl-deliverable">■ 完整示例 + 部署文档 + PR 提交</div>
+ </div>
+ </div>
+</div>
+
+<h3>★ 期望获得的成长与收益</h3>
+
+<div class="goal-grid">
+ <div class="goal-item">
+ <h4>▣ 架构设计能力</h4>
+ <p>通过多租户 Gateway ↔ Worker 解耦、StorageRouter 多后端路由和 IM Channel Adapter 标准化接入的实战，理解从"单进程 Agent"到"分布式多租户服务"的架构演进路径。</p>
+</div>
+<div class="goal-item">
+<h4>■ 系统化思维</h4>
+<p>在数据一致性取舍（强一致 vs 最终一致）、数据迁移策略（双写切换）、租户隔离强度（逻辑隔离 vs 物理隔离）等现实约束下做工程决策，提升从"功能实现"到"系统设计"的思维层次。</p>
+</div>
+ <div class="goal-item">
+ <h4>★ 开源协作经验</h4>
+ <p>深度参与 tRPC 社区的 PR 评审流程，学习与官方维护者的协作方式，将多租户方案沉淀到框架主干并长期维护。</p>
+ </div>
+</div>
+
+<h3>⚒ 期望熟悉的技术与模块</h3>
+
+<p>
+ <span class="tag">tRPC-Agent SDK</span>
+ <span class="tag">A2A 协议</span>
+ <span class="tag">AG-UI 协议</span>
+ <span class="tag">Filter 治理链</span>
+ <span class="tag">Session 多后端</span>
+ <span class="tag">Memory 多后端</span>
+ <span class="tag">StorageRouter</span>
+ <span class="tag">OpenTelemetry</span>
+ <span class="tag">Docker Compose</span>
+ <span class="tag">Kubernetes</span>
+ <span class="tag">企业微信 API</span>
+ <span class="tag">微信公众号 API</span>
+</p>
+
+<!-- ══════════ 二、开源经历 ══════════ -->
+<h2>▶ 开源经历</h2>
+
+<p>在正式申请本课题前，我围绕 tRPC-Agent-Python 框架完成了四个阶段的开源实践，覆盖从基础到综合交付的完整链路：</p>
+
+<div class="project-block">
+ <div class="card">
+<div class="card-title">☰ 阶段一：Issue #89 — Session/Memory 多后端回放一致性测试</div>
+ <p><span class="tag">Session</span><span class="tag">Memory</span><span class="tag">InMemory</span><span class="tag">SQLite</span><span class="tag">Redis</span></p>
+ <p>构建 Replay Harness 驱动 InMemory/SQLite/Redis 三种后端，10 个 Replay Case 覆盖 <strong>event order / state / memory / summary</strong> 四维度，DiffEngine 字段级比较。验收：29 项 replay 测试通过（0.93s），与已有 337 项 session 测试无冲突、零影响。</p>
+ </div>
+ <div class="card">
+<div class="card-title">☢ 阶段二：Issue #90 — Tool Script Safety Guard</div>
+ <p><span class="tag">Filter</span><span class="tag">AST</span><span class="tag">OTel</span><span class="tag">策略引擎</span></p>
+ <p>可插拔 SafetyFilter 前置扫描 <strong>7 类风险</strong>，Python 脚本 AST 分析 + Bash 正则匹配，输出 <code>allow / deny / needs_human_review</code> 三级决策。验收：60 项测试通过，500 行脚本扫描 9.13ms。</p>
+ </div>
+ <div class="card">
+<div class="card-title">◘ 阶段三：Issue #92 — Skills + 沙箱 + 数据库代码评审 Agent</div>
+ <p><span class="tag">Skill</span><span class="tag">CodeExecutor</span><span class="tag">GraphAgent</span><span class="tag">A2A</span><span class="tag">AG-UI</span></p>
+ <p>构建自动化代码评审 Agent，整合 Skills 体系、Container/E2B 沙箱、SQLite 存储、GraphAgent 图编排和 Filter 治理。交付 5 类风险规则、6 张 DB 表、7 节点图编排管道和 8 条测试 diff。</p>
+ </div>
+ <div class="card">
+<div class="card-title">△ 阶段四：ReviewMind — 综合 Demo（基于 #92 演进）</div>
+ <p><span class="tag">Eval</span><span class="tag">A2A Server</span><span class="tag">AG-UI Server</span><span class="tag">评测集</span><span class="tag">OpenTelemetry</span></p>
+ <p>在 Issue #92 骨架之上扩展为完整可服务的代码评审系统：新增 A2A/AG-UI 双协议服务端、RAG 知识库检索、长期记忆（SqliteMemoryService + 30 天 TTL）、ProgressReporter 流式进度推送、全套 Eval Set 评测和隐藏样本盲测。验收：8 条公开 fixture 全部通过，pytest 测试套件通过，共 37 个 Python 文件。</p>
+ </div>
+</div>
+
+<div class="callout">
+ <strong>从浅入深，</strong>四个阶段依次覆盖了 Session/Memory 多后端、Filter 治理链、Skill + 沙箱 + 图编排、A2A/AG-UI 服务化与评测体系——这些正是本课题（多租户存储路由、租户级 Filter 治理、Gateway ↔ Worker 解耦）的直接前置经验。
+</div>
+
+<!-- ══════════ 个人陈述 ══════════ -->
+<h2>▶ 个人陈述</h2>
+
+<p>四个阶段的实践经历让我清楚地意识到一件事：Agent 框架的工程化落地和写一个能跑的 Agent 脚本是完全不同的两件事。脚本只需要调通 API、拿到返回就够了；但一个工程化的 Agent 服务需要考虑模型超时怎么办、工具执行失败怎么恢复、多个会话之间的状态怎么隔离、不同业务方共享同一套基础设施时配置怎么不串、数据怎么不混。</p>
+
+<p>这些问题的答案不在 LLM 的返回里，而在工程架构的设计里。而"多租户与节点部署"这个课题恰好站在这个交汇点上——tRPC-Agent 已经解决了 Agent"能跑起来"的问题，但多业务方共享时的配置隔离、数据分片、无状态 Worker 扩缩、IM 通道统一接入、治理监控体系，这些是企业落地的最后一道门槛。这也是我认为这个课题最有价值的地方：它的产出不会只停留在仓库里，而是能直接推动框架向企业级服务迈进。</p>
+
+<p>双版本的存在提供了更大的设计空间。Python 版内建的 OpenClaw 通道层、Filter 治理链和多后端 Session 抽象是可复用的基础设施；Go 版的 Gateway 架构和 goroutine 并发模型适合做高吞吐路由。A2A 协议让两者可以协同工作而不是二选一。</p>
+
+<p>从 Session/Memory 多后端测试（#89）到 SafetyFilter 治理链（#90），从 Skill 沙箱执行（#92）到完整的服务化系统（ReviewMind），四次实践恰好覆盖了本课题涉及的四个核心维度：存储抽象、治理策略、执行环境和接入协议。这不是从头学起，而是将这些已有能力组合并扩展到多租户场景——这个课题就是我在这条路上的自然延伸。</p>
+
+<div class="callout">
+  <strong>综上，</strong>我已在学习实践中验证了对 Session/Memory 多后端、Filter 治理链、GraphAgent 图编排、A2A/AG-UI 服务化和 Evaluation 评测体系的掌握。本课题是这些能力的横向延伸而非从头学起，我有信心按时交付高质量成果并持续为 tRPC 社区做出贡献。
+</div>
+
+<div class="footer-note">
+ 申请项目：tRPC（第一志愿）· Tencent YOLO-Master（第二志愿）· WeKnora（第三志愿）
+</div>
+
+<!-- ══════════ 文末 ══════════ -->
+
+</body>
+</html>

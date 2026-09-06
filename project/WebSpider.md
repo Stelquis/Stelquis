@@ -60,7 +60,7 @@ Data/
 
 # 云原生配置
 
-├── Dockerfile                 # 容器镜像构建
+├── .ide/Dockerfile            # 容器镜像构建
 
 ├── .cnb.yml                   # CNB 云原生构建配置
 

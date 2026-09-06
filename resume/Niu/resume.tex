@@ -39,8 +39,10 @@
 % ===================================================================
 \begin{document}
 
-% 隐藏页码，简历通常不需要显示页码
-\pagenumbering{gobble}
+% 简历不显示页码：清空页眉页脚
+% 勿用 \pagenumbering{gobble}，它会使 hyperref 写入重复的 @page 对象，
+% 导致 xdvipdfmx 报警 "Object @page. already defined."
+\pagestyle{empty}
 
 % ===================================================================
 % 基本信息
@@ -48,116 +50,57 @@
 
 % 个人照片
 % - [h] ：here，表示图片尽量放在当前位置
-% - \flushright ：图片右对齐
-% - 照片尺寸：高3.5cm，宽2.5cm（标准证件照比例）
+% - \raggedleft：图片右对齐（不用 \flushright，后者需配套 \endflushright 结束环境）
+% - 照片为 3cm 见方，置于右上角
 \begin{figure}[h]
-    \flushright
-    \includegraphics[height=3.5cm,width=3.5cm]{../assets/photos/Niu.png}
+    \raggedleft
+    \includegraphics[height=3cm,width=3cm]{../assets/photos/Niu2.png}
 \end{figure}
 
-% 垂直间距调整
-% - -0.175\linewidth ：显示考研成绩时的间距
-% - -0.15\linewidth ：隐藏考研成绩时的间距
-% \vspace{-0.175\linewidth}
-\vspace{-0.15\linewidth}
+% 抵消 figure 环境的上下留白，并把姓名上移到照片下沿
+\vspace{-27mm}
 
 % ===================================================================
-% 两种格式
+% 姓名与基本信息
 % ===================================================================
-% 姓名和表格位置
-% - 空行 = 段落分隔 = 换行
-% - % = 注释掉换行符 = 紧密连接
-% -------------------------------------------------------------------
-
-% -------------------------------------------------------------------
-% 标注考研成绩
-% -------------------------------------------------------------------
-
-% % 姓名
-% % - minipage ：迷你页面，用于布局控制
-% % - \LARGE ：字体大小为 24pt
-% \begin{minipage}[t]{0.175\textwidth}
-%     \centering
-%     \LARGE\fangsong\textbf{{星 觅}}
-% \end{minipage}%
-% \hspace{1em}%
-% \begin{minipage}[t]{0.4\textwidth}\kaishu\textbf{
-%     \centering
-%         \begin{tabular}{ccccc}
-%             \toprule[1.5pt]
-%             思想政治理论&英语（一）&专业课一&专业课二&初试总分\\
-%             \midrule[1pt]
-%             65&65&120&120&370\\
-%             \bottomrule[1.5pt]
-%         \end{tabular}
-%     }
-% \end{minipage}
-% % 垂直间距 1.5毫米（表格下方的微小空隙）
-% \vspace{1.5mm}
-% % 结束当前段落，强制换行
-% \par
-% % 水平间距1em，用于缩进（让联系方式与姓名左对齐）
-% \hspace{1em}
-% % 位置信息
-% \faMapMarker \hspace{0.25em}\fangsong\textbf{湖南\textbullet 长沙}
-% \hspace{0.25em}{\small{\textbullet}}\hspace{0.25em}
-% % 性别
-% \makebox[0.75em][c]{\faMars}
-% \hspace{0.25em}{\small{\textbullet}}\hspace{0.25em}
-% % 年龄
-% \fangsong\textbf{22岁}
-% \hspace{0.25em}{\small{\textbullet}}\hspace{0.25em}
-% % 电话
-% \faPhone \hspace{0.25em}\textbf{(+86)137-5512-2125}
-% \hspace{0.25em}{\small{\textbullet}}\hspace{0.25em}
-% % 邮箱
-% \faEnvelope \hspace{0.25em}\textbf{\textit{3420761503@qq.com}}
-% % 垂直间距1毫米
-% \vspace{1mm}
-
-% -------------------------------------------------------------------
-% 隐藏考研成绩（姓名居中布局）
-% -------------------------------------------------------------------
 % 布局说明：
-%   - 姓名位于A4纸正中间
+%   - 姓名居中于 A4 纸正中间
 %   - 基本信息分两行显示在姓名下方
-%   - 第一行：地点 | 性别 | 年龄
-%   - 第二行：电话 | 邮箱
+%   - 第一行：电话 | 地点
+%   - 第二行：邮箱 | GitHub | CNB
 % -------------------------------------------------------------------
 
-% 垂直间距调整（隐藏成绩时姓名与照片的距离）
-% - 数值越大越往下，越小越往上
-\vspace{-0.03\linewidth}
+% 微调姓名与照片的距离：数值越大越往下
+\vspace{-5mm}
 
-% 姓名居中（占满整行宽度）
-% - \centering: 水平居中命令（比center环境更紧凑，无额外间距）
-% - \LARGE: 大字号
-% - \fangsong: 仿宋字体
-% - \par: 结束当前段落，使居中生效
-{\centering\LARGE\fangsong\textbf{牛晨勋}\par}
+% 姓名居中：\centering 比 center 环境紧凑（无额外间距），需 \par 结束段落使居中生效
+{\centering\LARGE\kaishu\textbf{牛晨勋}\par}
 
 % 姓名与基本信息之间的间距
 \vspace{2mm}
 
-% 第一行基本信息（电话 | 地点 | 年龄）
+% 第一行基本信息（电话 | 地点）
 % - 使用\centering命令而非center环境，避免额外垂直间距
 {\centering
-    \faPhone \hspace{0.25em}\textbf{(+86)137-5512-2125}
+    \faPhone \hspace{0.25em}\textbf{(+86)178-3734-3195}
     \hspace{0.5em}{\small{\textbullet}}\hspace{0.5em}
-    \faMapMarker \hspace{0.25em}\fangsong\textbf{湖南\textbullet 长沙}
+    \faMapMarker \hspace{0.25em}\kaishu\textbf{湖南\textbullet 长沙}
 \par}
 
 % 两行基本信息之间的间距
 \vspace{1mm}
 
-% 第二行基本信息（邮箱 | CNB）
+% 第二行基本信息（邮箱 | GitHub | CNB）
 {\centering
     \faEnvelope \hspace{0.25em}\textbf{\textit{17837343195@163.com}}
     \hspace{0.5em}{\small{\textbullet}}\hspace{0.5em}
-    \faGithub \hspace{0.25em}\textbf{\textit{CNB: \href{https://cnb.cool/u/Stelquis}{\underline{Stelquis}}}}
+    \href{https://github.com/Stelquis}{\faGithub \hspace{0.25em}\textbf{\textit{\underline{Stelquis}}}}
+    \hspace{0.5em}{\small{\textbullet}}\hspace{0.5em}
+    \href{https://cnb.cool/u/Stelquis}{\includegraphics[height=0.75em]{../assets/photos/CNB-logo.png}\hspace{0.1em}\textbf{\textit{\underline{Stelquis}}}}
 \par}
-% 基本信息与下方内容的间距
-\vspace{2mm}
+
+% 基本信息与正文之间的间距（此处用 \gapEntry，其余 section 间距由文档类统一控制）
+\gapEntry
 
 % ===================================================================
 % 个人经历
@@ -167,100 +110,83 @@
 % 教育背景
 % -------------------------------------------------------------------
 % \faGraduationCap: 毕业帽图标 🎓
-% \datedsubsection: 带日期的子章节（学校信息 | 时间）
-% \qquad: 大空格（2em）
-% \textasciitilde: 波浪号 ~
+% \datedsubsection{学校与专业}{起止时间}，\qquad 为 2em 间隔，\textasciitilde 为波浪号 ~
 % -------------------------------------------------------------------
-\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faGraduationCap} \fangsong\textbf{教育背景}}{教育背景}}
+\cvsection{\faGraduationCap}{教育背景}
 % 【修改】学校名称、专业、学历、入学-毕业时间
 \datedsubsection{\texorpdfstring{\textbf{中南大学}\qquad \qquad \textbf{数据科学与大数据技术}\qquad \qquad \textbf{本科}}{中南大学 | 数据科学与大数据技术 | 本科}}
 {\textbf{2023.09 \textasciitilde \ 2027.06}}
 
-% 【修改】荣誉称号、GPA、专业排名（三栏布局）
-\begin{minipage}[t]{0.35\textwidth}
-    \begin{itemize}
-        \item \kaishu\textbf{平均学分绩点: }83.94/100.00
-    \end{itemize}
-\end{minipage}
-
-% 【修改】主修课程：课程名称(分数)，多个课程用逗号分隔
+% 【修改】GPA、专业排名、主修课程
 \begin{itemize}
-    \item \kaishu\textbf{主修课程:}数据可视化与人机交互，数据仓库与数据挖掘，分布式系统，Spark大数据编程
+    \item \kaishu\textbf{平均学分绩点：}83.94/100.00
+    \item \kaishu\textbf{主修课程：}数据可视化与人机交互，数据仓库与数据挖掘，分布式系统，Spark 大数据编程
 \end{itemize}
 
 % -------------------------------------------------------------------
 % 实习经历
 % -------------------------------------------------------------------
 % \faUsers: 多人图标 👥（代表团队/公司）
-% \faMapMarker: 位置图标 📍
-% \role: 自定义命令，显示部门和职位
+% 标题行：公司名 \qquad 部门 ~ 职位 \hfill 起止时间
+% 要点按 STAR 法则撰写（Situation-Task-Action-Result）
+% 需标注城市时，在公司名后加 \quad \small{\faMapMarker 城市}
 % -------------------------------------------------------------------
-% \section{\hspace{0.25em}\makebox[0.75em][c]{\faUsers} \fangsong\textbf{实习经历}}
-% % 实习经历 1
-% % 【修改】公司名称、地点、时间、部门、职位、工作内容
-% \datedsubsection{\textbf{专业实习（深圳）有限公司}\quad \small{\faMapMarker \fangsong\textbf{广东\textbullet 深圳}}}
-% {\large\textbf{2023.07 \textasciitilde \ 2023.12}}
-% \role {实习部门}{实习生}
-% \begin{itemize}
-%     \item \kaishu 负责实习；负责做牛做马做牛马；负责监督老板工作
-% \end{itemize}
-% % 实习经历 2
-% % 【修改】公司名称、地点、时间、部门、职位、工作内容
-% \datedsubsection{\textbf{字节跳动（北京）有限公司}\quad \small{\faMapMarker \fangsong\textbf{北京}}}
-% {\large\textbf{2022.10 \textasciitilde \ 2022.12}}
-% \role {字节不跳动部门}{实习生}
-% \begin{itemize}
-%     \item \kaishu 负责跳动；负责研究酒桌文化；负责在酒桌上灌醉甲方
-% \end{itemize}
-% % 实习经历 3
-% % 【修改】公司名称、地点、时间、部门、职位、工作内容
-% \datedsubsection{\textbf{哔哩哔哩（上海）有限公司}\quad \small{\faMapMarker \fangsong\textbf{上海}}}
-% {\large\textbf{2022.09 \textasciitilde \ 2022.10}}
-% \role {哔哩吧啦部门}{实习生}
-% \begin{itemize}
-%     \item \kaishu 负责哔哩吧啦；负责哔哩吧啦；负责哔哩吧啦
-% \end{itemize}
+\cvsection{\faUsers}{实习经历}
+\datedsubsection{\texorpdfstring{\textbf{湖南电信无线运营中心}\qquad \textbf{AI+云网融合} ~ 实习生}{湖南电信无线运营中心 | AI+云网融合 | 实习生}}
+{\textbf{2026.07 \textasciitilde \ 2026.08}}
+\begin{itemize}
+    \item \kaishu \textbf{基站位置预测：}在 TA 覆盖率仅 0.11\%、无基站真值的约束下放弃传统测距路线，基于 10 万条 MR 关联样点与 4.5 万条工参记录设计“样点中位数+工参锚点折中”策略（S4）；定位并修复 GCJ02/WGS84 坐标系混用导致的 676m 系统偏移，覆盖 3,850 个基站实现双分片自洽 P50=30.2m
+    \item \kaishu \textbf{投诉意图识别：}从 48 万条生产工单中清洗提取 2.7 万条训练数据，基于 StructBERT+LoRA（299K 可训练参数，占 0.29\%）构建五类故障意图分类模型；定位并修复词表文件损坏（仅 5 个 token 致中文全编码为 [UNK]）这一根因，Macro-F1 由 0.14 升至 0.81，最终三种子集成达 0.8909，推理延迟 25ms/条
+\end{itemize}
 
-\vspace{2mm}
 % -------------------------------------------------------------------
 % 项目经历
 % -------------------------------------------------------------------
 % \faFlask: 烧瓶图标 🧪（代表科研/实验）
 % \faThumbTack: 图钉图标 📌（用于标记要点）
-% \faHashtag: 井号图标 #
 % -------------------------------------------------------------------
-\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faFlask} \fangsong\textbf{项目经历}}{项目经历}}
+\cvsection{\faFlask}{项目经历}
 
 % 项目 1
-\datedsubsection{\texorpdfstring{\textbf{\href{http://42.194.193.223}{\underline{「梨园星图」}}—— 京剧剧本多维可视分析系统}}{梨园星图 - 京剧剧本多维可视分析系统}}{\textbf{主要负责人}\quad\textbf{2026.03\textasciitilde \ 2026.06}}
-\hspace*{1.5em}\kaishu 针对 1,473 部京剧剧本的非结构化文本难以直接量化分析，系统提取角色关系、主题分布与叙事模式，探索三者间的关联，搭建数据挖掘与可视分析管线
+\datedsubsection{\texorpdfstring{\textbf{「梨园星图」—— 京剧剧本多维可视分析系统}}{梨园星图 - 京剧剧本多维可视分析系统}}{\textbf{主要负责人}\quad\textbf{2026.03\textasciitilde \ 2026.06}}
+\hspace*{1.5em}\kaishu 针对 1,473 部京剧剧本的非结构化文本难以直接量化分析，系统提取角色关系、主题分布与叙事模式，探索三者间的关联，构建数据挖掘管线与可视分析系统
 \begin{itemize}
-    \item[\faThumbTack] \kaishu \textbf{数据处理与特征工程：}参与搭建 Python 数据处理管线（30+ 脚本），从非结构化剧本中提取 29 维角色特征、12 维主题体系及 8 项网络拓扑指标，构建 7,965 角色人次的共现关系网络
+    \item[\faThumbTack] \kaishu \textbf{数据处理与特征工程：}搭建 Python 数据处理管线（30+ 脚本），从非结构化剧本中提取 29 维角色特征、12 维主题体系及 8 项网络拓扑指标，构建 7,965 角色人次的共现关系网络
     \item[\faThumbTack] \kaishu \textbf{统计建模与模式发现：}运用卡方检验、ANOVA、KMeans 聚类等方法分析数据分布与差异，通过 PCA 降维 + 层次聚类归纳 6 种主题原型与 8 种叙事模式，梳理角色关系、主题、叙事间的关联路径
     \item[\faThumbTack] \kaishu \textbf{NLP 语义增强：}集成 BGE 嵌入、KeyBERT 关键词提取、SimCSE 语义相似度计算，调用 DeepSeek 大模型（FastAPI + LangChain）辅助角色别名消歧与关系类型标注
-    \item[\faThumbTack] \kaishu \textbf{交互式可视分析系统：}搭建前端可视分析界面，实现力导向网络图、主题气泡矩阵、叙事丝带图及 3D 螺旋星系等多视图联动探索与筛选交互
 \end{itemize}
-\vspace{0.5mm}
+\gapDetail
 \noindent\kaishu 技术栈：Python、FastAPI、React、TypeScript、D3.js、Three.js \quad 源码：\href{https://cnb.cool/OrionDawn/HumanVIZ}{\underline{cnb.cool/OrionDawn/HumanVIZ}}
 
-\vspace{2mm}
+\gapProject
 
 % 项目 2
-\datedsubsection{\textbf{短视频流自适应预加载算法设计与实现}}{\textbf{2025.12\textasciitilde \ 2026.01}}
-\hspace*{1.5em}\kaishu 短视频应用采用滑动式观看模式，系统需预加载当前视频和推荐队列内容以保证流畅体验，但用户随时可能滑动跳过，导致预加载数据浪费；同时移动网络带宽动态波动、用户观看行为不确定，使得预加载决策面临巨大挑战
+\datedsubsection{\texorpdfstring{\textbf{「DeepAstraDraft」—— CAD 图纸智能问答 Agent}}{DeepAstraDraft}}{\textbf{2026.06\textasciitilde \ 2026.07}}
+\hspace*{1.5em}\kaishu 上传 DWG/DXF 图纸自动解析，构建 123 项参数语义索引，通过自然语言对话精确回答技术参数问题，支持 CLI / API / Web 三种使用形态
 \begin{itemize}
-    \item[\faThumbTack] \kaishu \textbf{预加载策略设计：}设计三级网络状态分类、基于条件概率的动态预加载决策、自适应下载优先级、码率增强机制，实现 QoE 与带宽效率的平衡
-    \item[\faThumbTack] \kaishu \textbf{带宽预测实现：}结合调和平均数与算术均值进行鲁棒带宽预测，动态调整预加载阈值，基于用户留存条件概率智能决策下载目标与码率
-    \item[\faThumbTack] \kaishu \textbf{性能测试优化：}在4种网络环境（共80条trace）下测试，综合得分平均提升\textbf{45.41\%}，带宽浪费降低\textbf{21.03\%}，QoE提升\textbf{7.53\%}
-    \item[\faThumbTack] \kaishu \textbf{测试与可视化：}搭建云原生开发环境（Docker + CNB + code-server），实现双平台自动化测试脚本，完成数据分析与可视化，实现数据驱动的算法优化流程
+    \item[\faThumbTack] \kaishu \textbf{CAD 解析管线：}基于 ezdxf + LibreDWG 实现 DWG→DXF 转换，提取 14 种几何实体类型（3,206 个实体）、7 类尺寸标注（78 个），构建参数语义索引
+    \item[\faThumbTack] \kaishu \textbf{Agent 工程实现：}基于 LangChain + LangGraph 设计 4 个子 Agent（Parser / Indexer / Query / Evaluator）协作管线 + 5 个 CAD 领域 Skill，实现意图分类→规则匹配→LLM 增强的渐进式推理
+    \item[\faThumbTack] \kaishu \textbf{性能与降级策略：}58 题测试集准确率 \textbf{93.1\%}，无 API Key 时自动降级纯规则模式，保持同等准确率
 \end{itemize}
-\vspace{0.5mm}
-\noindent\kaishu 技术栈：Python 3.13、NumPy、Pandas、MPC、Docker \quad 源码：\href{https://cnb.cool/OrionSeeker/Data-processing-method-Project}{\underline{Data-processing-method-Project}}
+\gapDetail
+\noindent\kaishu 技术栈：DeepAgent、LangChain、LangGraph、FastAPI、Vue 3、Docker \quad 源码：\href{https://cnb.cool/OrionDawn/AstraDraft}{\underline{cnb.cool/OrionDawn/AstraDraft}}
 
-\vspace{2mm}
+% \gapProject
+% % 项目 3（原短视频预加载算法）
+% \datedsubsection{\texorpdfstring{\textbf{短视频流自适应预加载算法设计与实现}}{短视频流自适应预加载算法设计与实现}}{\textbf{2025.12\textasciitilde \ 2026.01}}
+% \hspace*{1.5em}\kaishu 短视频应用采用滑动式观看模式，系统需预加载当前视频和推荐队列内容以保证流畅体验，但用户随时可能滑动跳过，导致预加载数据浪费；同时移动网络带宽动态波动、用户观看行为不确定，使得预加载决策面临巨大挑战
+% \begin{itemize}
+%     \item[\faThumbTack] \kaishu \textbf{预加载策略设计：}设计三级网络状态分类、基于条件概率的动态预加载决策、自适应下载优先级、码率增强机制，实现 QoE 与带宽效率的平衡
+%     \item[\faThumbTack] \kaishu \textbf{带宽预测实现：}结合调和平均数与算术均值进行鲁棒带宽预测，动态调整预加载阈值，基于用户留存条件概率智能决策下载目标与码率
+%     \item[\faThumbTack] \kaishu \textbf{性能测试优化：}在4种网络环境（共80条trace）下测试，综合得分平均提升\textbf{45.41\%}，带宽浪费降低\textbf{21.03\%}，QoE提升\textbf{7.53\%}
+%     \item[\faThumbTack] \kaishu \textbf{测试与可视化：}搭建云原生开发环境（Docker + CNB + code-server），实现双平台自动化测试脚本，完成数据分析与可视化，实现数据驱动的算法优化流程
+% \end{itemize}
+% \gapDetail
+% \noindent\kaishu 技术栈：Python 、NumPy、Pandas、MPC、Docker \quad 源码：\href{https://cnb.cool/OrionSeeker/Data-processing-method-Project}{\underline{Data-processing-method-Project}}
 
-% % 项目 3（备用）
-% \datedsubsection{\textbf{PySpider - 高性能分布式网络爬虫系统}}{\textbf{2025.09\textasciitilde \ 2025.12}}
+% \gapProject
+% % 项目 4（原 PySpider 分布式爬虫）
+% \datedsubsection{\texorpdfstring{\textbf{PySpider - 高性能分布式网络爬虫系统}}{PySpider - 高性能分布式网络爬虫系统}}{\textbf{2025.09\textasciitilde \ 2025.12}}
 % \hspace*{1.5em}\kaishu 针对大规模网页抓取任务中高并发、URL去重、数据持久化等挑战，设计并实现了基于生产者-消费者模式的分布式爬虫系统，在本地测试环境中成功完成 160,000+ 网页的抓取与解析
 % \begin{itemize}
 %     \item[\faThumbTack] \kaishu \textbf{并发架构设计：}采用生产者-消费者模式，设计多级消息队列（FetchQueue → ParseQueue → ResultQueue），实现 44 线程并发（24 抓取 + 20 解析），避免阻塞
@@ -268,15 +194,15 @@
 %     \item[\faThumbTack] \kaishu \textbf{系统稳定性保障：}设计优雅关闭机制、动态超时控制、异常隔离策略，确保系统稳定运行；实现逐行 CSV 持久化，断电不丢失
 %     \item[\faThumbTack] \kaishu \textbf{容器化部署：}搭建 Docker 容器化环境，配置 CNB 云原生开发平台，实现一键部署开箱即用
 % \end{itemize}
-% \vspace{0.5mm}
-% \noindent\kaishu 技术栈：Python 3.12、threading、requests、Docker \quad 源码：\href{https://cnb.cool/OrionSeeker/WebSpider}{cnb.cool/OrionSeeker/PySpider}
+% \gapDetail
+% \noindent\kaishu 技术栈：Python 3.12、threading、requests、Docker \quad 源码：\href{https://cnb.cool/OrionSeeker/WebSpider}{\underline{cnb.cool/OrionSeeker/PySpider}}
 
 % -------------------------------------------------------------------
 % 毕业设计
 % -------------------------------------------------------------------
-% \faPaste: 文档图标 📋（代表论文/报告）
+% \faClipboard: 文档图标 📋（代表论文/报告）
 % -------------------------------------------------------------------
-% \section{\hspace{0.25em}\makebox[0.75em][c]{\faPaste} \fangsong\textbf{毕业设计}}
+% \cvsection{\faClipboard}{毕业设计}
 % % 【修改】设计题目、起止时间、设计内容要点
 % \datedsubsection{\textbf{基于\LaTeX 专业排版的毕业设计题目}}{\textbf{2023.09 \textasciitilde \ 2024.05}}
 % \begin{itemize}
@@ -286,96 +212,50 @@
 % \end{itemize}
 
 % -------------------------------------------------------------------
-% 校园实践
-% -------------------------------------------------------------------
-% \faPaperPlane: 纸飞机图标 ✈️（代表活动/实践）
-% \textit: 斜体（用于职位）
-% -------------------------------------------------------------------
-% \section{\hspace{0.25em}\makebox[0.75em][c]{\faPaperPlane} \fangsong\textbf{校园实践}}
-% % 校园实践 1
-% % 【修改】组织名称、职位、时间、工作内容
-% \datedsubsection{\textbf{\LaTeX 专业排版工程学院保卫科}\qquad \textit{保安大队长}}
-% {\textbf{2020.09 \textasciitilde \ 2022.12}}
-% \begin{itemize}
-%     \item[\faThumbTack]  \kaishu 负责保卫工作；负责保卫大学生；负责保卫大领导
-% \end{itemize}
-% % 校园实践 2
-% % 【修改】组织名称、职位、时间、工作内容
-% \datedsubsection{\textbf{\LaTeX 专业排版工程学院后勤部}\qquad \textit{后勤部部长}}
-% {\textbf{2020.09 \textasciitilde \ 2022.03}}
-% \begin{itemize}
-%     \item[\faThumbTack]  \kaishu 负责后勤工作；负责喂饱大学生；负责喂饱大领导
-% \end{itemize}
-
-% -------------------------------------------------------------------
-% 志愿经历
-% -------------------------------------------------------------------
-% \faHeartbeat: 心跳图标 ❤️（代表公益/志愿）
-% -------------------------------------------------------------------
-% \section{\hspace{0.25em}\makebox[0.75em][c]{\faHeartbeat} \fangsong\textbf{志愿经历}}
-% % 【修改】志愿组织、职位、时间、活动内容
-% \datedsubsection{\textbf{\LaTeX 专业排版工程学院青年志愿部}\qquad \textit{部长}}
-% {\textbf{202×.×× \textasciitilde \ 202×.××}}
-% \begin{itemize}
-%     \item[\faThumbTack]  \kaishu 负责组织志愿活动
-% \end{itemize}
-
-\vspace{2mm}
-% -------------------------------------------------------------------
 % 荣誉奖项
 % -------------------------------------------------------------------
 % \faTrophy: 奖杯图标 🏆
-% \datedline: 带日期的列表项（奖项 | 时间）
+% \datedline{奖项}{时间}：内容与日期分居左右两端
 % -------------------------------------------------------------------
-\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faTrophy} \fangsong\textbf{荣誉奖项}}{荣誉奖项}}
-\vspace{0.1em}
+\cvsection{\faTrophy}{荣誉奖项}
 \begin{itemize}
-    \item \datedline{\kaishu ChinaVIS2026 数据可视化竞赛\qquad \textbf{二等奖}}{\textbf{2026.07}}
-\end{itemize}
-
-\begin{itemize}
+    \item \datedline{\kaishu ChinaVIS2026 数据可视化竞赛\qquad \textbf{二等奖}}{\textbf{2026.06}}
     \item \datedline{\kaishu 中南大学数学建模竞赛校赛\qquad \textbf{三等奖}}{\textbf{2025.07}}
 \end{itemize}
 
-\vspace{2mm}
 % -------------------------------------------------------------------
 % 专业技能
 % -------------------------------------------------------------------
 % \faPuzzlePiece: 拼图图标 🧩（代表技能/能力）
-% \noindent: 取消首行缩进
 % -------------------------------------------------------------------
-\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faPuzzlePiece} \fangsong\textbf{专业技能}}{专业技能}}
-\vspace{0.1em}
+\cvsection{\faPuzzlePiece}{专业技能}
 \begin{itemize}
-    \item \kaishu\textbf{编程语言}：Python（数据分析、机器学习、API 开发）、Java
+    \item \kaishu\textbf{AI Agent 工程}：DeepAgent、LangChain、LangGraph、Tool Calling、MCP
+    \item \kaishu\textbf{编程语言}：Python（异步 / API / 数据分析）、Java
     \item \kaishu\textbf{数据处理与建模}：NumPy、Pandas、SciPy、scikit-learn
-    \item \kaishu\textbf{前端与可视化}：React、TypeScript、D3.js、ECharts、Three.js
-    \item \kaishu\textbf{工具与框架}：FastAPI、LangChain、Docker、Git、Linux
-    \item \kaishu\textbf{CCF CSP 认证}：200 分、\kaishu\textbf{英语能力}：CET-4
+    \item \kaishu\textbf{工程与云原生}：FastAPI、Docker、Git、Linux
+    \item \kaishu\textbf{前端与可视化}：React、D3.js、ECharts、Three.js
+    \item \kaishu\textbf{CCF CSP 认证}：200 分 \quad \textbf{英语能力}：CET-6
 \end{itemize}
 
-\vspace{2mm}
 % -------------------------------------------------------------------
 % 自我评价
 % -------------------------------------------------------------------
 % \faSignal: 信号图标 📶（代表个人特质）
 % -------------------------------------------------------------------
-\section{\texorpdfstring{\hspace{0.25em}\makebox[0.75em][c]{\faSignal} \fangsong\textbf{自我评价}}{自我评价}}
-\vspace{0.1em}
+\cvsection{\faSignal}{自我评价}
 \begin{itemize}
     \item \kaishu 具备良好的团队协作意识，乐于与他人沟通配合，能够在团队项目中主动承担任务并与成员有效协作
     \item \kaishu 具备扎实的自学能力，能够通过项目实践快速掌握新技术（含 AI 辅助开发工具）并解决实际问题
     \item \kaishu 乐于知识分享与技术传播，热衷于参与 Datawhale 等开源学习活动，具有良好的社区贡献意识
 \end{itemize}
 
-\vspace{2mm}
 % -------------------------------------------------------------------
 % 硕士规划
 % -------------------------------------------------------------------
 % \faSignal: 信号图标 📶（代表规划/发展）
 % -------------------------------------------------------------------
-% \section{\hspace{0.25em}\makebox[0.75em][c]{\faSignal} \fangsong\textbf{硕士规划}}
-% \vspace{0.1em}
+% \cvsection{\faSignal}{硕士规划}
 % \begin{itemize}
 %     % 【修改】具体规划内容
 %     \item \kaishu 具体规划，复制相应文字到此处；复制相应文字到此处；复制相应文字到此处
