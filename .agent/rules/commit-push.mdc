@@ -31,15 +31,22 @@ docs: 重构多租户平台架构设计文档
 2. 只 `git add <具体文件>`，禁止 `git add -A`。
 3. 提交前必须把提交信息呈给用户，等批准后再 commit/push。
 4. 不需要协作者，提交信息中不加 `Co-Authored-By` 尾部。
+5. **作者与提交者保持一致**：提交者取 `git config` 的作者身份（环境注入的平台提交者需显式覆盖）。
 
 ## 步骤
 
 1. `git status -s` 复查改动。
 2. 按上述风格与精简原则写提交信息（subject + 可选 body）。
 3. 呈给用户，等待批准。
-4. 批准后：
+4. 批准后执行（前两行把提交者对齐为作者，勿省）：
    ```bash
+   export GIT_COMMITTER_NAME="$(git config user.name)"
+   export GIT_COMMITTER_EMAIL="$(git config user.email)"
    git add <files>
    git commit -m "<type>: <描述>"
    git push
+   ```
+5. 推送后自检两者是否一致（应输出相同的姓名与邮箱）：
+   ```bash
+   git log -1 --format='author: %an <%ae>%ncommitter: %cn <%ce>'
    ```

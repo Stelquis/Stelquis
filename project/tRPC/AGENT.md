@@ -1,889 +1,581 @@
-# tRPC-Agent 学习指南
+# tRPC-Agent 学习材料
 
-> 从零到一，掌握 Agent 工程化实践。
->
-> 本文档以开源学习路径为纲，以 tRPC-Agent-Python 仓库的文档和示例为参考，用通俗的语言带你理解 Agent 工程的核心概念、进阶能力和生产级实践。
-
----
-
-## 一、基础篇
-
-### 1.1 Agent 工程化核心概念
-
-#### 什么是 Agent？
-
-Agent（智能体）是一个"能自己思考、会调用工具、记得上下文"的程序。它不像传统程序那样按固定流程执行，而是：
-
-1. 接收你的输入（问题/指令）
-2. 自己决定怎么做（调用 LLM 推理）
-3. 必要时使用工具（查天气、搜文档、执行代码）
-4. 给出最终回答
-
-#### tRPC-Agent 的六大核心抽象
-
-| 概念 | 一句话理解 | 类比 |
-|------|-----------|------|
-| **Agent** | 智能体本身，决定"下一步做什么" | 一个员工 |
-| **Runner** | 负责把 Agent 跑起来，管理会话生命周期 | 员工的经理 |
-| **Model** | 背后的大语言模型（LLM），负责推理和生成 | 员工的大脑 |
-| **Tool** | Agent 可以调用的外部能力（函数/API） | 员工的工具箱 |
-| **Session** | 一次对话的完整记录，包括消息、状态、事件 | 员工的工单记录 |
-| **Memory** | 跨会话的长期记忆，记住用户的偏好和历史 | 员工的笔记本 |
-| **Graph** | 把多个 Agent 编排成工作流，像流程图一样执行 | 员工的操作手册 |
-
-#### 一次 Agent 调用的完整链路
-
-当用户发来一条消息，背后发生的事情：
-
-```
-① 用户输入 "今天北京天气怎么样？"
-    │
-    ▼
-② Runner.run_async()
-   ├── 获取或创建 Session（记录这次对话）
-   ├── 把用户消息追加到 Session 中
-   └── 创建 InvocationContext（这次调用的"工作证"）
-    │
-    ▼
-③ Agent._run_async_impl()
-   ├── Filter 链（前置检查：敏感词？权限？拦截？）
-   ├── RequestProcessor 拼装请求
-   │   ├── 系统指令（你是天气助手）
-   │   ├── 工具列表（get_weather, search_web...）
-   │   └── 历史消息（之前的对话）
-   ├── LlmProcessor 调用 LLM
-   │   └── LLM 返回：想用 get_weather("北京") 工具
-   ├── ToolsProcessor 执行工具
-   │   ├── 解析参数 → 调用 get_weather("北京")
-   │   └── 返回结果 "25°C，晴"
-   ├── LlmProcessor 再次调用 LLM（带上工具结果）
-   │   └── LLM 返回：最终回答 "北京今天 25°C，天气晴朗"
-   └── 循环，直到 LLM 不再调用工具
-    │
-    ▼
-④ Runner 后处理
-   ├── 生成会话摘要
-   ├── 保存到 Memory（长期记忆）
-   └── 发送 Telemetry（监控数据）
-    │
-    ▼
-⑤ 事件流输出 → 用户看到回答
-```
-
-**关键理解**：这不是一次性的"问→答"，而是一个**多轮循环**——LLM 可以反复调用工具、拿到结果、再推理，直到给出最终答案。
-
-#### 参考文档
-
-- `docs/mkdocs/zh/llm_agent.md` — Agent 核心概念
-- `docs/mkdocs/zh/model.md` — 模型配置
-- 示例：`examples/quickstart/` — 最小 Agent
+> **从「理解 Agent 框架」走向「使用 Agent 工程系统」**
+> 内容基于 tRPC-Agent-Python（PyPI 包 `trpc-agent-py` v1.1.19，import 名 `trpc_agent_sdk`）源码与官方文档整理。
+> 文中所有"框架提供 / 框架内置 / 框架对应"的类名与能力，均已对照该版本源码核实；个别通用概念（如 RAG、OTel）为行业通用表述。
+> 本文在原有知识提纲（8 层金字塔）基础上展开，每一层先讲清"是什么、为什么"，再讲"怎么用、怎么选"，最后给出自检问题。
+> 安装提示：`trpc-agent-py` 基础包已覆盖大部分能力（Agent 核心类型、Runner、Model、Tool、Session、Memory、Filter、Skill、MCP）；其余为**可选 extras**，用到时按需安装：图编排 `[graph]`、A2A `[a2a]`、AG-UI `[ag-ui]`、知识库 `[knowledge]`、云端沙箱 `[cube]`、外部记忆 `[mem0]` / `[mempalace]`、Langfuse `[langfuse]`、评测 `[eval]`、优化 `[optimize]`。
+> 源码仅作必要举例，重点在于建立正确的概念模型。
 
 ---
 
-### 1.2 Quickstart：跑通你的第一个 Agent
+## 第一层：核心基础抽象与运行链路（地基）
 
-#### 最小 Agent 示例
+这是理解 Agent 的"底层源码"和"一次调用的完整生命周期"，必须彻底吃透。后续所有层都建立在本层概念之上。
 
-不需要理解所有细节，先跑起来：
+### 1.1 五大核心抽象
 
-```python
-from trpc_agent_sdk.agents import LlmAgent
-from trpc_agent_sdk.models import OpenAIModel
-from trpc_agent_sdk.runners import Runner
-from trpc_agent_sdk.sessions import InMemorySessionService
+#### Agent —— 智能体（"是谁"）
 
-# 1. 配置模型（这里以 DeepSeek 为例）
-model = OpenAIModel(
-    model_name="deepseek-chat",
-    api_key="sk-xxxxx",
-    base_url="https://api.deepseek.com/v1",
-)
+Agent 是能力的**封装体**：它把"用什么模型、挂哪些工具、带什么记忆/知识、按什么系统提示词工作"打包成一个可运行的对象。你不需要关心内部的模型切换、消息组装，只需把用户输入交给它。
 
-# 2. 创建 Agent
-agent = LlmAgent(
-    name="assistant",
-    model=model,
-    instruction="你是一个友好的助手，请用中文回答。",
-)
+框架提供多种开箱即用的 Agent 类型：
 
-# 3. 创建 Runner（负责运行 Agent）
-session_service = InMemorySessionService()
-runner = Runner(
-    app_name="demo",
-    agent=agent,
-    session_service=session_service,
-)
+- **LlmAgent**：单模型对话 Agent，最简单，适合多轮问答、工具调用型助手。
+- **GraphAgent**：图编排 Agent，把任务拆成"节点 + 边"的工作流，适合审批、诊断、多步骤任务。
+- **TeamAgent**：团队型 Agent，一个 Leader 调度多个成员 Agent 分工协作。
+- **Agent-as-Tool**：把一个 Agent 包装成工具，供另一个 Agent 调用（Agent 嵌套）。
 
-# 4. 运行（异步迭代事件流）
-import asyncio
+> 依赖说明：以上四类均可从 `trpc_agent_sdk` 真实导入与构造。其中 **GraphAgent** 依赖图编排组件 langgraph，需安装 `trpc-agent-py[graph]` 才能导入；其余三类（LlmAgent / TeamAgent / AgentTool）在基础包中即可直接使用。
 
-async def main():
-    async for event in runner.run_async(
-        user_id="user1",
-        session_id="session1",
-        new_message="你好，请介绍一下自己。",
-    ):
-        if event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                    print(part.text, end="")
+> 心智模型：Agent 是"岗位"，它知道自己的职责（系统提示词）、能力（模型与工具）、经验（记忆）与参考资料（知识库）。
 
-asyncio.run(main())
+#### Runner —— 运行器（"谁在跑"）
+
+Runner 是**主循环调度器**，负责驱动一次完整的 Agent 执行：
+
+1. 接收用户输入（`new_message`）并确定会话（`user_id` / `session_id`）；
+2. 把输入交给 Agent，进入"推理 → 执行 → 再推理"的循环；
+3. 每一步产出**事件（Event）**，以**流式**形式对外输出；
+4. 直到 Agent 认为可以给出最终回复，循环结束。
+
+关键点：**Agent 定义"做什么"，Runner 决定"怎么跑"**。框架的核心实现是 `Runner`（`trpc_agent_sdk.runners`）：构造时绑定一个 Agent，并注入 Session / Memory 服务（`app_name` 标识应用、`agent` 指定 Agent、`session_service` / `memory_service` 提供状态与记忆）。它承担了上下文拼接、多轮历史注入、Filter 执行等编排职责。
+
+#### Model —— 大模型（"靠什么思考"）
+
+Model 是对各家大模型 API 的**统一抽象**，屏蔽厂商差异。框架提供 `OpenAIModel`、`AnthropicModel`（Claude）等实现，GLM / Kimi / DeepSeek / MiniMax / Ollama（本地部署）等可经 `LiteLLMModel` 统一接入。接入方式一致：配置模型名、API Key、参数（temperature 等），调用统一接口。
+
+Model 层提供三类能力：
+
+- **同步 / 异步**调用：阻塞式或协程式，异步更适合服务化场景；
+- **流式输出**（Streaming）：模型逐 token 返回，前端可做打字机效果；
+- **工具调用**：模型在回复中声明"我要调用某个工具 + 这些参数"，由上层执行。
+
+> 心智模型：Model 是"大脑"，但它是**无状态的**——它不记得上次聊了什么，记忆由 Session/Memory 层负责。
+
+#### Tool —— 工具（"靠什么行动"）
+
+Tool 是 Agent 与现实世界交互的通道：查天气、算数、读写文件、调外部 API 都可以是工具。框架的典型形态：
+
+- **FunctionTool**：把一个普通 Python 函数包装成工具，自动生成 JSON Schema（入参/返回值定义），模型据此决定是否调用、传什么参数；
+- **MCPToolset**：通过 MCP 协议加载外部工具服务（见第六层）；
+- **StreamingFunctionTool**：执行过程持续产出增量的工具（如生成式任务）；
+- **AgentTool（Agent-as-Tool）**：把子 Agent 包装成工具，实现嵌套协作。
+
+工具的价值在于：**让模型从"只会说"变成"能做"**，同时把动作边界约束在工具白名单内，这是 Agent 安全治理的基础。
+
+#### Session —— 会话（"靠什么记上下文"）
+
+Session 是**短期上下文容器**，保存一次对话过程中的：
+
+- **消息（Messages）**：完整对话历史；
+- **状态（State）**：可读写的键值状态，用于跨轮传递信息；
+- **事件（Events）**：执行过程中的事件记录，可回放。
+
+Session 是"一次对话"的边界：同一个 Session 内模型记得上下文，不同 Session 之间互相隔离。它由 SessionService 管理，可以落在不同后端（详见第三层）。
+
+### 1.2 一次 Agent 调用的完整链路
+
+把五个抽象串起来，一次完整调用长这样：
+
+```
+用户输入 → Runner 接收消息（new_message + session_id）
+         → 拼接上下文（Session 历史 + Memory 记忆 + Knowledge 知识）
+         → 交给 Agent 循环：
+              模型推理（Model）→ 是否要调工具？
+                  是 → 执行 Tool → 结果回填 → 回到模型推理
+                  否 → 产出最终回复
+         → 事件流输出（Event / Streaming）
+         → 写回 Session / 更新 Memory
 ```
 
-#### 关键点
+其中需要特别理解两点：
 
-- **`LlmAgent`**：最基础的 Agent 类型，支持多轮 tool loop
-- **`Runner`**：管理 Session 生命周期，生成事件流
-- **`InMemorySessionService`**：会话数据存在内存中，适合开发测试
-- **事件流**：`runner.run_async()` 返回的是一个异步生成器（AsyncGenerator），每次 `yield` 一个事件
+1. **上下文拼接发生在模型推理之前**：模型本身无记忆，它"看到"的是 Runner 拼好的一段文本（历史 + 记忆 + 知识 + 系统提示词）。所以"上下文管理"直接决定模型回答质量。
+2. **工具调用是多轮循环**：模型第一次回复可能只是"我要调工具"，执行完后结果作为新的一轮输入再交给模型，如此反复，直到模型给出面向用户的最终回答。
 
-#### 流式输出
+### 1.3 多轮对话与流式输出（LlmAgent 实操）
 
-把 `streaming=True` 传给 `Runner` 或 `RunConfig`，就可以看到逐字输出的效果：
+多轮对话的本质：**每一轮的完整历史都进入下一轮的上下文**。LlmAgent + Runner 会自动完成这件事——你只需在每次交互时调用 `Runner.run_async(user_id, session_id, new_message)`，Runner 会从 Session 读出历史一并交给模型。
 
-```python
-from trpc_agent_sdk.configs import RunConfig
+流式输出的本质：Runner 把模型输出切成**增量事件（delta）**逐段吐出，而不是等全部生成完再返回。这样用户能看到"正在打字"的效果，交互体验更好；同时每个事件（工具调用、模型输出）都能被监听，为后续日志、追踪、评测铺路。
 
-runner = Runner(
-    app_name="demo",
-    agent=agent,
-    session_service=session_service,
-    run_config=RunConfig(streaming=True),
-)
-```
+> 实操建议：先跑通"最小 Agent"——LlmAgent + 一个模型配置 + Runner，验证**多轮对话**与**流式输出**两个能力，这是后续一切实验的地基。
 
-#### 参考文档与示例
+### 1.4 本层自检
 
-- `docs/mkdocs/zh/llm_agent.md` — LlmAgent 详细配置
-- `docs/mkdocs/zh/model.md` — 模型支持列表（OpenAI、Anthropic、DeepSeek、Gemini...）
-- 示例：`examples/quickstart/` — 完整的最小 Agent 示例
+- [ ] 能否说清 Agent / Runner / Model / Tool / Session 各自职责，以及"谁有状态、谁无状态"？
+- [ ] 能否画出"一次调用从输入到事件流输出"的完整链路？
+- [ ] 能否解释"为什么模型推理前要先拼接上下文"？
 
 ---
 
-### 1.3 Function Calling 与工具调用
+## 第二层：工具调用与函数封装（Agent 的"手脚"）
 
-#### 什么是 Function Calling？
+工具是 Agent 从"聊天"走向"做事"的关键。本层聚焦 Function Calling 的机制与工程实践。
 
-Function Calling 是 LLM 的一项能力：它**不是直接回答问题**，而是说"我想调用某个函数，参数是这些"，然后由框架去执行这个函数，把结果带回给 LLM。
+### 2.1 Function Calling 是什么
+
+Function Calling（函数调用 / 工具调用）是大模型的一项能力：**模型在生成回复时，可以输出一个结构化声明——"我要调用函数 X，参数是 Y"**，而不是直接给出最终答案。真正的执行仍由代码完成，执行结果再回填给模型继续推理。
+
+它解决的核心问题：模型**不能真正执行动作**（查实时数据、算数、操作文件），但能**准确理解何时需要动作、需要什么参数**。人负责"动手"，模型负责"决策"，分工明确。
+
+### 2.2 从普通函数到 FunctionTool
+
+把一个普通 Python 函数变成 Agent 可用的工具，核心是两件事：
+
+1. **描述能力**：告诉模型"这个工具是干什么的、参数长什么样"——即 JSON Schema；
+2. **注册暴露**：把函数与 Schema 绑定，供模型选择。
+
+框架的做法是**从函数自动生成 Schema**：依据函数的类型注解与 docstring（参数含义、返回值说明）推导出入参结构，无需手写 JSON。这意味着：
+
+- 写好类型注解和 docstring 是"给模型用的说明书"，质量直接影响模型调用准确性；
+- 函数体可以完全复用现有业务代码，零侵入接入。
+
+> 示例（概念，非完整代码）：一个 `get_weather(city: str) -> str` 的函数，加上类型注解与说明后即可被包装为工具，模型在聊到天气时自动以 `{"city": "深圳"}` 调用它。
+
+### 2.3 一次工具调用的完整闭环
 
 ```
-用户："北京天气怎么样？"
-  │
-LLM 思考："用户想查天气，我有一个 get_weather 工具"
-  │
-LLM 返回：{"function_call": {"name": "get_weather", "args": {"city": "北京"}}}
-  │
-框架执行 get_weather("北京") → "25°C，晴"
-  │
-LLM 拿到结果 → 组织回答："北京今天 25°C，天气晴朗。"
+用户问："深圳今天热吗？"
+→ 模型推理：需要天气数据 → 声明调用工具 get_weather(city="深圳")
+→ Runner 拦截该声明，执行 get_weather 函数
+→ 得到工具结果（"32°C 晴"）
+→ 结果作为函数响应回填给模型，继续推理
+→ 模型综合工具结果给出最终回复："深圳今天 32°C，注意防暑。"
 ```
 
-#### 把普通函数变成工具
+> 术语说明：以上"声明调用工具 / 工具结果"即工具调用（Function Calling）的抽象过程。在框架的事件模型中，事件（`Event`）携带会话归属（`author`）、内容（`content`）与动作（工具调用声明/函数响应），并支持按事件动作类型区分"用户消息 / 模型输出 / 工具调用 / 工具结果"。
 
-```python
-from trpc_agent_sdk.tools import FunctionTool
+这里要理解两个"回合"的区别：
 
-# 一个普通的 Python 函数
-def get_weather(city: str) -> str:
-    """查询指定城市的天气。
-    
-    Args:
-        city: 城市名称，如"北京"、"上海"
-    
-    Returns:
-        天气信息字符串
-    """
-    # 这里应该是真实的 API 调用
-    return f"{city}: 25°C，晴"
+- **模型回合**：模型每输出一次，是一个回合；
+- **工具回合**：每执行一次工具，也是一个回合。
 
-# 封装成工具
-weather_tool = FunctionTool(get_weather)
+一次对话可能包含多个模型回合 + 多个工具回合（模型连续调用多个工具、或根据结果二次调用）。Runner 负责把这两种回合无缝串起来，全程以事件流暴露，供上层记录。
 
-# 给 Agent 配上工具
-agent = LlmAgent(
-    name="weather_assistant",
-    model=model,
-    instruction="你是天气助手，查询天气时使用 get_weather 工具。",
-    tools=[weather_tool],
-)
-```
+### 2.4 异常、超时与重试
 
-#### SDK 自动帮你做了这些
+工具调用在生产环境必须考虑失败路径，常见问题与对策：
 
-1. **解析函数签名** → 生成 JSON Schema（LLM 能理解的格式）
-2. **参数校验** → 确保 LLM 传的参数类型正确
-3. **执行函数** → 调用你的 Python 函数
-4. **错误处理** → 函数抛异常时，把错误信息返回给 LLM 重试或解释
-5. **结果返回** → 把函数返回值送回给 LLM
+| 问题 | 对策 |
+|------|------|
+| 工具抛异常 | 捕获后转为工具结果（函数响应）中的错误信息回填给模型，**让模型决定**（换参数重试 / 换工具 / 如实告知用户） |
+| 工具超时 | 设置超时上限，超时视为失败，走同一错误回填通道 |
+| 参数非法 | 由 Schema 校验拦截，必要时让模型重新生成参数 |
+| 副作用 | 幂等设计（同一请求重复执行结果一致），避免重试产生脏数据 |
 
-#### 工具类型一览
+关键思想：**工具失败不是"终点"，而是给模型的"新输入"**。把错误信息结构化地还给模型，由模型进行下一步决策，比在工具层直接崩溃更符合 Agent 的容错哲学。
 
-| 工具类型 | 适用场景 | 参考 |
-|---------|---------|------|
-| `FunctionTool` | 普通函数封装 | 大多数场景 |
-| `StreamingFunctionTool` | 流式输出工具（如实时翻译） | `examples/llmagent_with_streaming_tool_simple/` |
-| `MCPToolset` | 通过 MCP 协议接入外部工具服务 | 进阶篇介绍 |
-| `Agent-as-Tool` | 把一个 Agent 当作另一个 Agent 的工具 | `docs/mkdocs/zh/sub_agent.md` |
+### 2.5 更多工具形态
 
-#### 参考文档与示例
+- **MCPToolset / MCPTool**：接入外部 MCP 服务器，动态加载其暴露的工具（数据库、第三方 API），无需手写对接（详见第六层）；
+- **StreamingFunctionTool**：工具执行过程持续产出（如"生成一张图"的分阶段进度），适合长任务；
+- **AgentTool（Agent-as-Tool）**：把子 Agent 包成工具，父 Agent 按需委派，实现 Agent 嵌套；
+- **ToolRegistry（工具注册表）**：集中注册/获取工具（`register_tool` / `get_tool`），配合 Filter 实现**按租户/按用户过滤工具白名单**——这是多租户平台治理工具权限的基础；
+- **内置文件/Shell 工具**：框架自带 `FileToolSet`（含 BashTool / GrepTool / GlobTool / EditTool 等），让 Agent 具备读写文件、执行命令、检索代码的能力，是"研发助手"类应用的底座。
 
-- `docs/mkdocs/zh/tool.md` — 工具系统完整文档
-- 示例：`examples/function_tools/` — 多种工具封装示例
+### 2.6 本层自检
+
+- [ ] 能否讲清"模型决策调用、代码负责执行、结果回填再推理"的闭环？
+- [ ] 能否说清 FunctionTool 的 Schema 从哪来、为什么 docstring 重要？
+- [ ] 能否设计一套工具失败的降级策略（超时 / 异常 / 非法参数）？
 
 ---
 
-### 1.4 Session 会话管理
+## 第三层：上下文、记忆与知识（Agent 的"大脑与长期存储"）
 
-#### 什么是 Session？
+这是区分"闲聊机器人"和"有用 Agent"的关键。三层信息各司其职：**Session 管短期、Memory 管长期、Knowledge 管外部**。
 
-Session 就是一次对话的"档案袋"，里面装着：
+### 3.1 Session —— 短期上下文
 
-- **消息历史**：用户说了什么、Agent 回了什么
-- **状态**：当前对话的状态数据（如用户选择的选项）
-- **事件**：每一步的详细记录（LLM 调用、工具执行、错误等）
-- **Token 用量**：每次 LLM 调用花了多少 token
+#### 消息、状态与 Token Usage
 
-#### 三种会话后端
+Session 是"一次对话"的载体，内部包含三类数据：
 
-| 后端 | 数据存哪 | 适合场景 | 参考文档 |
-|------|---------|---------|---------|
-| `InMemorySessionService` | 内存 | 开发/测试，重启即丢 | `docs/mkdocs/zh/session.md` |
-| `SqlSessionService` | SQLite / PostgreSQL | 生产环境，需要持久化 | `docs/mkdocs/zh/session_sql.md` |
-| `RedisSessionService` | Redis | 高并发、分布式场景 | `docs/mkdocs/zh/session_redis.md` |
+- **消息（Messages）**：完整对话历史，是上下文拼接的主要来源；
+- **状态（State）**：键值对，跨轮传递业务状态（如"当前正在审批的工单号"）；
+- **Token Usage**：每轮消耗的 token 数，用于成本核算与限额。
 
-#### SQL 会话持久化示例
+#### Session Backend 选型
 
-```python
-from trpc_agent_sdk.sessions import SqlSessionService
+Session 存哪里，取决于你要"多快、多持久、多贵"：
 
-session_service = SqlSessionService("sqlite:///sessions.db")
-runner = Runner(app_name="demo", agent=agent, session_service=session_service)
+| 后端 | 特点 | 适用场景 |
+|------|------|----------|
+| **InMemory**（`InMemorySessionService`） | 进程内，最快，重启即失 | 本地开发、单机调试 |
+| **Redis**（`RedisSessionService`） | 快，可跨进程共享，支持 TTL | 高并发、多实例共享状态（生产首选） |
+| **SQL**（`SqlSessionService`） | 持久化、可查询、可审计 | 需要留存历史、离线分析、恢复重建 |
+
+> 选型原则：**多节点部署必须用共享后端（Redis/SQL）**，否则不同实例各持一份 Session，上下文会互相"失忆"。这也是"无状态 Worker + 共享状态层"架构的基石。
+
+#### 进阶操作：Truncation / Summary / Resume
+
+- **Truncation（历史裁剪）**：上下文有长度上限，超出时裁剪最早的对话。策略要平衡"保留关键信息"与"控制成本"。
+- **Summary（会话摘要）**：用模型把长历史压成摘要，替代被裁剪的原文，保留"话题脉络"。框架的 `SessionSummarizer` 可按 **token 数 / 事件数 / 时间间隔** 等阈值触发自动摘要，并由 `SummarizerSessionManager` 统一管理摘要与裁剪的配合。
+- **Resume（会话恢复）**：从持久化后端读回历史，让用户在**新进程/新设备/新节点**上继续上次对话——这是"多轮会话恢复"的工程基础（`SessionService` 的 create / get / update 即落库与恢复的接口）。
+
+### 3.2 Memory —— 长期记忆
+
+Session 只记"一次对话"，Memory 记"跨对话的事实与偏好"。典型例子：用户上个月说过"我是后端工程师"，今天再聊时 Agent 仍记得。
+
+Memory 的核心能力（接口为 `store_session` 写入 / `search_memory` 检索）：
+
+- **写入**：调用 `store_session` 把一次会话交给记忆服务，框架自动从中抽取关键信息（用户偏好、关键事实）入库存档，可带来源与时间；
+- **检索**：新对话开始时，`search_memory` 按相关性召回与当前话题相关的记忆。内置后端（`InMemoryMemoryService` / `RedisMemoryService` / `SqlMemoryService`）以**关键词匹配**为主；需要**语义召回**时可接入支持向量检索的外部记忆服务（如 mem0、mempalace 等）；
+- **个性化**：召回的记忆拼入上下文，让回答更贴合该用户。
+
+与 Session 的关系：**Session 管"这一场聊了什么"，Memory 管"这个用户长期是什么样"**。两者共同构成"上下文 = 短期历史 + 长期画像"。
+
+### 3.3 Knowledge / RAG —— 外部知识库
+
+当答案不在模型训练数据里（企业内部文档、实时资料），需要把外部知识"喂"给模型，这就是 RAG（检索增强生成）。在框架中，知识库以 **`KnowledgeBase`** 为统一入口（构造时配置文档与检索参数），查询经 `SearchRequest` 返回 `SearchResult`。
+
+#### 离线流程（建库）
+
+```
+文档加载（Loader）→ 切分（Splitter）→ 向量化（Embedding）→ 向量存储（Vector Store）
 ```
 
-之后每次对话都会自动保存到数据库，重启后也能恢复。
+- **Loader**：从 PDF/Word/网页/数据库加载原始文档；
+- **Splitter**：把长文档切成小块（chunk），块太大塞不下上下文、太小丢失语义；
+- **Embedding**：每块文本转为向量（语义坐标）；
+- **Vector Store**：存入向量库（支持近似检索的存储，如 Chroma/Milvus 等）。
 
-#### 会话摘要
+#### 在线流程（问答）
 
-长对话会消耗大量 token。Session 支持**自动摘要**——当对话超过阈值时，自动把历史浓缩成摘要，释放上下文空间。
-
-```python
-from trpc_agent_sdk.sessions import SummarizerSessionManager
-
-# 配置摘要策略
-manager = SummarizerSessionManager(
-    token_threshold=4000,      # 超过 4000 token 时触发摘要
-    time_interval=3600,        # 或 1 小时后触发
-    events_count_threshold=50, # 或 50 条消息后触发
-)
+```
+检索（Retrieval）→ 上下文拼接（Prompt Augmentation）→ 生成答案（Generation）
 ```
 
-详细文档：`docs/mkdocs/zh/session_summary.md`
+- 用户提问 → 问题向量化 → 在向量库中检索 Top-K 最相关片段；
+- 相关片段拼入提示词（注明"以下为资料，请基于资料回答"）；
+- 模型基于资料生成答案，并支持多轮追问（把历史也拼入，持续引用资料）。
 
-#### 参考文档与示例
+> 注意事项：RAG 的质量取决于**切分粒度、检索准确率、拼接方式**，而非模型本身。多数"回答不准"问题出在建库环节，而非模型能力。
 
-- `docs/mkdocs/zh/session.md` — 会话管理基础
-- `docs/mkdocs/zh/session_sql.md` — SQL 持久化
-- `docs/mkdocs/zh/session_redis.md` — Redis 持久化
-- 示例：`examples/session_service_with_sql/` — SQLite 会话示例
+#### Memory 与 Knowledge 的边界
+
+| 维度 | Memory | Knowledge |
+|------|--------|-----------|
+| 来源 | 对话中沉淀 | 外部文档导入 |
+| 归属 | 某用户/某会话 | 全局或按知识库组织 |
+| 更新 | 持续写入 | 按版本导入 |
+| 典型用途 | 个性化画像 | 事实问答、资料检索 |
+
+> 心智模型：Memory 是"个人档案"，Knowledge 是"公共图书馆"，Session 是"本次谈话记录"。
+
+### 3.4 本层自检
+
+- [ ] 能否说清 Session / Memory / Knowledge 三者区别与配合关系？
+- [ ] 能否给出 Session 后端选型依据（为什么多节点必须共享后端）？
+- [ ] 能否画出 RAG 的离线建库与在线检索两条流程？
 
 ---
 
-## 二、进阶篇
+## 第四层：多 Agent 协作与复杂编排（系统架构）
 
-### 2.1 Memory 与 Knowledge / RAG
+单 Agent 能解决"单一任务"，但真实业务往往需要**多个角色协作**或**多步骤流程**。本层讲编排。
 
-#### Memory（长期记忆）
+### 4.1 基础编排模式：Chain / Parallel / Cycle
 
-**问题**：Session 只记住一次对话内的内容。下次用户再来，Agent 不记得上次聊过什么。
+- **Chain（链式）**：A 的输出作为 B 的输入，串行执行，适合有先后依赖的流水线（如"先抽取 → 再总结 → 最后翻译"）。框架对应 `ChainAgent`。
+- **Parallel（并行）**：多个 Agent 同时处理互不依赖的子任务，最后汇总，适合"并行调研多个维度"。框架对应 `ParallelAgent`。
+- **Cycle（循环）**：反复执行直到满足退出条件，适合"迭代改进"（如反复修改直到通过检查）。框架对应 `CycleAgent`。
 
-**解决**：Memory 系统把重要的信息跨会话保存下来。
+> 选择依据：**任务之间有无依赖**。有依赖用链式，无依赖可并行，需迭代用循环。
 
-**工作流程**：
+### 4.2 TeamAgent：Leader 调度分工
 
-```
-用户第一次："我叫张三，喜欢 Python。"
-  │
-会话结束后 → Memory 存储 {"name": "张三", "interests": ["Python"]}
-  │
-用户第二次："你还记得我吗？"
-  │
-Agent 启动 → load_memory_tool 自动加载记忆
-  │
-Agent 知道："这是张三，他喜欢 Python。"
-```
+TeamAgent 模仿团队协作：一个 **Leader Agent** 接收总任务，把任务**拆解**成子任务，派发给**成员 Agent**，收集结果并汇总成最终答案。
 
-**配置方式**：
+- 成员可以是不同能力的 Agent（有的会查库、有的会写代码）；
+- Leader 负责**分工、调度、汇总**，本身不一定执行具体工作；
+- 适合"任务不明确、需要现场拆解"的场景（如"调研某公司并出报告"）。
 
-```python
-from trpc_agent_sdk.memory import SqlMemoryService
-from trpc_agent_sdk.tools import load_memory_tool
+### 4.3 GraphAgent：图编排
 
-memory_service = SqlMemoryService(
-    db_url="sqlite:///memory.db",
-    ttl=3600 * 24 * 30,  # 30 天过期
-)
+GraphAgent 把任务建模成一张**有向图**：节点是执行步骤，边是流转关系。它是编排能力最完整的形态，也是生产级工作流（审批、诊断、规划）的首选。框架中 GraphAgent 位于 `dsl.graph` 模块。
 
-agent = LlmAgent(
-    ...,
-    tools=[load_memory_tool],  # 让 Agent 能主动加载记忆
-)
-```
+#### 节点与边
 
-**详细文档**：`docs/mkdocs/zh/memory.md`
+- **节点（Node）**：一个执行单元（一个 Agent、一个工具调用、一段逻辑），输入状态、输出状态更新；
+- **边（Edge）**：定义执行顺序——`A → B` 表示 A 完成后执行 B。
 
-#### Knowledge / RAG（检索增强生成）
+#### 条件路由（Conditional Routing）
 
-**问题**：LLM 的知识有截止日期，也不知道你的内部文档。
-
-**解决**：RAG 把"检索"和"生成"结合起来——先搜文档，再回答问题。
-
-**完整流程**：
+边可以带条件：根据当前状态决定走哪条分支。典型场景：
 
 ```
-用户提问："我们的数据库连接超时怎么配置？"
-  │
-① 文档加载 → 读取公司内部的编码规范文档
-  │
-② 文本切分 → 把长文档切成 500 字的片段
-  │
-③ 向量化 → 每个片段转成向量（数学上的"语义指纹"）
-  │
-④ 向量检索 → 找到和问题最相关的 3 个片段
-  │
-⑤ 上下文拼接 → 把片段 + 问题一起发给 LLM
-  │
-⑥ LLM 回答 → 基于检索到的文档内容给出答案
+判断输入类型 → 是工单？→ 走工单处理分支
+             → 是咨询？→ 走问答分支
+             → 其他？  → 走兜底分支
 ```
 
-**配置方式**：
+条件路由让工作流**不是固定流水线，而是能按情况分流的决策图**。
 
-```python
-from trpc_agent_sdk.knowledge import LangchainKnowledge
-from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+#### State Reducer（状态归并）
 
-rag = LangchainKnowledge(
-    document_loader=TextLoader("docs/coding_standards.md"),
-    document_transformer=RecursiveCharacterTextSplitter(
-        chunk_size=500, chunk_overlap=50,
-    ),
-    embedder=HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5"),
-    search_type="similarity",
-    search_kwargs={"k": 3},
-)
+节点之间通过**共享状态（State）**传数据。当多个来源要更新同一字段时，如何决定谁覆盖谁？这就是 Reducer 的职责：
+
+- **覆盖（override）**：后写的覆盖先写的；
+- **合并（merge）**：不同来源的字段按需合并，互不覆盖。
+
+Reducer 决定了状态在节点间流转时的"合并/覆盖"语义，是状态一致性的关键。
+
+#### Checkpoint（状态快照）
+
+工作流执行到一半，把当前状态**打快照**保存下来。好处：
+
+- **恢复**：进程崩溃后从最近 Checkpoint 继续，不用重跑；
+- **审计**：可回溯任意时刻的工作流状态。
+
+#### Interrupt / Resume（人工介入与恢复）
+
+部分流程需要**人来审批**，不能全自动跑完。Interrupt 机制：
+
+```
+执行到"待审批"节点 → 暂停并发出 Interrupt（携带上下文）
+                    → 等待人工决策（同意 / 拒绝 / 修改）
+                    → 收到结果后 Resume，从暂停点继续
 ```
 
-**知识库子模块详解**：
+这就是 **Human-in-the-loop（人在环路）**：机器做能自动做的，关键决策留给人，审批流、风控流都靠它。
 
-| 模块 | 做什么 | 常用选择 | 文档 |
-|------|--------|---------|------|
-| Document Loader | 读取文档 | TextLoader、PDFLoader、CSVLoader | `docs/mkdocs/zh/knowledge_document_loader.md` |
-| Text Splitter | 切分文本 | RecursiveCharacterTextSplitter | `docs/mkdocs/zh/knowledge_text_splitter.md` |
-| Embedder | 转向量 | HuggingFace、OpenAI | `docs/mkdocs/zh/knowledge_embedder.md` |
-| Vector Store | 存向量 | InMemory、FAISS、Chroma | `docs/mkdocs/zh/knowledge_vectorstore.md` |
-| Retriever | 检索 | 相似度搜索、MMR | `docs/mkdocs/zh/knowledge_retrievers.md` |
-| Prompt Template | 拼提示词 | 自定义模板 | `docs/mkdocs/zh/knowledge_prompt_template.md` |
+### 4.4 本层自检
 
-**参考文档与示例**：
-- `docs/mkdocs/zh/knowledge.md` — 知识库总览
-- 示例：`examples/knowledge_with_rag_agent/` — 完整的 RAG Agent
+- [ ] 能否按任务依赖关系选择合适的编排模式（Chain / Parallel / Cycle）？
+- [ ] 能否说清 GraphAgent 中"节点、边、条件路由、Reducer、Checkpoint、Interrupt"各自作用？
+- [ ] 能否设计一个"带人工审批"的工作流，并说清 Checkpoint 与 Interrupt 的区别？
 
 ---
 
-### 2.2 多 Agent 协作与图编排
+## 第五层：可扩展能力（Skills 与 CodeExecutor）
 
-#### 为什么需要多 Agent？
+让 Agent 具备"按需加载的技能"与"安全执行代码"的能力，是 Agent 工程化的关键扩展点。
 
-一个 Agent 做所有事情就像一个人既当前台又当会计又当保洁——不高效。多 Agent 协作把不同职责拆给不同的 Agent：
+### 5.1 Skill 机制
 
-| 场景 | 单 Agent 的问题 | 多 Agent 的好处 |
-|------|---------------|----------------|
-| 复杂任务 | 指令太长，LLM 容易混淆 | 每个 Agent 专注一件事 |
-| 专业分工 | 一个 Agent 什么都会，什么都不精 | 每个 Agent 有自己的 instruction |
-| 流程控制 | 难以控制执行顺序和条件 | 编排引擎决定谁先谁后 |
+Skill（技能）是把**可复用的任务能力**打包成标准格式，让 Agent 按需加载。它与 Tool 的区别：Tool 是"单个函数"，Skill 是"一套指令 + 可能含脚本/资源的完整方案"。
 
-#### 编排方式一览
+#### SKILL.md 规范
 
-**ChainAgent（链式）**：顺序执行，前一个的输出传给后一个
+一个 Skill 通常是一个目录，内含 `SKILL.md` 描述文件（框架中文件名常量为 `SKILL_FILE`），格式为两部分：
 
-```
-Agent A（提取信息）→ Agent B（翻译）→ Agent C（格式化输出）
-```
+- **YAML Frontmatter**（文件头，框架解析为 `SkillFrontMatter`）：技能的名称、描述、适用场景等元信息——**描述决定了 Agent 何时会想到用它**；
+- **Markdown 正文**：具体的执行指令（步骤、注意事项、输出要求）。
 
-示例：`examples/multi_agent_chain/`
+Skill 由**技能仓库**管理（如 `FsSkillRepository` 从文件系统目录扫描加载），运行时通过 `SkillLoadTool` 加载描述、`SkillRunTool` 执行任务。
 
-**ParallelAgent（并行）**：多个 Agent 同时执行，结果合并
-
-```
-        ┌→ Agent A（查天气）┐
-用户输入 ┤→ Agent B（查新闻）├→ 结果合并
-        └→ Agent C（查日历）┘
-```
-
-**CycleAgent（循环）**：循环执行直到满足条件
-
-```
-Agent A（生成方案）→ Agent B（评审）→ 不合格 → 回到 Agent A
-                                    → 合格 → 输出
-```
-
-**TeamAgent（团队）**：一个 Manager 管理多个 Worker
-
-```
-Manager（分配任务）
-  ├── Worker A（写代码）
-  ├── Worker B（写测试）
-  └── Worker C（写文档）
-```
-
-详细文档：`docs/mkdocs/zh/multi_agents.md`、`docs/mkdocs/zh/team.md`
-
-#### GraphAgent（图编排）
-
-GraphAgent 是最强大的编排方式，把工作流画成**有向图**：
-
-```
-          ┌→ 工具调用 ─→ ┐
-用户输入 → 意图识别 ─→ 知识库搜索 ─→ 格式化输出
-          └→ LLM 直接回答 ─→ ┘
-```
-
-**核心概念**：
-
-| 概念 | 说明 | 类比 |
-|------|------|------|
-| **节点（Node）** | 工作流中的一个步骤 | 流程图中的方框 |
-| **边（Edge）** | 节点之间的连接 | 箭头 |
-| **条件路由** | 根据结果走不同分支 | if-else |
-| **状态（State）** | 节点间传递的数据 | 流水线上的工件 |
-| **状态 reducer** | 合并多个节点的输出 | 汇总 |
-| **Checkpoint** | 保存执行进度 | 游戏存档 |
-| **Interrupt/Resume** | 暂停等待人工审批，然后继续 | 审批流程 |
-
-**GraphAgent 示例**：
-
-```python
-from trpc_agent_sdk.dsl.graph import GraphAgent, StateGraph, NodeConfig
-
-async def step1(state):
-    # 处理输入
-    return {"processed": state["input"] + "processed"}
-
-async def step2(state):
-    # 最终输出
-    return {"output": f"结果: {state['processed']}"}
-
-graph = StateGraph(dict)
-graph.add_node("step1", step1, config=NodeConfig(name="step1", desc="第一步"))
-graph.add_node("step2", step2, config=NodeConfig(name="step2", desc="第二步"))
-graph.set_entry_point("step1")
-graph.set_finish_point("step2")
-graph.add_edge("step1", "step2")
-
-agent = GraphAgent(name="workflow", graph=graph.compile())
-```
-
-**GraphAgent 的高级用法**：
-
-- `add_llm_node()`：添加 LLM 节点（带 instruction 的自动推理）
-- `add_agent_node()`：添加子 Agent 节点
-- `add_code_node()`：添加代码执行节点
-- `add_knowledge_node()`：添加知识库检索节点
-- `add_mcp_node()`：添加 MCP 工具调用节点
-- `add_conditional_edges()`：条件路由，根据状态走不同分支
-
-**参考文档与示例**：
-- `docs/mkdocs/zh/graph.md` — GraphAgent 完整文档
-- `docs/mkdocs/zh/langgraph_agent.md` — LangGraphAgent
-- 示例：`examples/graph/` — 完整的 GraphAgent 示例
-
----
-
-### 2.3 MCP、A2A 与 AG-UI 协议
-
-#### MCP（Model Context Protocol）
-
-MCP 是让 Agent 接入外部工具服务的**标准协议**。你可以把 MCP 理解为"工具的 USB 接口"——只要服务提供 MCP 接口，Agent 就能直接用。
-
-**工作方式**：
-
-```
-Agent → MCPToolset → MCP Server（工具提供方）
-                      ├── 计算器服务
-                      ├── 数据库查询服务
-                      └── 第三方 API 封装
-```
-
-**三种 MCP 模式**：
-- **stdio**：本地启动子进程通信
-- **HTTP SSE**：通过 HTTP 流式通信
-- **WebSocket**：双向实时通信
-
-#### A2A（Agent-to-Agent）
-
-A2A 让不同的 Agent 之间可以互相通信。一个 Agent 可以把任务委托给另一个 Agent。
-
-**工作方式**：
-
-```
-Agent A（用户助手）
-  │  A2A 协议
-  ▼
-Agent B（专业翻译）
-  │  A2A 协议
-  ▼
-Agent C（格式校对）
-```
-
-**A2A 服务部署**：
-
-```python
-from trpc_agent_sdk.server.a2a import TrpcA2aAgentService
-
-a2a_svc = TrpcA2aAgentService(
-    service_name="my_agent",
-    agent=root_agent,
-    session_service=session_service,
-    memory_service=memory_service,
-)
-a2a_svc.initialize()
-```
-
-详细文档：`docs/mkdocs/zh/a2a.md`
-示例：`examples/a2a/`
-
-#### AG-UI（Agent UI 协议）
-
-AG-UI 是 Agent 向前端（网页/App）输出结构化事件的标准协议。它让前端能实时看到 Agent 的"思考过程"。
-
-**AG-UI 能做什么**：
-- 实时显示 LLM 的逐字输出（流式）
-- 显示工具调用过程（正在查天气...）
-- 显示进度条（正在处理，已完成 30%...）
-- 兼容 CopilotKit 等前端框架
-
-**AG-UI 服务部署**：
-
-```python
-from trpc_agent_sdk.server.ag_ui import AgUiAgent, AgUiManager
-
-agui_agent = AgUiAgent(trpc_agent=root_agent, app_name="my_app")
-agui_manager = AgUiManager()
-agui_service = AgUiService("my_service", app=fastapi_app)
-agui_service.add_agent("/agent", agui_agent)
-agui_manager.register_service("my_service", agui_service)
-```
-
-详细文档：`docs/mkdocs/zh/agui.md`
-示例：`examples/agui/`
-
-#### 服务化部署方式对比
-
-| 方式 | 适用场景 | 参考 |
-|------|---------|------|
-| **FastAPI Server** | 标准 REST API | `examples/fastapi_server/` |
-| **A2A Server** | Agent 间通信 | `examples/a2a/` |
-| **AG-UI Server** | 前端实时交互 | `examples/agui/` |
-| **Gateway Server** | 统一入口/多协议路由 | 进阶部署 |
-
----
-
-### 2.4 Skills 与 CodeExecutor
-
-#### Skill 体系
-
-Skill 是把一组"规则 + 脚本"打包成可复用的能力单元。Agent 可以按需加载 Skill，在隔离环境中执行。
-
-**Skill 的目录结构**：
-
-```
-skills/my-skill/
-├── SKILL.md          # 技能描述（名称、规则、脚本说明）
-├── rules/            # 规则文档
-│   ├── rule1.md
-│   └── rule2.md
-└── scripts/          # 沙箱执行脚本
-    ├── script1.py
-    └── script2.sh
-```
-
-**SKILL.md 示例**：
+> 示例（格式，非完整内容；框架采用 OpenClaw 兼容的 frontmatter 规范）：
 
 ```markdown
 ---
-name: my-skill
-description: 我的自定义技能
+name: 会议纪要整理
+description: 把会议录音/文字稿整理为结构化纪要（结论/待办/责任人）
 ---
 
-# My Skill
-
-## Rules
-
-- rule1: 规则说明
-- rule2: 规则说明
-
-## Scripts
-
-1) script1.py <input> <output> — 脚本说明
-2) script2.sh <input> <output> — 脚本说明
-
-## Output Files
-
-- out/result.json
+1. 提取会议结论
+2. 列出待办事项与责任人
+3. 输出 Markdown 格式纪要
 ```
 
-**Agent 调用 Skill**：
+> 说明：除 `name` / `description` 外，frontmatter 还支持扩展字段（`skill_key` / `primary_env` / `emoji` / `always` / `os` / `requires` 等），`requires` 可声明运行时依赖（需在 PATH 的二进制、环境变量等）；正文中可用 `Tools` 小节声明该技能自带的工具。
 
-```python
-from trpc_agent_sdk.skills import SkillToolSet
+#### skill load / run 生命周期
 
-skill_set = SkillToolSet("skills/my-skill")
-await skill_set.skill_load("my-skill")  # 加载规则文档
-await skill_set.skill_run("scripts/script1.py", args=[...])  # 执行脚本
-```
+- **load**：读取 SKILL.md，让 Agent "知道有这个技能、是干什么的"；
+- **run**：Agent 判断当前任务适用该技能时，按描述中的指令执行。
 
-详细文档：`docs/mkdocs/zh/skill.md`
+Skill 的价值：**把组织里的最佳实践沉淀成可复用、可分享、可治理的能力包**。与 Tool 配合时，Skill 负责"流程方法"，Tool 负责"具体动作"。
 
-#### CodeExecutor（沙箱执行）
+### 5.2 CodeExecutor 与沙箱执行
 
-Skill 的脚本在**沙箱**中执行，保证安全：
+让 Agent 写代码不难，难的是**安全地执行**。CodeExecutor 负责在受控环境中运行 Agent 生成的代码，而执行环境决定了风险等级。
 
-| 执行器 | 隔离级别 | 启动方式 | 安全等级 |
-|--------|---------|---------|---------|
-| `UnsafeLocalCodeExecutor` | 无隔离，本地直接执行 | 即时 | ⚠️ 仅开发 |
-| `ContainerCodeExecutor` | Docker 容器隔离 | 需 Docker 环境 | ✅ 生产 |
-| `CubeCodeExecutor` | 远程 Cube/E2B 沙箱 | 远程 workspace | ✅ 生产 |
+#### Workspace Runtime（工作区运行时）
 
-**配置沙箱**：
+Workspace 是代码执行的"工作目录/运行环境"抽象：Agent 在其中写文件、跑命令、拿结果。Runtime（`BaseWorkspaceRuntime` / `BaseWorkspaceManager`）提供统一接口，屏蔽底层是本地进程还是远端沙箱。
 
-```python
-from trpc_agent_sdk.code_executors import ContainerCodeExecutor
+#### 执行环境与安全边界
 
-executor = ContainerCodeExecutor(
-    timeout=30,                    # 超时 30 秒
-    max_output_size=1_048_576,     # 输出上限 1MB
-    env_whitelist=["PATH", "HOME"], # 环境变量白名单
-)
-```
+| 执行方式 | 隔离程度 | 风险 | 适用场景 |
+|----------|----------|------|----------|
+| **本地执行**（SDK 内置 `UnsafeLocalCodeExecutor`，名称即提示"不安全"） | 无隔离 | 高（可访问宿主机文件/网络） | 仅可信环境、开发调试 |
+| **容器执行（Docker）**（`ContainerCodeExecutor`） | 进程/网络隔离 | 中 | 常规业务代码，控制资源上限 |
+| **云端沙箱（Cube）**（SDK 内置 cube 沙箱，底层基于 E2B 等隔离技术） | 完全隔离 | 低 | 不可信代码、多租户场景 |
 
-**Skill + 沙箱的完整链路**：
+> 工程原则：**执行环境按"代码可信度"选择**。用户提交的代码永远按最高风险对待；Agent 自产代码也要设资源上限（CPU/内存/网络/超时），防止死循环与资源耗尽。
 
-```
-Agent 决定使用 Skill
-  → skill_load 加载规则文档到上下文
-  → Filter 检查脚本是否安全（高风险模式？路径白名单？）
-  → skill_run 在沙箱中执行脚本
-  → 收集输出结果
-  → 结果返回给 Agent 分析
-```
+### 5.3 本层自检
 
-详细文档：`docs/mkdocs/zh/code_executor.md`
-示例：`examples/code_executors/`、`examples/skills/`
+- [ ] 能否说清 Skill 与 Tool 的区别，以及 SKILL.md 中 description 为何重要？
+- [ ] 能否按代码可信度选择执行环境，并说明各自风险？
+- [ ] 能否设计一套沙箱执行的资源限制策略？
 
 ---
 
-### 2.5 评测、优化与可观测性
+## 第六层：服务化与互联协议（接入生产环境）
 
-#### 评测（Evaluation）
+本地能跑的 Agent 只是 demo，被外部调用的 Agent 才是服务。本层讲三种互联协议与部署方式。
 
-**为什么需要评测**？没有评测，你就不知道 Agent 改得好不好。
+### 6.1 三大协议
 
-**评测体系**：
+#### MCP（Model Context Protocol）
+
+MCP 是"模型接入外部工具服务"的**开放协议**。它解决"每个工具写一套对接"的重复劳动：工具方按 MCP 规范暴露服务，Agent 通过 **MCPToolset / MCPTool** 统一接入，动态加载其工具。
+
+- Agent 扮演 **MCP 客户端**，工具服务（数据库、第三方 API、内部系统）扮演 MCP 服务端；
+- 连接方式覆盖 **stdio（本地进程）、SSE / Streamable HTTP（远端服务）** 等；
+- 价值：**一次接入、处处可用**，工具生态可复用。
+
+#### A2A（Agent-to-Agent）
+
+A2A 是"Agent 之间互通"的协议，基于 JSON-RPC。不同团队、不同语言实现的 Agent，只要实现 A2A 规范即可互相调用：
+
+- 一方作为 **A2A 服务端** 暴露能力；
+- 另一方作为客户端发起任务、跟踪进度、获取结果。
+
+> 价值：Agent 不再是孤岛，可被其他 Agent 发现并协作，是"Agent 生态"的基础协议。
+
+#### AG-UI（Agent-GUI）
+
+AG-UI 是"Agent 向前端 UI 输出结构化事件"的协议。传统做法是前后端自定义消息格式，AG-UI 统一了"Agent → 前端"的事件流语义：
+
+- Agent 侧持续输出结构化事件（正在思考、调用工具、流式文本、任务完成）；
+- 前端按协议渲染进度条、工具调用卡片、流式回复。
+
+> 价值：**前端不用为每个 Agent 定制协议**，一套协议适配所有 AG-UI 兼容的 Agent，同时天然支持流式与状态展示。
+
+### 6.2 服务化部署方式
+
+| 方式 | 特点 | 适用 |
+|------|------|------|
+| **FastAPI** | 手写 HTTP 接口，完全可控 | 需要自定义 REST 接口的轻量服务 |
+| **AG-UI Server**（`AgUiService`，需 `[ag-ui]`） | 基于 AG-UI 协议的现成服务端（WebSocket/HTTP），支持流式；配套 `AgUiAgent` 包装 Agent | 面向 Web 前端的聊天服务，开箱即用 |
+| **A2A Server**（`TrpcA2aAgentService`，需 `[a2a]`） | 按 A2A 规范暴露 Agent，供其他 Agent 调用 | Agent 生态内互通 |
+
+**一次"Agent 即服务"的请求流转**（以 AG-UI Server + Web 前端为例）：
 
 ```
-EvalSet（评测数据集）
-  ├── EvalCase 1：输入"北京的天气" → 期望输出"北京..." → 期望调用工具 get_weather
-  ├── EvalCase 2：输入"翻译成英文" → 期望输出翻译结果
-  └── EvalCase 3：输入"..., ..., ..." → 期望输出"..., ..., ..."
-      │
-      ▼
-AgentEvaluator（自动评测引擎）
-  ├── 运行 Agent 处理每个 EvalCase
-  ├── 对比实际输出 vs 期望输出
-  └── 产出量化指标
+前端（AG-UI 客户端）→ WebSocket 发送用户消息
+→ AG-UI Server（AgUiService）校验/鉴权 → Runner 执行 Agent
+→ 事件流按 AG-UI 协议推回前端（思考中 / 工具调用 / 流式文本）
+→ 前端实时渲染，对话结束
 ```
 
-**评测指标**：
+> 工程要点：服务化后必须补上**鉴权、限流、超时、日志追踪**——本地 demo 可以裸奔，线上服务不行（与第七层衔接）。
 
-| 指标 | 测量什么 | 说明 |
-|------|---------|------|
-| `tool_trajectory_avg_score` | 工具调用路径 | Agent 是否调用了正确的工具、顺序对不对 |
-| `response_match_score` | 回答匹配度 | Agent 的回答是否和期望一致 |
-| `LLM Judge` | LLM 评估 | 用另一个 LLM 来评估回答质量 |
-| `Rubric` | 评分规则 | 按自定义规则打分（如"是否包含引用来源"） |
+### 6.3 本层自检
 
-**运行评测**：
-
-```python
-from trpc_agent_sdk.evaluation import AgentEvaluator
-
-await AgentEvaluator.evaluate(
-    agent_module="my_agent",
-    eval_dataset_file_path_or_dir="evals/my_evalset.json",
-    print_detailed_results=True,
-)
-```
-
-详细文档：`docs/mkdocs/zh/evaluation.md`
-示例：`examples/evaluation/quickstart/`
-
-#### 优化（Optimization）
-
-**AgentOptimizer**：自动优化 Agent 的 Prompt。
-
-工作流程：
-```
-① 定义评测集
-② 运行评测 → 得到基线分数
-③ AgentOptimizer 分析失败案例
-④ 自动调整 Prompt
-⑤ 再次运行评测 → 对比分数提升
-⑥ 循环，直到分数达标
-```
-
-详细文档：`docs/mkdocs/zh/optimization.md`
-
-#### 可观测性（Observability）
-
-| 工具 | 监控什么 | 文档 |
-|------|---------|------|
-| **OpenTelemetry** | 链路追踪（每次 LLM 调用、工具执行的耗时和状态） | 内置 |
-| **Langfuse** | LLM 调用监控、Token 用量、成本分析 | `docs/mkdocs/zh/openclaw.md` |
-| **Filter Telemetry** | 拦截记录、耗时分析 | `docs/mkdocs/zh/filter.md` |
-| **结构化日志** | 支持 JSON 格式，可接入 ELK 等日志系统 | 内置 |
+- [ ] 能否说清 MCP / A2A / AG-UI 各自解决什么问题（工具接入 / Agent 互通 / 前端输出）？
+- [ ] 能否为"Web 聊天"与"Agent 互通"各选一种部署方式并说明理由？
+- [ ] 能否画出一次服务化请求从进入到返回的完整流转？
 
 ---
 
-## 三、实战篇
+## 第七层：生产级可观测性与评测（保障质量）
 
-### 3.1 推荐学习路径
+Agent 是**概率系统**：同一输入可能得到不同输出。因此"怎么验证它好、怎么定位它坏"成为生产级必答题。
 
-```
-第一阶段：基础入门
-  Quickstart → 跑通最小 Agent（1-2 小时）
-  → FunctionTool → 封装第一个工具（1 小时）
-  → Session → 理解会话管理（1 小时）
+### 7.1 评测体系（Evaluation）
 
-第二阶段：进阶能力
-  Memory/Knowledge → 长期记忆和 RAG（2-3 小时）
-  Multi-Agent/GraphAgent → 多 Agent 编排（2-3 小时）
-  Skills/CodeExecutor → 沙箱执行（1-2 小时）
-  Server/Protocols → 服务化部署（1-2 小时）
+#### Eval Set 与 Metric（评测集与指标）
 
-第三阶段：生产化
-  Evaluation → 评测体系建设（1-2 小时）
-  Observability → 监控和可观测性（1 小时）
-  Optimization → Prompt 优化（1 小时）
+- **Eval Set（评测集）**：一组带期望答案/期望行为的用例，是质量的"标尺"。框架的 `EvalSet` 由一组 `eval_cases`（用例）构成；
+- **Metric（指标）**：量化"答得对不对"，框架的 `EvalMetric` 由"指标名 + 阈值 + 判据"三要素组成，内置文本匹配、JSON 校验、工具轨迹等多种判据，并可用 `AgentEvaluator` 统一跑评测。
 
-第四阶段：综合实战
-  选择一个项目，整合以上所有能力
-```
+> 思想：**没有评测集，就无法回答"这次改动是变好还是变坏"**。Prompt、模型、工具的每次调整，都应在同一评测集上对比。
 
-### 3.2 实战项目建议
+#### LLM Judge 与 Rubric Evaluator
 
-| 项目 | 难度 | 涉及技术 | 参考示例 |
-|------|------|---------|---------|
-| **工具型助手** | ⭐⭐ | FunctionTool + 多轮对话 | `examples/function_tools/` |
-| **RAG 问答 Agent** | ⭐⭐⭐ | Knowledge + 向量检索 + 多轮对话 | `examples/knowledge_with_rag_agent/` |
-| **自动代码审查** | ⭐⭐⭐⭐ | Skills + Sandbox + DB + Filter + Graph | `examples/skills_code_review_agent/` |
-| **企业知识助手** | ⭐⭐⭐⭐⭐ | RAG + Memory + Graph + A2A + AG-UI | `examples/graph/` + `examples/a2a/` |
-| **研发自动化助手** | ⭐⭐⭐⭐⭐ | Skills + CodeExecutor + MCP + Session | `examples/skills/` + `examples/code_executors/` |
+很多任务没有唯一正确答案（写总结、写方案），精确匹配失效，于是"用大模型当裁判"：
 
-### 3.3 学习成果验收
+- **LLM Judge**：让一个评审模型按标准打分或判定优劣。框架实现为 `LLMJudge`，通过 `LLMJudgeCriterion` 配置评审标准；
+- **Rubric Evaluator**：先把评分标准写成**评分量表（rubric）**（如"1-5 分，5 分=结构清晰且覆盖全部要点"），再按量表评估——`LLMJudgeCriterion` 的评分输出即带 rubric 结构。
 
-完成学习后，你应该能：
+> 注意：Judge 本身也是模型，可能偏心或不稳定——必要时多模型投票、抽样人工复核。
 
-1. **解释清楚**一次 Agent 运行中：
-   - 模型输入长什么样（instruction + tools + history）
-   - 工具调用是怎么触发的（LLM → function_call → 执行 → 返回）
-   - 状态是怎么变化的（Session state → Graph state）
-   - 记忆是怎么召回的（load_memory_tool → 相似度检索）
-   - 事件是怎么输出的（事件流 → 前端/日志）
-   - 评测结果说明了什么（指标 → 改进方向）
+#### Prompt 迭代与 AgentOptimizer
 
-2. **构建一个综合项目**，至少包含：
-   - ✅ 多轮对话
-   - ✅ 工具调用
-   - ✅ 知识库检索（RAG）
-   - ✅ 长期记忆
-   - ✅ 任务拆解（GraphAgent/ChainAgent）
-   - ✅ 流式事件输出
-   - ✅ 运行日志
-   - ✅ 评测集
-   - ✅ 一种服务化协议（A2A / AG-UI / FastAPI）
+评测的目的最终是为了"调优"：分析失败用例 → 修改提示词/工具描述 → 重跑评测 → 对比指标。框架提供 **AgentOptimizer** 把这一过程自动化：根据评测结果自动生成/优化提示词，形成"评测-优化"闭环。
 
-3. **从"使用框架"进入"理解工程"**：
-   - 知道为什么 Agent 这样设计，而不是怎么调 API
-   - 知道什么场景该用 ChainAgent、什么场景该用 GraphAgent
-   - 知道怎么评测、怎么优化、怎么监控
+### 7.2 可观测性（Observability）
+
+#### OpenTelemetry 追踪
+
+OpenTelemetry（OTel）是分布式追踪的事实标准。Agent 的一次调用会跨越多个环节（接收请求 → 拼上下文 → 模型推理 → 调工具 → 写状态 → 回复），OTel 把这些环节串成 **Span 链**，携带 trace_id 贯穿全链路。框架在 `telemetry` 模块提供 tracer 与指标上报（`trace_runner` / `report_call_llm` / `report_execute_tool` 等埋点）：
+
+- 定位"慢在哪一环"（是模型慢还是工具慢）；
+- 复现问题时按 trace_id 找回一次完整执行过程。
+
+#### Langfuse
+
+Langfuse 是面向 LLM 的可观测平台，在 OTel 之上提供更贴合 Agent 的视角（框架集成位于 `server/langfuse`）：
+
+- 可视化查看**每次对话的完整链路**（提示词、模型输出、工具调用、token 数）；
+- 按 Prompt/模型/用户聚合统计，辅助评测与成本分析。
+
+#### 核心指标与排障思路
+
+| 指标 | 含义 | 异常时的排查方向 |
+|------|------|------------------|
+| **Token Usage** | 单次/累计 token 消耗 | 成本超支 → 查是否上下文过长、循环调用 |
+| **延迟（Latency）** | 端到端耗时 | 变慢 → 用 trace 定位是模型还是工具环节 |
+| **错误率（Error Rate）** | 失败请求占比 | 升高 → 看错误类型：鉴权 / 超时 / 工具异常 |
+| **Trace Logs** | 执行日志 | 复现问题 → 按 trace_id 回溯全链路 |
+
+> 工程原则：**先有可观测，再谈优化**。没有 trace 和评测的 Agent 上线，等于"盲飞"。
+
+### 7.3 本层自检
+
+- [ ] 能否说清"评测集 + 指标 + LLM Judge"如何构成质量标尺？
+- [ ] 能否解释 OTel 与 Langfuse 的关系（协议 vs 平台）？
+- [ ] 面对"响应变慢"，能否给出基于 trace 的排查路径？
 
 ---
 
-## 四、参考资源
+## 第八层：实战综合项目需要融会贯通的能力
 
-### 4.1 文档索引
+前七层是"零件"，本层要求把它们**装成整机**。根据验收项目要求，你需要将以上所有概念**串联成系统思维**。
 
-| 主题 | 中文文档 | 英文文档 |
-|------|---------|---------|
-| Agent 核心 | `docs/mkdocs/zh/llm_agent.md` | `docs/mkdocs/en/llm_agent.md` |
-| 模型配置 | `docs/mkdocs/zh/model.md` | `docs/mkdocs/en/model.md` |
-| 工具系统 | `docs/mkdocs/zh/tool.md` | `docs/mkdocs/en/tool.md` |
-| 会话管理 | `docs/mkdocs/zh/session.md` | `docs/mkdocs/en/session.md` |
-| SQL 会话 | `docs/mkdocs/zh/session_sql.md` | `docs/mkdocs/en/session_sql.md` |
-| Redis 会话 | `docs/mkdocs/zh/session_redis.md` | `docs/mkdocs/en/session_redis.md` |
-| 会话摘要 | `docs/mkdocs/zh/session_summary.md` | `docs/mkdocs/en/session_summary.md` |
-| 长期记忆 | `docs/mkdocs/zh/memory.md` | `docs/mkdocs/en/memory.md` |
-| 知识库总览 | `docs/mkdocs/zh/knowledge.md` | `docs/mkdocs/en/knowledge.md` |
-| 文档加载器 | `docs/mkdocs/zh/knowledge_document_loader.md` | `docs/mkdocs/en/knowledge_document_loader.md` |
-| 文本切分器 | `docs/mkdocs/zh/knowledge_text_splitter.md` | `docs/mkdocs/en/knowledge_text_splitter.md` |
-| 向量化 | `docs/mkdocs/zh/knowledge_embedder.md` | `docs/mkdocs/en/knowledge_embedder.md` |
-| 向量存储 | `docs/mkdocs/zh/knowledge_vectorstore.md` | `docs/mkdocs/en/knowledge_vectorstore.md` |
-| 检索器 | `docs/mkdocs/zh/knowledge_retrievers.md` | `docs/mkdocs/en/knowledge_retrievers.md` |
-| 提示词模板 | `docs/mkdocs/zh/knowledge_prompt_template.md` | `docs/mkdocs/en/knowledge_prompt_template.md` |
-| 自定义组件 | `docs/mkdocs/zh/knowledge_custom_components.md` | `docs/mkdocs/en/knowledge_custom_components.md` |
-| 图编排 | `docs/mkdocs/zh/graph.md` | `docs/mkdocs/en/graph.md` |
-| LangGraph | `docs/mkdocs/zh/langgraph_agent.md` | `docs/mkdocs/en/langgraph_agent.md` |
-| 多 Agent | `docs/mkdocs/zh/multi_agents.md` | `docs/mkdocs/en/multi_agents.md` |
-| 团队协作 | `docs/mkdocs/zh/team.md` | `docs/mkdocs/en/team.md` |
-| 子 Agent | `docs/mkdocs/zh/sub_agent.md` | `docs/mkdocs/en/sub_agent.md` |
-| Skill | `docs/mkdocs/zh/skill.md` | `docs/mkdocs/en/skill.md` |
-| 沙箱执行 | `docs/mkdocs/zh/code_executor.md` | `docs/mkdocs/en/code_executor.md` |
-| Filter | `docs/mkdocs/zh/filter.md` | `docs/mkdocs/en/filter.md` |
-| 评测 | `docs/mkdocs/zh/evaluation.md` | `docs/mkdocs/en/evaluation.md` |
-| 优化 | `docs/mkdocs/zh/optimization.md` | `docs/mkdocs/en/optimization.md` |
-| A2A | `docs/mkdocs/zh/a2a.md` | `docs/mkdocs/en/a2a.md` |
-| AG-UI | `docs/mkdocs/zh/agui.md` | `docs/mkdocs/en/agui.md` |
-| Human-in-the-loop | `docs/mkdocs/zh/human_in_the_loop.md` | `docs/mkdocs/en/human_in_the_loop.md` |
-| Plan Mode | `docs/mkdocs/zh/plan.md` | `docs/mkdocs/en/plan.md` |
-| 自定义 Agent | `docs/mkdocs/zh/custom_agent.md` | `docs/mkdocs/en/custom_agent.md` |
-| 取消机制 | `docs/mkdocs/zh/cancel.md` | `docs/mkdocs/en/cancel.md` |
+### 8.1 企业知识助手
 
-### 4.2 示例代码索引
+集成链路：`RAG`（外部知识）+ `Session`（多轮）+ `Memory`（长期偏好）+ `Tools`（查询/计算）+ `Streaming`（流式事件）+ `Tracing`（日志追踪）+ `Service`（服务化协议）。
 
-| 示例 | 路径 | 学习内容 |
-|------|------|---------|
-| Quickstart | `examples/quickstart/` | 最小 Agent、Runner、Session |
-| FunctionTool | `examples/function_tools/` | 工具封装、参数校验、错误处理 |
-| Skills | `examples/skills/` | SKILL.md、skill_run、skill_load |
-| CodeExecutor | `examples/code_executors/` | 容器/本地沙箱配置 |
-| Session SQL | `examples/session_service_with_sql/` | SQLite 会话持久化 |
-| Memory SQL | `examples/memory_service_with_sql/` | 长期记忆持久化 |
-| RAG | `examples/knowledge_with_rag_agent/` | 文档加载、向量检索、RAG 问答 |
-| A2A | `examples/a2a/` | Agent-to-Agent 协议、多轮对话 |
-| AG-UI | `examples/agui/` | 前端事件流、实时交互 |
-| FastAPI | `examples/fastapi_server/` | REST API 服务化部署 |
-| 评测 | `examples/evaluation/quickstart/` | EvalSet、AgentEvaluator、评分 |
-| Filter | `examples/filter_with_tool/` | 工具拦截、Filter 治理 |
-| 流式工具 | `examples/llmagent_with_streaming_tool_simple/` | StreamingFunctionTool |
-| 多 Agent 链 | `examples/multi_agent_chain/` | ChainAgent 顺序编排 |
-| Graph | `examples/graph/` | 图编排、条件路由、状态管理 |
-| Human-in-the-loop | `examples/llmagent_with_human_in_the_loop/` | 审批流程、中断恢复 |
-| Plan Mode | `examples/plan_mode/` | 先计划后执行、读写门控 |
-| MCP | `examples/mcp/` | MCP 工具集成 |
-| ReviewMind | `examples/skills_code_review_agent/` | 综合项目：Skills + 沙箱 + 数据库 + Filter + 评测 + 服务化 |
+学习重点：**这七者不是并列的，而是分层协作**——Session 记本轮、Memory 记人、Knowledge 记资料、Tools 做动作、Streaming 做体验、Tracing 保可观测、Service 让外部能调。
+
+### 8.2 研发自动化助手
+
+集成链路：`Skills`（封装流程）+ `CodeExecutor`（执行代码）+ `MCP`（拉取外部代码库）+ `GraphAgent`（任务拆解与条件路由）。
+
+学习重点：**这是"流程驱动"的 Agent**——需求分析 → 代码检索 → 任务拆解 → 执行反馈 → 结果总结。GraphAgent 负责把这条流水线固化成工作流，Skill 把"每个环节怎么做"沉淀成可复用指令。
+
+### 8.3 GraphAgent 工作流实战
+
+重点理解两个机制如何配合：
+
+- **状态变更（Reducer）如何在节点间流转**：每个节点读状态、改状态，Reducer 决定合并/覆盖语义，状态是节点间唯一的"信使"；
+- **Interrupt 暂停等待人工审批**：工作流不是"一把梭"，关键决策点挂起等人工，这就是 Human-in-the-loop。
+
+> 建议动手实现一个最小审批流：建单 → 自动校验 → **暂停等审批** → 通过则执行、拒绝则通知——完整走通 Checkpoint 与 Resume。
+
+### 8.4 从"会调用"到"会设计"
+
+完成上述项目后，请反问自己三个问题：
+
+1. 我能**从零设计**一个 Agent 的架构吗（选什么 Agent 类型、配什么工具、挂什么记忆/知识、走什么编排、如何服务化）？
+2. 我能**让一个 Agent 可运维**吗（可观测、可评测、可降级）？
+3. 我能**解释任意一次运行**吗（输入、工具调用、状态变化、记忆召回、事件输出、评测结果）？
+
+能回答，你就已经从"使用 Agent 框架"进入"理解 Agent 工程系统"的阶段。
 
 ---
 
-*本文档基于 tRPC-Agent-Python 仓库中的文档和示例编写，旨在为学习者提供一条从基础到实践的完整学习路径。建议结合仓库中的 `docs/` 文档和 `examples/` 示例一起学习。*
+## 💡 验收标准（判断你是否"理解工程系统"）
+
+当你学完以上内容后，能否清晰讲出以下闭环链条，即为学成：
+
+> **用户输入** → **Memory 召回偏好** → **Session 拼接上下文** → **RAG 检索相关知识** → **Graph/Chain 编排任务** → **触发 Tool/Skill 执行** → **状态通过 Reducer 更新** → **Checkpoint 保存进度** → **流式事件推送到前端（AG-UI）** → **最终输出并记录 Trace（Langfuse）** → **通过评测集验证结果质量（LLM Judge）**。
+
+这条链上的每一环，都对应本文某一层的能力。能完整讲通，就说明八层金字塔已在你脑中连成一张网。

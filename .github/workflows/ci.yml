@@ -3,70 +3,42 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/**'
-      - '.cnb.yml'
-      - '.ide/**'
-      - 'scripts/**'
   pull_request:
     branches: [main]
-    paths:
-      - '.github/**'
-      - '.cnb.yml'
-      - '.ide/**'
-      - 'scripts/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: 静态检查
+  syntax:
+    name: 语法校验
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: YAML 语法校验
-        run: |
-          python3 -m pip install --quiet pyyaml
-          python3 - <<'PY'
-          import glob
-          import sys
-
-          import yaml
-
-          files = sorted(
-              set(
-                  glob.glob('.github/**/*.yml', recursive=True)
-                  + glob.glob('.github/**/*.yaml', recursive=True)
-                  + ['.cnb.yml']
-              )
-          )
-          errors = []
-          for path in files:
-              try:
-                  with open(path, encoding='utf-8') as fh:
-                      yaml.safe_load(fh)
-              except Exception as exc:  # noqa: BLE001
-                  errors.append(f'{path}: {exc}')
-
-          print(f'已校验 {len(files)} 个 YAML 文件')
-          if errors:
-              print('\n'.join(errors))
-          sys.exit(1 if errors else 0)
-          PY
-
-      - name: ShellCheck
-        continue-on-error: true
-        run: shellcheck scripts/*.sh
-
-      - name: Dockerfile 检查
-        continue-on-error: true
-        uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: .ide/Dockerfile
-          failure-threshold: error
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: YAML / JSON 语法
+        run: python3 scripts/check-syntax.py
+
+      - name: Shell 语法
+        run: bash -n scripts/*.sh
+
+      - name: Python 语法
+        run: python3 -m compileall -q -x '(\.git|repos)/' .
